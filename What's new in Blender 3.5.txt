@@ -1,0 +1,3594 @@
+This work is licensed under the GNU General Public License v3.0 or later (GPL).
+For more information, see https://www.gnu.org/licenses/gpl-3.0.html.
+
+
+What's new in Blender 3.5
+
+'''''
+
+Blender 3.5 Table Of Contents
+
+Section 1. Animation & Rigging¶
+Section 2. Core¶
+Section 3. EEVEE & Viewport¶
+Section 4. Grease Pencil¶
+Section 5. Modeling¶
+Section 6. Nodes & Physics¶
+Section 7. Pipeline, Assets & I/O¶
+Section 8. Python API¶
+Section 9. Cycles¶
+Section 10. Sculpt, Paint, Texture¶
+Section 11. User Interface¶
+Section 12. VFX & Video¶
+Section 13. Add-ons¶
+
+'''''
+
+1. Animation & Rigging¶
+
+Animation & Rigging
+¶
+General
+¶
+The old (pre-3.0) pose library has been removed
+  (
+48b5dcdbe8
+### Commit Summary: Animation: Removal of most of the old pose library · 48b5dcdbe8 - blender - Blender Projects
+### Commit Details:
+Remove most of the old (pre-3.0) pose library:
+
+- Remove The entire `editors/armature/pose_lib.c` file
+- Deprecate `Object::poselib` in DNA
+- Remove Operators marked as deprecated in T93405
+- Remove RNA property `Object.pose_library`
+- Add comment to clarify that the call `BLO_read_id_address(reader,
+  ob->id.lib, &ob->poselib);` handles deprecated data.
+
+Note that this functionality has been documented as deprecated since
+Blender 3.2.
+
+What remains of the old pose library: The DNA for action markers
+(`bAction::markers`) and the corresponding Python API. This will allow
+future versions of Blender to still convert old pose libraries to new
+ones (via the Pose Library panel in the Action editor).
+
+Manifest task: T93406
+-------
+).
+  They are now seen by Blender as simply Actions with named markers. It
+  is recommended to
+convert them to pose
+  assets
+### Commit Summary: Pose Library — Blender Manual
+### Commit Details:
+No details found
+-------
+.
+Fixed an old bug where the effect of the Invert Vertex Group toggle of
+  the Armature modifier was inverted when Multi-Modifier was active. Old
+  tutorials explaining the usage of the Multi-Modifier option will need
+  updating.
+  (
+ea1c31a244
+### Commit Summary: Fix T103074: flipped vertex group meaning in Multi-Modifier Armature. · ea1c31a244 - blender - Blender Projects
+### Commit Details:
+For some reason the Armature modifier in the Multi-Modifier mode
+interpreted the vertex group in a way essentially opposite to the
+regular mode. Moreover, this depended not on the Multi-Modifier
+checkbox, but on whether the mode was actually active.
+
+This fixes the flip and adds versioning code to patch old files.
+One difficulty is that whether the Multi-Modifier flag is valid
+can be different between the viewport and render. The versioning
+code assumes any modifier enabled in either to be active.
+
+This change is not forward compatible, so min version is also bumped.
+
+Differential Revision:
+https://developer.blender.org/D16787
+-------
+)
+Added the pin icon to the Dope Sheet to pin channels.
+  (
+49ad91b5ab
+### Commit Summary: Animation: Enable Pin Icon in the Dope Sheet · 49ad91b5ab - blender - Blender Projects
+### Commit Details:
+Even though the dope sheet respects the pinned channels, it did not show the icon to interact with the pinned state.
+
+This adds the icon to the dope sheet as well.
+
+{F14178715}
+
+Reviewed by: Sybren A. Stüvel
+Differential Revision:
+https://developer.blender.org/D17061
+Ref: D17061
+-------
+)
+Added "Select Linked Vertices" to weight paint mode.
+  (
+04aab7d516
+### Commit Summary: Animation: Add "Select Linked Vertices" to Weight Paint Mode · 04aab7d516 - blender - Blender Projects
+### Commit Details:
+Adds two operators to select linked  vertices in weight paint mode.
+Similar to how it works in edit mode.
+Press "L" to select vertices under the cursor,
+or CTRL + "L" to select anything linked to the current selection.
+
+Reviewed by: Sybren A. Stüvel, Hans Goudey, Marion Stalke
+Differential Revision:
+https://developer.blender.org/D16848
+Ref: D16848
+-------
+)
+Take subframes into account when jumping to next/previous keyframes.
+  (
+5eab813fc0
+### Commit Summary: Fix T102746: Jumping to next/previous (key)frame doesn't take subframes into account · 5eab813fc0 - blender - Blender Projects
+### Commit Details:
+Previously when on frame 2.5 and trying to jump to a
+keyframe that was on frame 2, it would instead jump past it.
+
+Now it properly respects the subframes for that.
+
+Reviewed by: Sybren A. Stüvel
+Differential Revision:
+https://developer.blender.org/D16651
+Ref: D16651
+-------
+)
+Motion paths have a new frame range option "Manual Range" to ensure
+  the frame range is never changed on update
+  (
+d72c7eefd1
+### Commit Summary: Fix T101522: Animation: motion path range overwritten by 'Update Paths' · d72c7eefd1 - blender - Blender Projects
+### Commit Details:
+Expand the motion path frame range options with an extra option "Manual
+Range". When chosen, Blender will not automatically update the path
+range any more.
+
+Additionally, the start/end frame fields are greyed out in the UI when
+one of the automatic range options is selected (i.e. all but the new
+"Manual Range" one). It is still possible to set the start/end frame
+temporarily, but the original behaviour (of recomputing those on update)
+remains.
+
+Manifest Task: T101522
+-------
+).
+  In other modes ("All Keys", "Selected Keys", "Scene Frame Range") the
+  start/end frame are still editable, but greyed out.
+Adding F-Curve modifiers to multiple channels at once is now easier to
+  access
+  (
+0f51b5b599
+### Commit Summary: Animation: Add Operator for adding FCurve modifiers to more menus · 0f51b5b599 - blender - Blender Projects
+### Commit Details:
+The operator has the option to add to selected FCurves instead
+of only the active, but it was only exposed in the redo panel.
+This patch adds the operator to the right-click menu on FCurve channels,
+and to the channel menu in the Graph editor.
+Both times with configured to add to selected
+instead of only the active FCurve
+
+Revied by Reviewed by: Sybren A. Stüvel
+Differential Revision:
+https://developer.blender.org/D17066
+Ref: D17066
+-------
+).
+Motion Paths frame range options
+Asset Browser and Pose Library
+¶
+The Pose Library went through a few usability changes to unify the
+experience of the other asset types
+(
+c164c5d866
+).
+The Pose Library functionality in the asset browser were moved to a new
+Asset menu, as well as the pose asset context menu.
+In the viewport, a few options were removed:
+The option to Create Pose Assets is no longer there - use instead the
+  Action Editor or the Asset Browser.
+The Flip Pose check-box is gone - flipped poses can be applied
+  directly via the context menu. When blending, keep CTRL pressed to
+  blend the flipped pose.
+The
+poselib.apply_pose_asset_for_keymap
+and
+poselib.blend_pose_asset_for_keymap
+operators are gone. If you
+  have assigned these in your keymap, use the regular apply/blend
+  operators (
+poselib.blend_pose_asset
+and
+poselib.apply_pose_asset
+) instead.
+Other improvements are:
+A pose asset can now be "subtracted" while blending. Drag to the right
+  to blend as usual,
+drag to the left to subtract the pose
+.
+While blending, keep Ctrl pressed to flip the pose
+  (
+bd36c712b9
+### Commit Summary: Pose Library: while blending, use CTRL for flipping the pose · bd36c712b9 - blender - Blender Projects
+### Commit Details:
+Using negative blend factors for blending in flipped poses was undesirable.
+Instead, the pose blending operator now uses CTRL to flip the pose.
+
+Negative blend values are still allowed, and cause the pose asset to be
+subtracted from the current pose. It can quickly break the rig, but for
+small adjustments it can be useful.
+-------
+).
+Blending can now also exaggerate a pose, by pressing E (for
+  Extrapolate) and applying a pose for more than 100%
+74c4977aea
+### Commit Summary: Pose Library: allow extrapolating the pose · 74c4977aea - blender - Blender Projects
+### Commit Details:
+While blending, press E to enable extrapolation / overshoot of the pose.
+It will make it possible to blend in more than 100% of the pose asset.
+This has the potential to completely break the rig, but it can be useful
+to exaggerate poses when used with caution.
+-------
+.
+Graph Editor
+¶
+Ease Operator
+¶
+The Graph Editor got a new Operator, "Ease"
+(
+76a68649c1
+### Commit Summary: Animation: Graph Editor Ease operator · 76a68649c1 - blender - Blender Projects
+### Commit Details:
+Added a new operator that aligns selected keys on an exponential curve
+
+Revied by Reviewed by: Sybren A. Stüvel
+Differential Revision:
+https://developer.blender.org/D9479
+Ref: D9479
+-------
+),
+that can align keys on an exponential curve. This is useful for quickly
+making an easing transition on multiple keys. It can be found under
+Key
+»
+Slider
+Operators
+.
+Pose Mode
+¶
+Propagate Pose
+¶
+The Propagate Pose Operator has been updated
+(
+200a114e15
+### Commit Summary: Fix T87548: Propagate Pose, Next Keyframe · 200a114e15 - blender - Blender Projects
+### Commit Details:
+Change the logic for propagating poses such that it checks keyframes
+on all selected bones to determine the frame on which a pose
+should be propagated to.
+It then adds keyframes if they don't exist on whatever
+frame the pose should be propagated to.
+
+Reviewd by: Sybren A. Stüvel
+Differential Revision:
+https://developer.blender.org/D16654
+Ref: D16654
+-------
+).
+Previously it used to evaluate each FCurve individually to find the
+target key. That resulted in undesired behavior when the keys where not
+on the same frame. Now it finds the frame first by checking all FCurves
+in question and then propagates the pose to it. It will add a keyframe
+to it in case it doesn't exist. The discussion can be found here
+https://developer.blender.org/T87548
+
+'''''
+
+
+2. Core¶
+
+Core
+¶
+Custom Properties
+¶
+Custom properties can now have a boolean type
+(
+ef68a37e5d
+### Commit Summary: Custom Properties: Add boolean type · ef68a37e5d - blender - Blender Projects
+### Commit Details:
+A proper boolean custom property type is commonly requested. This
+commit simply adds a new `IDP_BOOLEAN` type that can be used for
+boolean and boolean array custom properties. This can also be used
+for exposing boolean node sockets in the geometry nodes modifier.
+
+I've just extended the places existing IDProperty types are used, and
+tested with the custom property edit operator and the python console.
+Adding another IDProperty type is a straightforward extension of the
+existing design.
+
+Differential Revision:
+https://developer.blender.org/D12815
+-------
+).
+Datablocks
+¶
+'Fake User' on linked data will now always enforce that linked
+data-block to be considered as 'directly linked', i.e. never
+automatically cleared by Blender on file save. See
+#105786
+and
+133dde41bb
+### Commit Summary: Improve handling of (in)direclty linked status for linked IDs. · 133dde41bb - blender - Blender Projects
+### Commit Details:
+This commit essentially ensures before writing .blend file that only
+actualy locally used linked IDs are tagged as `LIB_TAG_EXTERN` (and
+therefore get a reference stored in the .blend file).
+
+Previously, a linked ID tagged as directly linked would never get back
+to the indirectly linked status. Consequence was a lot of 'needless'
+references to linked data in .blend files.
+
+This commit also introduces a new flag for lib_query ID usage types,
+`IDWALK_CB_DIRECT_WEAK_LINK`, used currently for base's Object
+pointer, and for LayerCollection's Collection pointer.
+
+NOTE: A side-effect of this patch is that even IDs explicitely linked by
+the user won't be kept anymore when writing files, i.e. they will not be
+there anymore after a file reload, if they are not actually used.
+
+Overhead of new process is below 0.1% in whole file saving process in
+a Heist production file e.g.
+
+Reviewed By: brecht
+
+Differential Revision:
+https://developer.blender.org/D16605
+-------
+for details.
+
+'''''
+
+
+3. EEVEE & Viewport¶
+
+EEVEE & Viewport
+¶
+Viewport Compositor
+¶
+A new
+Viewport
+Compositor
+shading option was added that applies the result of the Compositor
+Editor node-tree directly in the 3D Viewport. This feature is a work in
+progress and not all compositor setups are supported. Refer to
+#99210
+for
+the status of the project.
+Viewport Compositor is disabled.
+Viewport Compositor is enabled.
+Metal Viewport
+¶
+When running on a MacOS device Blender will now use the Metal back-end
+for the user interface and 3D viewport. Metal provides improved
+performance, better stability and on par compatibility compared with
+other platforms.
+Improved performance affects rendering as well as animation playback.
+The scenes tested are
+Wanderer
+and
+"Hi,
+my name is
+Amy"
+.
+Platform
+Scene
+Blender
+Playback (FPS)
+Render time (seconds)
+Mac Studio - Ultra
+Wanderer
+3.4.1 / OpenGL
+16.8
+6.5
+3.5 / OpenGL
+17.0
+5.7
+3.5 / Metal
+45.0
+5.3
+Amy
+3.4.1 / OpenGL
+12.7
+12.2
+3.5 / OpenGL
+17.7
+9.8
+3.5 / Metal
+34
+8.8
+Mac Mini - Intel i5
+Wanderer
+3.4.1 / OpenGL
+5.4*
+17.5*
+3.5 / OpenGL
+5.9*
+16.9*
+3.5 / Metal
+6.8
+20.4
+Amy
+3.4.1 / OpenGL
+6.3
+65
+3.5 / OpenGL
+6.5
+64
+3.5 / Metal
+9.7
+55
+(*) = Fails to compile certain materials at the moment.
+Check
+Python API
+to
+learn more about the deprecation of the
+bgl
+module. Users of
+add-ons/scripts still using this module should inform the add-on/script
+developers to update their scripts. Users can switch back to the OpenGL
+back-end in Preferences → System, in order to keep using these scripts.
+
+'''''
+
+
+4. Grease Pencil¶
+
+Grease Pencil
+¶
+Operators
+¶
+Sculpt Auto-masking moved to Global setting.
+  (
+4c182aef7c
+### Commit Summary: GPencil: Make Sculpt Auto-masking Global and not by Brush · 4c182aef7c - blender - Blender Projects
+### Commit Details:
+The auto-masking was working by Brush and this was very
+inconvenient because it was necessary set the options by
+Brush, now the options are global and can be set at once.
+
+Also, the automa-masking now works with `and` logic
+and not with `or` as before. That means that a stroke
+must meet all the conditions of the masking.
+
+Added new Layer and Material options to masking the 
+strokes using the same Layer/Material of the selected stroke.
+Before, only Active Layer and Active Material could be masked.
+
+The options of masking has been moved to the top-bar using
+the same design of Mesh Sculpt masking.
+
+As result of the changes above, the following props changed:
+
+Removed:
+
+`brush.gpencil_settings.use_automasking_strokes`
+`brush.gpencil_settings.use_automasking_layer`
+`brush.gpencil_settings.use_automasking_material`
+
+Added:
+
+`tool_settings.gpencil_sculpt.use_automasking_stroke`
+`tool_settings.gpencil_sculpt.use_automasking_layer_stroke`
+`tool_settings.gpencil_sculpt.use_automasking_material_stroke`
+`tool_settings.gpencil_sculpt.use_automasking_layer_active`
+`tool_settings.gpencil_sculpt.use_automasking_material_active`
+
+
+Reviewed by: Julien Kaspar, Matias Mendiola, Daniel Martinez Lara
+-------
+)
+Added new Auto-masking pie menu using
+Shift+Alt+A
+.
+  (
+4c182aef7c
+### Commit Summary: GPencil: Make Sculpt Auto-masking Global and not by Brush · 4c182aef7c - blender - Blender Projects
+### Commit Details:
+The auto-masking was working by Brush and this was very
+inconvenient because it was necessary set the options by
+Brush, now the options are global and can be set at once.
+
+Also, the automa-masking now works with `and` logic
+and not with `or` as before. That means that a stroke
+must meet all the conditions of the masking.
+
+Added new Layer and Material options to masking the 
+strokes using the same Layer/Material of the selected stroke.
+Before, only Active Layer and Active Material could be masked.
+
+The options of masking has been moved to the top-bar using
+the same design of Mesh Sculpt masking.
+
+As result of the changes above, the following props changed:
+
+Removed:
+
+`brush.gpencil_settings.use_automasking_strokes`
+`brush.gpencil_settings.use_automasking_layer`
+`brush.gpencil_settings.use_automasking_material`
+
+Added:
+
+`tool_settings.gpencil_sculpt.use_automasking_stroke`
+`tool_settings.gpencil_sculpt.use_automasking_layer_stroke`
+`tool_settings.gpencil_sculpt.use_automasking_material_stroke`
+`tool_settings.gpencil_sculpt.use_automasking_layer_active`
+`tool_settings.gpencil_sculpt.use_automasking_material_active`
+
+
+Reviewed by: Julien Kaspar, Matias Mendiola, Daniel Martinez Lara
+-------
+)
+Interpolate Sequence by default can now use all different keyframes
+  types as extremes and a new option
+Exclude Breakdowns
+was added to
+  allows users exclude this type of keyframes from the interpolation as
+  with the old behavior.
+  (
+56ae4089eb
+### Commit Summary: GPencil: Allow interpolation to use breakdown keyframe as extremes · 56ae4089eb - blender - Blender Projects
+### Commit Details:
+Actually, the interpolation can be done only between keyframes different of breakdown type,
+but in some cases, this is not convenient.
+
+Now, a new option is displayed to allow the interpolation using breakdown keyframes
+as interpolation extremes.
+
+Reviewed By: mendio, pepeland
+
+Differential Revision:
+https://developer.blender.org/D16515
+-------
+)
+Copy & Paste now works in multiframe mode.
+  (
+a5d4c63e86
+### Commit Summary: GPencil: remove multiframe copy/paste restriction · a5d4c63e86 - blender - Blender Projects
+### Commit Details:
+Multiframe copy paste operations were prohibited by a block of code.
+While this is understandable as it prevents confusing actions, there is a good use case to allow multiframe copy pasting.
+
+This patch does:
+- remove restricting block of code
+- adds outer loops for frames both in copy and paste actions.
+
+In copy action it will create an array of selected strokes from all selected frames
+In paste action it will create new from previous copy action merged to a single frame. It will paste to all selected frames and create new frame if autokey is on and time cursor is not on any of the keyframes.
+
+The main usecase is for creating motion smears as in examples attached. The user still need to do some actions in order to achieve desired look, such as stroke ordering and deleting excessive strokes.
+
+{F14069747}
+
+{F14069743}
+
+Reviewed By: antoniov, mendio
+
+Differential Revision:
+https://developer.blender.org/D16805
+-------
+)
+UI
+¶
+Vertex Opacity
+parameter now is visible in Overlay panel in Sculpt
+  mode.
+  (
+1aff91b1a7
+### Commit Summary: GPencil: Add Vertex Opacity Overlay parameter in Sculpt · 1aff91b1a7 - blender - Blender Projects
+### Commit Details:
+This option was missing in overlay panel.
+-------
+)
+New option to show the brush size in Draw tool cursor.
+  (
+a44c128482
+### Commit Summary: GPencil: show brush size in Draw tool cursor · a44c128482 - blender - Blender Projects
+### Commit Details:
+When drawing strokes in Grease Pencil, it was always a bit hard
+to predict how thick the strokes would be, because there was
+no visual reference of the thickness in the cursor.
+This patch adds that visual reference. It shows the brush size
+as a circle in the draw cursor.
+Showing the brush size can be toggled in the Cursor menu
+of the Grease Pencil draw tool.
+
+Request in RCS with 26 upvotes for this option:
+https://blender.community/c/rightclickselect/0zfbbc
+On the technical side: the brush size is calculated
+in 3D space and takes zoom level into account, as well as
+object/layer transfrom, layer thickness change (gpl->line_change)
+and thickness scale (gpd->pixfactor).
+
+Reviewed By: mendio, antoniov
+
+Differential Revision:
+https://developer.blender.org/D16851
+-------
+)
+  (
+a2cf9a8647
+### Commit Summary: GPencil: Display real brush cursor size always · a2cf9a8647 - blender - Blender Projects
+### Commit Details:
+Remove the option to display the real size of the cursor
+and set as default. Now the cursor is displayed or not using
+show_cursor option, but if it's displayed always use the real size.
+-------
+)
+Radial control now displays the correct size when resizing brush size.
+  (
+0fb12a9c2e
+### Commit Summary: GPencil: Fix size difference between radial control and Brush size · 0fb12a9c2e - blender - Blender Projects
+### Commit Details:
+Due an internal scale of the brush size done by grease pencil
+draw tool (this scale factor cannot be removed), the size of the
+radial control is not equal to the actual stroke thickness and
+this makes the radial size displayed useless.
+
+This patch adds a new property that allows to pass the
+path of the tool path and this value is used to apply
+the correct scale to the radial size.
+
+Reviewed By: mendio, frogstomp, pepeland, brecht
+
+Differential Revision:
+https://developer.blender.org/D16866
+-------
+)
+Create new layer using
+Y
+menu in Drawing mode allows to enter new
+  layer name.
+  (
+f53bb93af9
+### Commit Summary: GPencil: Rename popup on Change active layer -> New Layer · f53bb93af9 - blender - Blender Projects
+### Commit Details:
+This patch adds rename popup when using Y key to switch 
+active layer and choosing New layer in Draw mode.
+It follows
+https://developer.blender.org/D15092
+, which introduced this 
+for moving selected strokes to layers in Edit mode.
+
+Reviewed By: antoniov
+
+Differential Revision:
+https://developer.blender.org/D16877
+-------
+)
+Material popover now display Fill color for Fill materials.
+  (
+e144af1f7c
+### Commit Summary: GPencil: Provide Option for Fill in Material Popover · e144af1f7c - blender - Blender Projects
+### Commit Details:
+The Grease Pencil Material Popover currently has a color picker 
+for the Stroke of a Material using Solid style, but not one for
+ a Fill using Solid style. 
+
+With the default Grease Pencil Materials, the current 
+popover only shows the Stroke color for the grey "Solid Fill" 
+material (which doesn't have its Stroke enabled) instead of 
+the more useful Fill color.
+
+This patch shows a Stroke color picker when the Material 
+has Stroke enabled and the style is Solid. 
+This is the same for the Fill.
+
+Reviewed By: antoniov, mendio
+
+Differential Revision:
+https://developer.blender.org/D17004
+-------
+)
+Modifiers
+¶
+Add offset (Location, Rotation, Scale) by Layer, Stroke and Material
+  to the
+Offset Modifier
+.
+  (
+7d712dcd0b
+### Commit Summary: Gpencil: Add offset(Location, Rotation, Scale) by Layer, Stroke and Material to Offset modifier · 7d712dcd0b - blender - Blender Projects
+### Commit Details:
+This patch adds two new panels in which users can control
+offset (position, rotation, scale) by layer and by stroke number.
+
+Use cases:
+- if you want to create array of Suzannes and place them one behind 
+another, in 2d mode, Z depth will be wrong. 
+In 3d mode there will be Z fighting. With combination of stroke 
+and layer offset we can fight this issue without touching original drawing.
+- even easier way to create 2.5d environments.. 
+simply draw on layers and then displace them in one panel 
+instead fiddling with every layer individually
+
+Possible improvements:
+- add offset by material slot
+- add step parameter, to allow displacing groups of N strokes.
+
+{F13129598}
+
+Reviewed By: mendio, antoniov
+
+Differential Revision:
+https://developer.blender.org/D15106
+-------
+)
+New
+Natural Drawing Speed
+mode in
+Build Modifier
+timing
+  property that replay drawings using the recorded speed of the stylus,
+  giving it a more natural feel
+  (
+250eda36b8
+### Commit Summary: GPencil: Build modifier add "natural drawing" time · 250eda36b8 - blender - Blender Projects
+### Commit Details:
+This patch uses the recorded drawing speed to rebuild the strokes. This results in a way more
+natural feel of the animation.
+
+Here's a short summary of existing data used:
+
+- gps->points->time: This is a timestamp in seconds of when the point was created
+  since the creation of the stroke. It's quite often 0 (I added a sanitization routine).
+- gpf->inittime: This is a timestamp in seconds when a stroke was drawn measured
+  since some unknown point in time. I only ever use the difference between two strokes,
+  so the absolute value is not relevant.
+
+Reviewed By: frogstomp, antoniov, mendio
+
+Differential Revision:
+https://developer.blender.org/D16759
+-------
+)
+
+'''''
+
+
+5. Modeling¶
+
+Modeling
+¶
+A new
+Set Attribute
+operator allows basic control over generic
+  attribute values in edit mode
+  (
+6661342dc5
+### Commit Summary: Mesh: Set active attribute values edit mode operator · 6661342dc5 - blender - Blender Projects
+### Commit Details:
+This patch adds a simple operator to set values of the active
+attribute for the selected element. The aim is to give simple control
+over attribute values in edit mode rather than to provide the fastest
+workflow for most cases. Eventually this operator might be less
+important compared to more advanced attribute editing tools, but for
+now, exposing a little bit of functionality is low hanging fruit and
+will help to see the possibilities.
+
+The implementation mostly consists of boilerplate to register the
+necessary property types for the operator and draw their UI.
+Beyond that, we just loop over selected elements and set a value.
+
+Pull Request
+#104426
+-------
+).
+A new
+Flip Quad Tessellation
+operator allows control over the
+  tessellation orientation of quads
+  (
+328772f2
+### Commit Summary: Mesh: Add operator to flip quad tessellation · 328772f2d9 - blender - Blender Projects
+### Commit Details:
+This adds a new operator: bpy.ops.mesh.flip_quad_tessellation()
+
+This operator rotates the internal loops of the selected quads, allowing
+the user to control tessellation without destructively altering the
+mesh.
+
+{F14201995}
+
+This operator can be found in the "Face" menu (Ctrl+F) under "Face
+Data".
+
+{F14201997}
+
+Reviewed By: campbellbarton, dbystedt
+
+Differential Revision:
+https://developer.blender.org/D17056
+-------
+).
+Edit mesh conversion to evaluated meshes has been parallelized and can
+  be over twice as fast depending on the mesh and CPU
+  (
+ebe8f8ce71
+### Commit Summary: BMesh: Parallelize BMesh to evaluated Mesh conversion · ebe8f8ce71 - blender - Blender Projects
+### Commit Details:
+Currently this conversion (which happens when using modifiers in edit
+mode, for example) is completely single threaded. It's harder than some
+other areas to multithread because BMesh elements don't always know
+their indices (and vise versa), and because the dynamic AoS format
+used by BMesh makes some typical solutions not helpful.
+
+This patch proposes to split the operation into two steps. The first
+updates the indices of BMesh elements and builds tables for easy
+iteration later. It also checks if some optional mesh attributes
+should be added. The second uses parallel loops over all elements,
+copying attribute values and building the Mesh topology.
+
+Both steps process different domains in separate threads (though the
+first has to combine faces and loops). Though this isn't proper data
+parallelism, it's quite helpful because each domain doesn't affect the
+others.
+
+**Timings**
+I tested this on a Ryzen 7950x with a 1 million face grid, with no
+extra attributes and then with several color attributes and vertex
+groups.
+
+| File | Before | After |
+| Simple | 101.6 ms | 59.6 ms |
+| More Attributes | 149.2 ms | 65.6 ms |
+
+The optimization scales better with more attributes on the BMesh. The
+speedup isn't as linear as multithreading other operations, indicating
+added overhead. I think this is worth it though, because the user is
+usually actively interacting with a mesh in edit mode.
+
+See the differential revision for more timing information.
+
+Differential Revision:
+https://developer.blender.org/D16249
+-------
+).
+UV Editing
+¶
+Copy/Paste
+¶
+The most anticipated UV feature in this release is
+UV Copy
+and
+UV
+Paste
+.
+For low poly modeling and game assets, you can now select connected
+faces, select from the menu
+"UV > Copy UVs"
+, this will make a copy of
+the UVs in a separate clipboard.
+Next, select different faces that have the same topology. They can be on
+a different mesh, a different UV channel, or even a different .blend
+file. Choose "
+Paste UVs
+", and the UVs will be pasted over.
+(
+721fc9c1c9
+### Commit Summary: UV: implement copy and paste for uv · 721fc9c1c9 - blender - Blender Projects
+### Commit Details:
+Implement a new topology-based copy and paste solution for UVs.
+
+Usage notes:
+
+* Open the UV Editor
+
+* Use the selection tools to select a Quad joined to a Triangle joined to another Quad.
+* From the menu, choose UV > UV Copy
+ * The UV co-ordinates for your quad<=>tri<=>quad are now stored internally
+
+* Use the selection tools to select a different Quad joined to a Triangle joined to a Quad.
+* (Optional) From the menu, choose UV > Split > Selection
+
+* From the menu, choose UV > UV Paste
+ * The UV co-ordinates for the new selection will be moved to match the stored UVs.
+
+Repeat selection / UV Paste steps as many times as desired.
+For performance considerations, see
+https://en.wikipedia.org/wiki/Graph_isomorphism_problem
+In theory, UV Copy and Paste should work with all UV selection modes.
+Please report any problems.
+
+A copy has been made of the Graph Isomorphism code from
+https://github.com/stefanoquer/graphISO
+Copyright (c) 2019 Stefano Quer
+stefano.quer@polito.it
+GPL v3 or later.
+
+Additional integration code Copyright (c) 2022 by Blender Foundation, GPL v2 or later.
+
+Maniphest Tasks: T77911
+Differential Revision:
+https://developer.blender.org/D16278
+-------
+)
+Improvements
+¶
+The
+Constrain to Image Bounds
+feature received fixes for the
+Shear
+Operator
+, and to improve robustness on unusual inputs. With this
+change,
+all
+of the UV operators should now correctly support
+Constrain to Image Bounds
+and it can now be considered feature
+complete.
+(
+3d1594417b
+### Commit Summary: UV: support constrain-to-bounds for uv shear operator · 3d1594417b - blender - Blender Projects
+### Commit Details:
+For uv rotation operator, see rBd527aa4dd53d4.
+-------
+and
+0079460dc7
+### Commit Summary: Fix T102923: replace zero check with epsilons with uv constrain to bounds · 0079460dc7 - blender - Blender Projects
+### Commit Details:
+Small roundoff errors during UV editing can sometimes occur, most likely
+due to so-called "catastrophic cancellation".
+
+Here we set a tolerance around zero when using Constrain-To-Bounds and UV Scaling.
+
+The tolerance is set at one quarter of a texel, on a 65536 x 65536 texture.
+
+TODO: If this fix holds, we should formalize the tolerance into the UV editing
+subsystem, perhaps as a helper function, and investigate where else it needs
+to be applied.
+
+Differential Revision:
+https://developer.blender.org/D16702
+-------
+)
+UV
+Sphere Projection
+and UV
+Cylinder Projection
+now have better
+handling of UVs at the poles. In addition, you can now specify whether
+to "
+Fan
+" or "
+Pinch
+" the UVs. All the projection options are now
+fully supported in all modes.
+(
+280502e630
+### Commit Summary: Fix T103469: improve uv cylinder projection and uv sphere projection · 280502e630 - blender - Blender Projects
+### Commit Details:
+Multiple improvements to UV Cylinder and UV Sphere projection including:
+
+ * New option "Pinch" or "Fan" to improve unwrap of faces at the poles.
+ * Support for "Polar ZY" option on "View On Equator" and "Align To Object"
+ * Better handling of inputs with round-off error.
+ * Improved handling of faces touching the unit square border.
+ * Improved handling of very wide quads spanning the right hand border.
+ * Improved accuracy near to (0, 0).
+ * Code cleanup and simplification.
+
+Differential Revision:
+https://developer.blender.org/D16869
+-------
+)
+Fixes
+¶
+Bring back the missing UV overlay in
+Texture Paint Mode
+.
+  (
+4401c93e45
+### Commit Summary: Fix T100926: Show UV outline in texture paint mode · 4401c93e45 - blender - Blender Projects
+### Commit Details:
+After rB716ea1547989 the UV overlay is no longer displayed in
+the UV Editor. It only appears for the Image Editor.
+
+So restore the previous behavior, displaying the "UV shadow"
+overlay in the UV editor as well.
+
+Reviewed By: Jeroen Bakker, Germano Cavalcante
+
+Maniphest Tasks: T92614, T100926
+
+Differential Revision:
+https://developer.blender.org/D16490
+-------
+)
+Select Similar
+now has support for
+Similar Object
+and
+Similar Winding
+(
+2b4bafeac6
+### Commit Summary: UV: add "similar object" and "similar winding" to uv "select similar" · 2b4bafeac6 - blender - Blender Projects
+### Commit Details:
+Adds new options to UV Face selection in the UV Editor, with UV > Select > Select Similar
+
+In multi object edit mode, "Similar Object" selects faces which have the same object.
+
+"Similar Winding" will select faces which have the same winding, i.e. are they
+facing upwards or downwards.
+
+Resolves: T103975
+Differential Revision:
+https://developer.blender.org/D17125
+-------
+)
+Fix
+UV Unwrap
+for quads with
+Reflex Angles
+.
+  (
+f450d39ada
+### Commit Summary: Fix T84078: improve UV unwrapping for quads with an internal reflex angle · f450d39ada - blender - Blender Projects
+### Commit Details:
+When triangulating meshes, the UV unwrapper was previously using a
+heuristic to split quads into triangles. If one of the internal angles
+is greater than 180degrees, a so-called "reflex angle", the heuristic
+was giving a poor choice of split.
+
+Instead of using a special case for quads, this change routes everything
+through the generic n-gon `BLI_polyfill_beautify` method instead.
+
+Reviewed By: Brecht Van Lommel
+
+Differential Revision:
+https://developer.blender.org/D16505
+-------
+)
+Fix
+UV Unwrap
+broken for n-gons with 3 shared vertices.
+  (
+644afda7eb
+### Commit Summary: Fix T102543: improve uv unwrapping with n-gons and shared vertices · 644afda7eb - blender - Blender Projects
+### Commit Details:
+When n-gons share vertices, their triangulation can be non-manifold,
+even if the original mesh is manifold.
+
+The UV Unwrapper does not currently work with non-manifold meshes.
+
+This workaround attempts to modify the triangulation of n-gons in
+the UV unwrapper to preserve the manifold property.
+
+This change replaces the previous fix for quads, and extends it
+to all n-gons.
+
+See T84078 as motivation for this change.
+
+Differential Revision:
+https://developer.blender.org/D16521
+-------
+)
+
+'''''
+
+
+6. Nodes & Physics¶
+
+Nodes & Physics
+¶
+Geometry Nodes
+¶
+General
+¶
+A new
+Image Info
+node allows retrieving various information about
+  an image
+  (
+efcd587bc2
+### Commit Summary: Geometry Nodes: Image Info Node · efcd587bc2 - blender - Blender Projects
+### Commit Details:
+This commit adds a new "Image Info" node to retrieve various
+information from an image like its width, height, and whether
+it has an alpha channel. It is also possible to retrieve the FPS
+and frame count of video files.
+
+Differential Revision:
+https://developer.blender.org/D15042
+-------
+).
+There is a new
+Image
+input node
+  (
+a3251e66a7
+### Commit Summary: Geometry Nodes: Image Input Node · a3251e66a7 - blender - Blender Projects
+### Commit Details:
+Add a simple node to choose an image data-block.
+
+Ref T102854
+
+Differential Revision:
+https://developer.blender.org/D16644
+-------
+).
+The
+Named Attribute
+input node now has an "Exists" output to tell
+  whether the attribute exists
+  (
+0d3a33e45e
+### Commit Summary: Geometry Nodes: Add "Exists" output to Named Attribute input node · 0d3a33e45e - blender - Blender Projects
+### Commit Details:
+As described in T100004, add an output socket that returns true if the
+attribute accessed by the node was already present in that context.
+
+Initial patch by Edward (
+@edward88
+).
+
+Differential Revision:
+https://developer.blender.org/D16316
+-------
+).
+A new
+Blur Attribute
+nodes allows mixing attribute values of
+  neighboring elements
+  (
+d68c47ff34
+### Commit Summary: Geometry Nodes: new Blur Attribute node · d68c47ff34 - blender - Blender Projects
+### Commit Details:
+The Blur Attribute node mixes values of neighboring elements in meshes and curves.
+
+Currently it supports points, edges and faces on meshes and points on curves.
+In theory, support for face corners could be added, but useful semantics are not
+obvious yet.
+
+The node calculates a weighted average of each element with its neighbors (based
+on curve/mesh topology). The weight of the element itself is always 1, and the weight
+of the neighbor elements is controlled by the weight input socket. In the future,
+more options for how different elements are weight can be added (e.g. smoothing
+groups and selection).
+
+The node can perform multiple blurring iterations to achieve a blurrier result.
+Generally, it is better to do multiple iterations in one node instead of using
+multiple blur nodes because it has better performance in the current implementation.
+
+We use the term "Blur" (instead of "Smooth") because smoothing is generally more
+related to removing roughness from surfaces. When viewing the result of the
+Blur Attribute node in the viewport, it looks like an image is blurred. While the
+node can also be used to smooth surfaces, other/better algorithms exists for that
+purpose (which e.g. don't reduce the volume of the mesh to zero with too many
+iterations).
+
+Differential Revision:
+https://developer.blender.org/D13952
+-------
+).
+The
+Store Named Attribute
+node can now store 2D vector attributes
+  (
+f0dc4d67e5
+### Commit Summary: Geometry Nodes: support storing 2d vector attributes · f0dc4d67e5 - blender - Blender Projects
+### Commit Details:
+This allows choosing the 2d vector type in the Store Named Attribute
+node. Similar to byte-colors, there is not a special socket type for this
+(currently). In geometry nodes itself, vectors are all still 3d.
+-------
+).
+The
+Image Texture
+node has a new mirror extension type
+  (
+a501a2dbff
+### Commit Summary: Images: add mirror extension type · a501a2dbff - blender - Blender Projects
+### Commit Details:
+This adds a new mirror image extension type for shaders and
+geometry nodes (next to the existing repeat, extend and clip
+options).
+
+See D16432 for a more detailed explanation of `wrap_mirror`.
+
+This also adds a new sampler flag `GPU_SAMPLER_MIRROR_REPEAT`.
+It acts as a modifier to `GPU_SAMPLER_REPEAT`, so any `REPEAT`
+flag must be set for the `MIRROR` flag to have an effect.
+
+Differential Revision:
+https://developer.blender.org/D16432
+-------
+).
+Field utility nodes have been renamed
+  (
+4961e5f91d
+### Commit Summary: Geometry Nodes: Rename Interpolate Domain and Field at Index nodes · 4961e5f91d - blender - Blender Projects
+### Commit Details:
+- `Interpolate Domain` -> `Evaluate on Domain`
+- `Field at Index` -> `Evaluate at Index`
+
+These names, discussed in recent geometry nodes submodule meetings,
+describe actions rather than nouns, which is generally how nodes are
+supposed to be named. The names are consistent, which is helpful
+because they're similar conceptually. They also don't require knowledge
+of the field concept, which we generally try to keep out of the UI in
+favor of more beginner-friendly concepts.
+
+We hope to add the ability to search for nodes with multiple
+names for 3.5, so the old names can still have search items.
+-------
+).
+Interpolate Domain
+->
+Evaluate on Domain
+Field at Index
+->
+Evaluate at Index
+The modifier user interface has been improved in various ways
+Exposed properties from node groups no longer have hard min and max
+  values
+  (
+cb92ff7b2d
+### Commit Summary: Geometry Nodes: Only set soft range for modifier properties · cb92ff7b2d - blender - Blender Projects
+### Commit Details:
+Similar to the corresponding properties on node sockets, only adjust
+the soft range. Because group nodes only have soft limits, groups
+should generally be able to accept these inputs anyway. The benefit
+of only using a soft range is that it allows choosing a more user-
+friendly default range while keeping flexibility.
+-------
+).
+Checkboxes are used for exposed boolean sockets
+  (
+2ea47e0def
+### Commit Summary: Geometry Nodes: Use checkbox for exposed boolean sockets · 2ea47e0def - blender - Blender Projects
+### Commit Details:
+This uses the changes from
+ef68a37e5d
+to create IDProperties
+for exposed boolean sockets with a boolean type instead of an integer
+with a [0,1] range. Existing properties and values are converted
+automatically.
+
+For forward compatibility, the properties are switched to the integer
+type for saving. Otherwise older versions crash immediately when opening
+a newer file. The "Use Attribute" IDProperties aren't changed here,
+since that wouldn't have a visible benefit.
+
+Differential Revision:
+https://developer.blender.org/D12816
+-------
+).
+The "Use Attribute" toggles have moved to the right edge of the
+  panel
+  (
+68625431d5
+### Commit Summary: Geometry Nodes: Adjust modifier UI to put field toggles on the right · 68625431d5 - blender - Blender Projects
+### Commit Details:
+This also fixes the layout of boolean properties with the field toggle
+visible. This was discussed in the most recent geometry nodes submodule
+meeting.
+-------
+).
+The technology for checkboxes was finally invented!
+Drag and drop is supported for geometry node group assets in the
+  viewport
+  (
+bfa7f9db0e
+### Commit Summary: Assets: Implement viewport drag and drop for geometry nodes · bfa7f9db0e - blender - Blender Projects
+### Commit Details:
+Currently there's no way to assign a geometry node group from the asset
+browser to an object as a modifier without first appending/linking it
+manually. This patch adds a drag and drop operator that adds a new
+modifier and assigns the dragged tree.
+
+Pull Request
+#104430
+-------
+).
+A new operator "Move to Nodes" creates a new node group wrapping the
+  modifier's group
+  (
+5ca65001ea
+### Commit Summary: Geometry Nodes: Operator to wrap a modifier's node group · 5ca65001ea - blender - Blender Projects
+### Commit Details:
+As described in
+#104171
+, add an operator that creates a new node group
+that contain the current node group and named attribute nodes to deal
+with the outputs. This saves manual work when moving a high-level
+modifier to the node editor for better procedural control.
+
+Pull Request
+#104546
+-------
+).
+Curves
+¶
+New
+Interpolate Curves
+node allows generating child curves between
+  a set of guides
+  (
+85908e9edf
+### Commit Summary: Geometry Nodes: new Interpolate Curves node · 85908e9edf - blender - Blender Projects
+### Commit Details:
+This adds a new `Interpolate Curves` node. It allows generating new curves
+between a set of existing guide curves. This is essential for procedural hair.
+
+Usage:
+- One has to provide a set of guide curves and a set of root positions for
+  the generated curves. New curves are created starting from these root
+  positions. The N closest guide curves are used for the interpolation.
+- An additional up vector can be provided for every guide curve and
+  root position. This is typically a surface normal or nothing. This allows
+  generating child curves that are properly oriented based on the
+  surface orientation.
+- Sometimes a point should only be interpolated using a subset of the
+  guides. This can be achieved using the `Guide Group ID` and
+  `Point Group ID` inputs. The curve generated at a specific point will
+  only take the guides with the same id into account. This allows e.g.
+  for hair parting.
+- The `Max Neighbors` input limits how many guide curves are taken
+  into account for every interpolated curve.
+
+Differential Revision:
+https://developer.blender.org/D16642
+-------
+).
+The
+Trim Curves
+node now has a selection input
+  (
+11f6c65e61
+### Commit Summary: Geometry Nodes: Trim curve node selection input and corrections · 11f6c65e61 - blender - Blender Projects
+### Commit Details:
+Correct trim for cyclical curves mentioned in T101379, splitting the
+curves if the start/endpoint is at the 'loop point'.
+
+Correct implementation based on comments in D14481, request was made to
+use 'foreach_curve_by_type' to computing the point lookups.
+
+Included corrections from D16066 as it may not be a adopted solution.
+
+Exposed selection input by adding it as input to the node.
+Note: This is disabled for 3.4 to avoid making UI changes in Bcon3.
+
+Differential Revision:
+https://developer.blender.org/D16161
+-------
+).
+Making simple procedural changes can be much faster in some cases, and
+  non-topology changing sculpt brushes are slightly faster
+  (
+7f958217ad
+### Commit Summary: Curves: Use shared caches for evaluated data · 7f958217ad - blender - Blender Projects
+### Commit Details:
+Use the `SharedCache` concept introduced in D16204 to share lazily
+calculated evaluated data between original and multiple evaluated
+curves data-blocks. Combined with D14139, this should basically remove
+most costs associated with copying large curves data-blocks (though
+they add slightly higher constant overhead). The caches should
+interact well with undo steps, limiting recalculations on undo/redo.
+
+Options for avoiding the new overhead associated with the shared
+caches are described in T104327 and can be addressed separately.
+
+Simple situations affected by this change are using any of the following data
+on an evaluated curves data-block without first invalidating it:
+- Evaluated offsets (size of evaluated curves)
+- Evaluated positions
+- Evaluated tangents
+- Evaluated normals
+- Evaluated lengths (spline parameter node)
+- Internal Bezier and NURBS caches
+
+In a test with 4m points and 170k curves, using curve normals in a
+procedural setup that didn't change positions procedurally gave 5x
+faster playback speeds. Avoiding recalculating the offsets on every
+update saved about 3 ms for every sculpt update for brushes that don't
+change topology.
+
+Differential Revision:
+https://developer.blender.org/D17134
+-------
+).
+Mesh
+¶
+The new
+Edges to Face Groups
+node finds groups of faces surrounded
+  by selected edges
+  (
+50dfd5f501
+### Commit Summary: Geometry Nodes: Edges to Face Groups Node · 50dfd5f501 - blender - Blender Projects
+### Commit Details:
+Add a new node that groups faces inside of boundary edge regions.
+This is the opposite action as the existing "Face Group Boundaries"
+node. It's also the same as some of the "Initialize Face Sets"
+options in sculpt mode.
+
+Discussion in
+#102962
+has favored "Group" for a name for these
+sockets rather than "Set", so that is used here.
+
+Pull Request
+#104428
+-------
+)
+The mesh primitive nodes now output a UV map (previously that was
+  stored as named attribute with a hard-coded name
+  (
+f879c20f72
+### Commit Summary: Geometry Nodes: output uv map from primitive nodes as anonymous attributes · f879c20f72 - blender - Blender Projects
+### Commit Details:
+This is essentially a left-over from the initial transition to fields where this was
+forgotten. The mesh primitive nodes used to create a named uv map attribute
+with a hard-coded name. The standard way to deal with that in geometry nodes
+now is to output the attribute as a socket instead. The user can then decide
+to store it as a named attribute or not.
+
+The benefits of not always storing the named attribute in the node are:
+* Improved performance and lower memory usage when the uv map is not
+  used.
+* It's more obvious that there actually is a uv map.
+* The hard-coded name was inconsistent.
+
+The versioning code inserts a new Store Named Attribute node that
+stores the uv map immediatly. In many cases, users can probably just
+remove this node without affecting their final result, but we can't
+detect that.
+
+There is one behavior change which is that the stored uv map will be
+a 3d vector instead of a 2d vector which is what the nodes originally created.
+We could store the uv map as 2d vector inthe Store Named Attribute node,
+but that has the problem that older Blender versions don't support this
+and would crash immediately. Users can just change this to 2d vector
+manually if they don't care about forward compatibility.
+
+There is a plan to support 2d vectors more natively in geometry nodes: T92765.
+
+This change breaks forward compatibility in the case when the uv map
+was used.
+
+Differential Revision:
+https://developer.blender.org/D16637
+-------
+).
+The
+Split Edges
+node is over two times faster
+  (
+e83f46ea76
+### Commit Summary: Geometry Nodes: Use Mesh instead of BMesh in split edges node · e83f46ea76 - blender - Blender Projects
+### Commit Details:
+Rewrite the edge split code to operate directly on Mesh instead
+of BMesh. This allows for the use of multi-threading and makes
+the node around 2 times faster. Around 15% of the time is spent
+just on the creation of the topology maps, so these being cached
+on the mesh could cause an even greater speedup. The new node
+gave identical results compared to the BMesh version on all the
+meshes I tested it on (up to permutation of the indices).
+
+Here are some of the results on a few simple test cases:
+(Intel i7-7700HQ (8 cores) @ 2.800GHz , with 50% of edges selected)
+|       | 370x370 UV Sphere | 400x400 Grid | Suzanne 4 subdiv levels |
+| ----- | ----------------- | -------------- | --------------------- |
+| Mesh  | 89ms              | 111ms          | 76ms                  |
+| BMesh | 200ms             | 276ms          | 208ms                 |
+
+Differential Revision:
+https://developer.blender.org/D16399
+-------
+).
+For mesh objects, applying modifier will now give an error message if
+  the geometry it creates doesn't contain a mesh
+  (
+b1494bcea7
+### Commit Summary: Geometry Nodes: Add error message when applying modifier with no mesh · b1494bcea7 - blender - Blender Projects
+### Commit Details:
+If the resulting geometry from applying a geometry nodes modifier
+contains no mesh, give an error message. This gives people something to
+search and makes the behavior more purposeful.
+
+Also remove the `modifyMesh` implementation from the geometry nodes
+modifier, since it isn't necessary anymore. And remove the existing
+"Modifier returned error, skipping apply" message which was cryptic
+and redundant if applying returns an actual error message.
+
+Resolves T103229
+
+Differential Revision:
+https://developer.blender.org/D16782
+-------
+).
+Instances
+¶
+Caching of geometry bounds can make viewport display of many geometry
+  instances 2-3x faster
+  (
+e8f4010611
+### Commit Summary: Geometry: Cache bounds min and max, share between data-blocks · e8f4010611 - blender - Blender Projects
+### Commit Details:
+Bounding box calculation can be a large in some situations, especially
+instancing. This patch caches the min and max of the bounding box in
+runtime data of meshes, point clouds, and curves, implementing part of
+T96968.
+
+Bounds are now calculated lazily-- only after they are tagged dirty.
+Also, cached bounds are also shared when copying geometry data-blocks
+that have equivalent data. When bounds are calculated on an evaluated
+data-block, they are also accessible on the original, and the next
+evaluated ID will also share them. A geometry will stop sharing bounds
+as soon as its positions (or radii) are changed.
+
+Just caching the bounds gave a 2-3x speedup with thousands of mesh
+geometry instances in the viewport. Sharing the bounds can eliminate
+recalculations entirely in cases like copying meshes in geometry nodes
+or the selection paint brush in curves sculpt mode, which causes a
+reevaluation but doesn't change the positions.
+
+**Implementation**
+The sharing is achieved with a `shared_ptr` that points to a cache mutex
+(from D16419) and the cached bounds data. When geometries are copied,
+the bounds are shared by default, and only "un-shared" when the bounds
+are tagged dirty.
+
+Point clouds have a new runtime struct to store this data. Functions
+for tagging the data dirty are improved for added for point clouds
+and improved for curves. A missing tag has also been fixed for mesh
+sculpt mode.
+
+**Future**
+There are further improvements which can be worked on next
+- Apply changes to volume objects and other types where it makes sense
+- Continue cleanup changes described in T96968
+- Apply shared cache design to more expensive data like triangulation
+  or normals
+
+Differential Revision:
+https://developer.blender.org/D16204
+-------
+).
+Node Editor
+¶
+User Interface
+¶
+The context menu has been significantly improved, giving quick access
+  to more features
+  (
+2c096f17a6
+### Commit Summary: UI: Refactor Node Context Menu · 2c096f17a6 - blender - Blender Projects
+### Commit Details:
+The Node Context Menu contains options that are not always available for
+the selected nodes, and misses important entries for accesibility.
+
+This patch covers the following:
+* Add operators to join and remove nodes from frames.
+* Sort and group entries more logically and follow Blender conventions.
+* Add `Insert into Group`
+* Show group actions only on nodes that support it.
+* Move all toggles to a sub-menu called `Show/Hide`.
+* When nothing is selected, show Add menu, links actions, and paste.
+
+Inspired by RightClickSelect proposals and community feedback.
+
+See D16216 for images.
+
+Reviewed By: HooglyBoogly
+
+Differential Revision:
+https://developer.blender.org/D16216
+-------
+).
+Automatically attaching nodes after adding or moving them can be
+  disabled by holding
+Alt
+(
+ae886596a0
+### Commit Summary: Nodes: Allow skipping node attachment after dragging · ae886596a0 - blender - Blender Projects
+### Commit Details:
+This patch allows skipping the automatic insertion of nodes on top of
+links when the transform operator ends. When putting nodes into small
+spaces this often gets in the way and wastes time. Now, when holding
+`alt`, this is turned off.
+
+The header text is also improved to add this shortcut and to remove
+the Dx and Dy values and improve the formatting a bit.
+
+Making this functionality optional might allow us to use it in more
+places in the future, like for the nodes added by link-drag-search.
+
+Differential Revision:
+https://developer.blender.org/D16230
+-------
+).
+For Copy & Paste, nodes are placed at the mouse position rather than
+  their original locations
+  (
+7355d64f2b
+### Commit Summary: Node Editor: Paste nodes on mouse position · 7355d64f2b - blender - Blender Projects
+### Commit Details:
+When pasting nodes with the shortcut or the context menu, place the
+center of the selected nodes at the same position as the mouse cursor.
+This should save time, and is more intuitive because the new nodes are
+actually visible.
+
+Based on a patch by Juanfran Matheu (
+@jfmatheu
+).
+
+Differential Revision:
+https://developer.blender.org/D10787
+-------
+).
+The Geometry Nodes add menu is reorganized to make it easier to
+  explore
+  (
+d4e638baac
+### Commit Summary: User Interface: Re-organization of Geometry Nodes Add Node Menu · d4e638baac - blender - Blender Projects
+### Commit Details:
+The menus are growing too large. This patches move some categories under
+sub-menus, and shuffle some entries around.
+
+We already had sub-categories split by separators. This change now
+goes a step further and embrace 3-level menus.
+
+Inspired by the "Simpler Add Menu" add-on by Quackers (waiting to hear
+back to know Quackers real name).
+
+Inspired by the "Simpler Add Menu" add-on by Alfonso Martinez II.
+
+Differential Revision:
+https://developer.blender.org/D16993
+-------
+,
+789e549dba
+### Commit Summary: Geometry Nodes: Tweak menu location of sample nodes · 789e549dba - blender - Blender Projects
+### Commit Details:
+There was an inconsistency between geometry sample nodes and mesh/curve
+sample nodes, where the latter didn't have a special "Sample" category,
+and we categorized as "Operations", which they were not. Also put the
+sample category between "Read" and "Write" since the verb name is
+more consistent and sampling is an advanced form of reading.
+-------
+).
+Node links can be swapped between sockets by holding
+Alt
+while
+  connecting them
+  (
+89aae4ac82
+### Commit Summary: Node Editor: Controlled node link swapping · 89aae4ac82 - blender - Blender Projects
+### Commit Details:
+Allow to explicitly swap node links by pressing the alt-key while
+reconnecting node links. This replaces the old auto-swapping based on
+matching prefixes in socket names.
+
+The new behavior works as follows:
+
+* By default plugging links into already occupied (single input)
+  sockets will connect the dragged link and remove the existing one.
+* Pressing the alt-key while dragging an existing node link from one
+  socket to another socket that is already connected will swap the
+  links' destinations.
+* Pressing the alt-key while dragging a new node link into an already
+  linked socket will try to reconnect the existing links into another
+  socket of the same type and remove the links, if no matching socket
+  is found on the node. This is similar to the old auto-swapping.
+
+Swapping links from or to multi input sockets is not supported.
+
+This commit also makes the link drag tooltip better visible, when using
+light themes by using the text theme color.
+
+Reviewed By: Hans Goudey, Simon Thommes
+
+Differential Revision:
+https://developer.blender.org/D16244
+-------
+).
+  This replaces the auto-swapping behavior.
+Cloth Simulation
+¶
+Self-collision was optimized with a 25% overall fps gain on some
+  collision-heavy tests
+  (
+0796210c8d
+### Commit Summary: BVH: implement an optimized self-overlap traversal. · 0796210c8d - blender - Blender Projects
+### Commit Details:
+Previously cloth self-collision and other code that wants self-overlap
+data was using an ordinary BVH overlap utility function. This works,
+but is suboptimal because it fails to take advantage of the fact that
+it is comparing two identical trees.
+
+The standard traversal for self-collision essentially devolves into
+enumerating all elements of the tree, and then matching them to the
+tree starting at the root. However, the tree itself naturally partitions
+the space, so overlapping elements are likely to be mostly placed nearby
+in the tree structure as well.
+
+Instead, self-overlap can be computed by recursively computing ordinary
+overlap between siblings within each subtree. This only considers each
+pair of leaves once, and provides significantly better locality.
+It also avoids outputting every overlap pair twice in different order.
+
+Differential Revision:
+https://developer.blender.org/D16915
+-------
+,
+a3ac91da27
+### Commit Summary: Cloth: share self and object collision BVH trees when possible. · a3ac91da27 - blender - Blender Projects
+### Commit Details:
+Both cloth object collision and self collision use a BVH tree
+representing the current cloth shape. The only difference between
+them is the epsilon threshold value.
+
+If these values are the same, it is possible to use the same tree
+for both uses, thus easily reducing the overhead in the case when
+both collision modes are used by the same cloth object.
+
+Differential Revision:
+https://developer.blender.org/D16914
+-------
+,
+e1df731c91
+### Commit Summary: Cloth: precompute barycentric coordinates for collision points. · e1df731c91 - blender - Blender Projects
+### Commit Details:
+Profiling shows that this computation consumes a noticeable amount
+of time, so it is worth moving it to an earlier part of the code
+that is executed less frequently and is multithreaded.
+
+Differential Revision:
+https://developer.blender.org/D16933
+-------
+).
+
+'''''
+
+
+7. Pipeline, Assets & I/O¶
+
+Pipeline, Assets & I/O
+¶
+USD
+¶
+Support for import
+  (
+cdef135f6f
+### Commit Summary: USD import: Support importing USDZ. · cdef135f6f - blender - Blender Projects
+### Commit Details:
+This addressed feature request T99811.
+
+Added the following features to fully support importing USDZ archives:
+
+- Added .usdz to the list of supported extensions.
+- Added new USD import options to copy textures from USDZ archives. The
+textures may be imported as packed data (the default) or to a directory
+on disk.
+- Extended the USD material import logic to handle package-relative texture
+assets paths by invoking the USD asset resolver to copy the textures from
+the USDZ archive to a directory on disk. When importing in Packed mode,
+the textures are first saved to Blender's temporary session directory
+prior to packing.
+
+The new USD import options are
+
+- Import Textures: Behavior when importing textures from a USDZ archive
+- Textures Directory: Path to the directory where imported textures will
+be copied
+- File Name Collision: Behavior when the name of an imported texture file
+conflicts with an existing file
+
+Import Textures menu options:
+
+- None: Don't import textures
+- Packed: Import textures as packed data (the default)
+- Copy: Copy files to Textures Directory
+
+File Name Collision menu options:
+
+- Use Existing: If a file with the same name already exists, use that
+instead of copying (the default)
+- Overwrite: Overwrite existing files
+
+Reviewed by: Bastien
+
+Differential Revision:
+https://developer.blender.org/D17074
+-------
+)
+  and export
+  (
+0c67a90e4f
+### Commit Summary: #99807: USD IO: Add support for exporting to USDZ · 0c67a90e4f - blender - Blender Projects
+### Commit Details:
+This commit adds the default .usdz export capability.
+
+The importer already supports usdz so no change is required other than updating the text in menu to match the updated exporter text.
+
+On export, a .usd/a/c file has to be created first, and then converted to .usdz. A weird change of directory is required because of a quirk with the USD conversion to usdz. If an absolute filepath is passed into the `UsdUtilsCreateNewUsdzPackage` function, the usd files inside the usdz archive will have the same directory structure, i.e. if one tries to create a file at `C:\code\BlenderProjects\file.usdz`, when the usdz file is created, inside it will have the structure `\code\BlenderProjects\file.usdc`.
+
+This is counteracted by setting the current working directory to the temporary session directory where both the usdc and usdz files are created, and just passing the file name to `UsdUtilsCreateNewUsdzPackage` without any filepath. Once the usdz file is created it is moved to the intended directory.
+
+There is a separate `UsdUtilsCreateNewARKitUsdzPackage` capability for exporting usdz for iOS devices that will be implemented in a follow up patch as it will require some more small UI changes.
+
+Co-authored-by: Charles Wardlaw (
+@CharlesWardlaw
+)
+Co-authored-by: Sonny Campbell (
+@SonnyCampbell_Unity
+)
+Co-authored-by: Bastien Montagne (
+@mont29
+)
+
+Pull Request
+#105185
+, based on
+#104556
+.
+
+Pull Request
+#105223
+-------
+)
+  of USDZ (compressed version of USD) was added.
+USD export changes to pass
+usdchecker
+(
+b67b84bd5d
+### Commit Summary: Fix T103984: USD exports pass usdchecker · b67b84bd5d - blender - Blender Projects
+### Commit Details:
+These changes were authored by Michael B Johnson (drwave).
+
+The default Blender USD export currently produces files that trigger
+errors in the usdchecker that ships with USD 22.11.
+
+The changes are:
+
+- Set the defaultPrim if no defaultPrim is set. This sets it to the
+first prim in the hierarchy which matches the behaviour of Pixar's
+referencing (where referencing a USD layer without a defaultPrim will
+pick the first prim) as well as matches the logic in Pixar's Maya USD
+exporter code.
+
+- Applies the MaterialBindingAPI to prims with material binding
+attributes. This is a relatively new requirement for USD as it will
+help for efficiency with upcoming changes to Hydra.
+
+- Removes the preview scope in the USD shader hierarchy, because it
+is no longer valid for shaders to have any non-container ancestors in
+their hierarchy up until the enclosing Material prim.
+
+Reviewed by: Michael Kowalski
+
+Differential Revision:
+https://developer.blender.org/D17041
+-------
+).
+Add scale and bias for exported
+USD Preview Surface
+normal maps
+  (
+c79b55fc05
+### Commit Summary: USD export: add scale and bias for normal maps. · c79b55fc05 - blender - Blender Projects
+### Commit Details:
+Changes authored by Michael B Johnson (drwave).
+
+This addresses the issue in T102911.
+
+Add scale and bias inputs to ensure the normals are
+in tangent space [(-1,-1,-1), (1,1,1)].
+
+This is following the convention as set in the USD Spec
+(
+https://graphics.pixar.com/usd/dev/spec_usdpreviewsurface.html
+).
+
+Differential Revision:
+https://developer.blender.org/D17072
+-------
+).
+Convert USD camera properties to mm from USD units
+  (
+f359a39d11
+### Commit Summary: Fix T100028: Convert USD camera properties to mm from USD units. · f359a39d11 - blender - Blender Projects
+### Commit Details:
+Authored by Sonny Campbell.
+
+Currently when importing a USD file, some of the camera properties are
+ignored, or the units are not converted correctly from USD world units.
+On import we currently set the focal length, but not the camera sensor
+size (horizontal and vertical aperture), so the camera field of view
+is wrong. The sensor size information is in the USD file, but is ignored
+for perspective cameras.
+
+USD uses "tenth of a world unit" scale for some physical camera properties
+like focal length and aperture.
+https://graphics.pixar.com/usd/release/api/class_usd_geom_camera.html#UsdGeom_CameraUnits
+I have added the UsdStage's metersPerUnit parameter to the ImportSettings
+so the camera can do the required conversion on import. This will convert from
+the USD file's world units to millimeters for Blender's camera settings.
+
+Reviewed by: Sybren and makowalski.
+
+Differential Revision:
+https://developer.blender.org/D16019
+-------
+).
+Support importing USD Shapes
+  (
+72a85d976a
+### Commit Summary: USD Import: USD Shapes support · 72a85d976a - blender - Blender Projects
+### Commit Details:
+This commit adds the ability to import USD Shape primitives (Gprims).
+They are imported as Blender Meshes using the USD API to convert, so
+that they appear the same as they would in other applications. USD
+Shapes are important in many workflows, particularly in gaming, where
+they are used for stand-in geometry or for collision primitives.
+
+Pull Request
+#104707
+-------
+).
+Author extents on exported
+UsdGeomMesh
+(
+5040c39d1a
+### Commit Summary: Fix T103354: Author extents on UsdGeomMesh · 5040c39d1a - blender - Blender Projects
+### Commit Details:
+A properly authored USD file will have the extent attribute authored on all prims conforming to UsdGeomBoundable.
+This cached extent information is useful because it allows the 3D range of prims to be quickly understood without reading potentially large arrays of data. Note that because the shape of prims may change over time, extent attributes are always evaluated for a given timecode.
+
+This patch introduces support for authoring extents on meshes and volumes during export to USD.
+
+Because extents are common to multiple kinds of geometries, the main support for authoring extents has been placed in USDAbstractWriter, whose new author_extent method can operate on any prim conforming to pxr::UsdGeomBoundable. The USD library already provides us the code necessary to compute the bounds for a given prim, in pxr::UsdGeomBBoxCache::ComputeLocalBound.
+Note that not all prims that are imageable are boundable, such as transforms and cameras.
+
+For more details on extents, see
+https://graphics.pixar.com/usd/release/api/class_usd_geom_boundable.html#details
+.
+
+Note that when new types of geometries are introduced, such as curves in
+https://developer.blender.org/D16545
+, we will need to update the USD writer for that geometry such that it calls this->author_extent.
+
+Update on Feb 2: This patch has been updated to include a unit test to ensure authored extents are valid. This test requires new test assets that will need to be submitted via svn. The test assets are attached in the d16837_usd_test_assets.zip file. To use, unzip and merge the contents of this zip into the lib/tests/usd folder.
+
+This unit test also addresses
+#104269
+by validating compliance of exported USD via UsdUtils.ComplianceChecker.
+
+Pull Request
+#104676
+-------
+).
+OBJ
+¶
+New OBJ importer got "Split by Objects" and "Split by Groups" import
+  settings, just like the old Python based addon had
+  (
+b59982041
+### Commit Summary: OBJ: add split by objects/groups import options (T103839) · b599820418 - blender - Blender Projects
+### Commit Details:
+The new C++ OBJ importer was missing "split by objects" / "split by
+groups" import settings of the older Python importer.
+Implements T103839.
+
+Added test coverage for all 4 possible combinations of these two
+options.
+-------
+).
+New OBJ importer can now import polylines with more than 2 vertices
+  (
+cfe828b452
+### Commit Summary: OBJ: Support polylines with more than 2 vertices. · cfe828b452 - blender - Blender Projects
+### Commit Details:
+The OBJ spec (page B1-17) allows "l" entries to specify
+polylines with more than 2 vertices, optionally with texture
+coordinates.
+
+Previously, only the first 2 vertices of each polyline
+were read and added as loose edges, failing when texture
+coordinates were present.
+
+This adds support for proper polylines, reading but ignoring
+texture coordinates.
+
+Pull Request
+#104503
+-------
+).
+Removing incorrect edge recalculation made the OBJ exporter up to 1.6x
+  faster
+  (
+455d195d55
+### Commit Summary: OBJ Export: Remove edge recalculation · 455d195d55 - blender - Blender Projects
+### Commit Details:
+The removed function call removes all attributes from mesh edges
+and rebuilds the mesh edge topology. This isn't necessary because
+meshes always have edges in the first place.
+
+Exporting a 4 million face grid, this saved 1.5 seconds out of 4
+seconds total for the whole export.
+
+Tests files have to be updated, since the edge calculation could
+potentially change the order of elements. This is also a fix, since
+previously the exporter would delete all attributes on the evaluated
+mesh edges.
+
+Differential Revision:
+https://developer.blender.org/D16391
+-------
+)
+Assets
+¶
+New "All" asset library
+  (
+35e54b52e6
+### Commit Summary: Assets: "All" asset library · 35e54b52e6 - blender - Blender Projects
+### Commit Details:
+Adds a new built-in asset library that contains all other asset
+libraries visible in the asset library selector menu. This also means
+all their asset catalogs will be displayed as a single merged tree. The
+asset catalogs are not editable, since this would require support for
+writing multiple catalog definition files, which isn't there yet.
+
+Often it's not relevant where an asset comes from. Users just want to be
+able to get an asset quickly, comparable to how people use a search
+engine to browse images or the web itself, instead of first going to a
+dedicated platform. They don't want to bother with first choosing where
+they want the result to come from.
+This especially is needed for the Asset Shelf (T102879) that is being
+developed for the brush assets project (T101895). With this, users will
+have access to all their brushes efficiently from the 3D view, without
+much browsing.
+
+Did an informal review of the asset system bits with Sybren.
+-------
+).
+  Displays contents from all other asset libraries. This asset library
+  is shown in Asset Browsers by default
+  (
+7ba59c8a62
+### Commit Summary: Assets: show all assets by default instead of current file · 7ba59c8a62 - blender - Blender Projects
+### Commit Details:
+The "current file" mode is only useful when creating new assets.
+However, the far more common use case and the one that should require
+fewer steps is to use existing assets.
+
+There is a risk that this causes freezing if the file browser preview
+caching does not work properly. So we'll have to keep an eye on the bug
+tracker to see if this is an issue in practice.
+
+Pull Request
+#104749
+-------
+).
+New "Essentials" asset library
+  (
+b3fb73f325
+### Commit Summary: Assets: bundle Essentials with Blender · b3fb73f325 - blender - Blender Projects
+### Commit Details:
+This patch adds an "Essentials" asset library that is bundled with Blender.
+Also see
+#103620
+. At build time, the `lib/assets/publish` folder is copied
+to `datafiles/assets` in the build directory.
+
+In the UI, the "Essentials" library can be accessed like other custom asset
+libraries with the exception that assets from that library cannot be linked.
+
+The immediate impact of this is that Blender now comes with some geometry
+node groups for procedural hair grooming.
+
+Pull Request
+#104474
+-------
+)
+  containing a number of assets that are now shipped with Blender. It
+  includes a number of hair node groups for use with geometry nodes.
+The user interface for setting up asset libraries in the Preferences
+  has been revamped.
+  (
+0d798ef57c
+### Commit Summary: Assets/UI: Use UI-list for asset library preferences UI · 0d798ef57c - blender - Blender Projects
+### Commit Details:
+The Preferences for asset libraries are becoming more than a simple name
++ path. E.g. there is now an Import Method options, and we previously
+also considered a Relative Paths option (which we may still want to
+add). The previous UI, while consistent with the Auto Run Python Scripts
+UI isn't well suited for less than trivial cases. Using UI lists makes
+the UI more scalable and follows usual list UI patterns more. There is
+also more space for the path button now.
+
+Part of
+#104686
+.
+-------
+)
+A default import method (
+Append
+,
+Append (Reuse Data)
+,
+Link
+) can
+  now be set per asset library in the Preferences.
+  (
+ae84a2956e
+### Commit Summary: Assets: Preference for default import method for an asset library · ae84a2956e - blender - Blender Projects
+### Commit Details:
+The default import method for an asset library can now be determined in
+the Preferences. The Asset Browser has a new "Follow Preferences" option
+for the importing. The essentials asset library still only uses "Append
+(Reuse Data)".
+
+This is part of
+#104686
+, which aims at improving the import method
+selection, especially for the introduction of the new essentials library
+(which doesn't support certain import methods). Further changes are
+coming to improve the UI, see
+#104686
+.
+
+#104688
+-------
+).
+  Asset Browsers follow this setting by default, but there's an option
+  to override it.
+Import Type
+has been renamed to
+Import Method
+.
+  (
+972f58c482
+### Commit Summary: Asset Browser: Rename "Import Type" to "Import Method" · 972f58c482 - blender - Blender Projects
+### Commit Details:
+"Type" sounds like you're selecting a thing, not a behavior. So "Method"
+should be better. Part of 104686.
+-------
+)
+glTF 2.0
+¶
+Find the changelog in the
+Add-ons
+section.
+
+'''''
+
+
+8. Python API¶
+
+Python API
+¶
+Breaking changes
+¶
+BGL Deprecation
+¶
+BGL is a direct wrapper around OpenGL calls. The BGL module is
+deprecated and since Blender 3.4 has been replaced with the
+gpu
+module. From this release it will not work when using the Metal backend.
+Add-ons and scripts that uses the bgl module are warned about the
+deprecation and should use the
+gpu
+module
+in stead.
+Class Registration
+¶
+Registering classes with the names matching existing built-in types now
+raises an error
+(
+52f521dec4
+### Commit Summary: Fix #105063: Registering existing RNA types overwrote built-in types · 52f521dec4 - blender - Blender Projects
+### Commit Details:
+When an RNA type was registered, any existing dynamic types with the
+same name were unregistered. This didn't account for built-in types
+which cannot be unregistered in (most cases) allowing duplicate
+operators for e.g. to be registered with the same name as existing
+built-in operators (asserting with debug builds with GHash duplicates).
+
+In practice the newly registered operator would be called unless
+adding operators caused the GHash to be resized which could cause the
+original operator to be used.
+
+As registered RNA type identifiers are meant to be unique, don't allow
+duplicate names in the first place. Now all dynamically registerable
+RNA types prevent this situation, raising an error when scripts
+attempt to register a type with an identifier matching the name of a
+type that could not be removed.
+-------
+).
+Node Group Sockets
+¶
+Virtual sockets are the extra sockets added to group input and output
+nodes. Previously connecting a link to them would create an input or
+output in the corresponding node group. That feature was meant as a
+UI/UX feature though, and is now implemented differently in Blender and
+doesn't happen automatically. The correct way to add a group input from
+Python is to use
+node_tree.inputs.new(...)
+(
+7026096099
+### Commit Summary: Nodes: Use dynamic declarations for group nodes · 7026096099 - blender - Blender Projects
+### Commit Details:
+Since a year and a half ago we've been switching to a new way to
+represent what sockets a node should have called "declarations"
+that's easier to use, clearer, and more flexible for upcoming
+features like dynamic socket counts or generic type sockets.
+
+All builtin nodes with a static set of sockets have switched, but one
+missing area has been group nodes and group input/output nodes. These
+nodes have **dynamic** declarations which change based on their
+properties or the group they're inside of. This patch addresses that,
+in preparation for using the same dynamic declaration feature for
+simulation nodes.
+
+Generally there shouldn't be user-visible differences, but one benefit
+is that user-created socket descriptions are now visible directly in
+the node editor for group nodes and group input/output nodes.
+
+The commit contains a few changes:
+- Add a node type callback for building dynamic declarations with
+  different arguments
+- Add an `Extend` socket declaration for the "virtual" sockets used
+  for connecting new links
+- A similar `Custom` socket declaration is used for addon-defined socket
+- Simplify the node update loop to use the declaration to build update
+  sockets
+- Replace the "group update" functions with the declaration building
+- Move the node group input/output link creation to link drag operator
+- Make the field status part of group node declarations
+  (not for group input/output nodes though)
+- Some fixes for declarations to make them update and build properly
+
+Differential Revision:
+https://developer.blender.org/D16850
+-------
+).
+Grease Pencil
+¶
+Auto-masking settings were moved from brush to tool settings, for
+details see
+4c182aef7c
+### Commit Summary: GPencil: Make Sculpt Auto-masking Global and not by Brush · 4c182aef7c - blender - Blender Projects
+### Commit Details:
+The auto-masking was working by Brush and this was very
+inconvenient because it was necessary set the options by
+Brush, now the options are global and can be set at once.
+
+Also, the automa-masking now works with `and` logic
+and not with `or` as before. That means that a stroke
+must meet all the conditions of the masking.
+
+Added new Layer and Material options to masking the 
+strokes using the same Layer/Material of the selected stroke.
+Before, only Active Layer and Active Material could be masked.
+
+The options of masking has been moved to the top-bar using
+the same design of Mesh Sculpt masking.
+
+As result of the changes above, the following props changed:
+
+Removed:
+
+`brush.gpencil_settings.use_automasking_strokes`
+`brush.gpencil_settings.use_automasking_layer`
+`brush.gpencil_settings.use_automasking_material`
+
+Added:
+
+`tool_settings.gpencil_sculpt.use_automasking_stroke`
+`tool_settings.gpencil_sculpt.use_automasking_layer_stroke`
+`tool_settings.gpencil_sculpt.use_automasking_material_stroke`
+`tool_settings.gpencil_sculpt.use_automasking_layer_active`
+`tool_settings.gpencil_sculpt.use_automasking_material_active`
+
+
+Reviewed by: Julien Kaspar, Matias Mendiola, Daniel Martinez Lara
+-------
+.
+Motion Tracking
+¶
+The internal storage of the optical center (principal point) has been
+changed in
+7dea18b3aa
+### Commit Summary: Tracking: Store lens principal point in normalized space · 7dea18b3aa - blender - Blender Projects
+### Commit Details:
+This avoids need to do special trickery detecting whether the principal
+point is to be changed when reloading movie clip. This also allows to
+transfer the optical center from high-res footage to possibly its lower
+resolution proxy without manual adjustment.
+
+On a user level the difference is that the principal point is exposed in
+the normalized coordinates: frame center has coordinate of (0, 0), left
+bottom corner of a frame has coordinate of (-1, -1) and the right top
+corner has coordinate of (1, 1).
+
+Another user-visible change is that there is no more operator for setting
+the principal point to center: use backspace on the center sliders will
+reset values to 0 which corresponds to the center.
+
+The code implements versioning in both directions, so it should be
+possible to open file in older Blender versions without loosing
+configuration.
+
+For the Python API there are two ways to access the property:
+- `tracking.camera.principal_point` which is measured in the normalized
+  space.
+- `tracking.camera.principal_point_pixels` to access the pixel-space
+  principal point.
+
+Both properties are not animatable, so there will by no conflict coming.
+
+Differential Revision:
+https://developer.blender.org/D16573
+-------
+to a normalized space.
+The normalized space refers to coordinate
+(0, 0)
+corresponding to
+the frame center,
+(-1, -1)
+the left bottom frame corner,
+(1, 1)
+is the top right frame corner. This notation is available via
+clip.tracking.camera.principal_point
+property.
+For some algorithms it is convenient to operate in the pixel space. For
+those usecases the new
+clip.tracking.camera.principal_point_pixels
+property has been added.
+The old
+clip.tracking.camera.principal
+has been removed to avoid
+ambiguous naming in the API.
+Armature Modifier
+¶
+An old bug where the effect of the Invert Vertex Group toggle of the
+Armature modifier was inverted when Multi-Modifier was active was fixed.
+(
+ea1c31a244
+### Commit Summary: Fix T103074: flipped vertex group meaning in Multi-Modifier Armature. · ea1c31a244 - blender - Blender Projects
+### Commit Details:
+For some reason the Armature modifier in the Multi-Modifier mode
+interpreted the vertex group in a way essentially opposite to the
+regular mode. Moreover, this depended not on the Multi-Modifier
+checkbox, but on whether the mode was actually active.
+
+This fixes the flip and adds versioning code to patch old files.
+One difficulty is that whether the Multi-Modifier flag is valid
+can be different between the viewport and render. The versioning
+code assumes any modifier enabled in either to be active.
+
+This change is not forward compatible, so min version is also bumped.
+
+Differential Revision:
+https://developer.blender.org/D16787
+-------
+)
+Scripts creating complex armature modifier setups need updating to check
+the exact blender version:
+modifier
+.
+use_multi_modifier
+=
+True
+if
+bpy
+.
+app
+.
+version_file
+<
+(
+3
+,
+5
+,
+8
+):
+# Blender bug T103074
+modifier
+.
+invert_vertex_group
+=
+True
+Data Transer
+¶
+For
+bpy.ops.object.datalayout_transfer operator
+,
+VCOL
+has been
+split into
+COLOR_VERTEX
+and
+COLOR_CORNER
+for different color
+domains
+(
+93d84e87b2
+### Commit Summary: Fix T103400: Transfer Mesh Data Layout broken for color attributes · 93d84e87b2 - blender - Blender Projects
+### Commit Details:
+This was the case when using the operator outside of the modifiers panel.
+
+Caused by {rBeae36be372a6}.
+
+In above commit, `DT_layer_items` shared both `DT_TYPE_MPROPCOL_LOOP` |
+`DT_TYPE_MLOOPCOL_LOOP` in a single EnumPropertyItem value "Colors".
+This is a bit unusual, but probably allowed.
+As a consequence, checks for specific datatypes would fail when selecting
+such EnumPropertyItem:
+- `DT_DATATYPE_IS_MULTILAYERS` (uses `ELEM` to check distinct entries --
+would return false)
+- `BKE_object_data_transfer_dttype_to_srcdst_index` (would return
+`DT_MULTILAYER_INDEX_INVALID`)
+
+These places have now been corrected to take these "special" values into
+account.
+
+Another issue was that multiple EnumPropertyItems with the same value
+could be created in dt_add_vcol_layers() if attributes of the same
+domain, but different color types are in play (could lead to crashes)
+and that has also been corrected.
+
+Also: above commit did not give the choice of transfering color
+attributes from the vertex domain (only face corner attributes could be
+chosen), this has now been added. DT_layer_vert_items (used from the
+modifier) already had this included so this was only an issue when using
+the operator outside of the modifiers panel.
+
+Since we now feature two domains, the single "VCOL" in the enum has been
+split into "COLOR_VERTEX" and "COLOR_CORNER". This will break existing
+scripts calling bpy.ops.object.datalayout_transfer and will be marked as
+a breaking change in the release notes.
+
+NOTE: there is another bug here when attributes of the same domain, but
+different color types are in play and you want to transfer just a single
+specific layer (but that is for a separate commit)
+
+Maniphest Tasks: T103400
+
+Differential Revision:
+https://developer.blender.org/D16935
+-------
+,
+eae36be372
+### Commit Summary: Refactor: Unify vertex and sculpt colors into new · eae36be372 - blender - Blender Projects
+### Commit Details:
+color attribute system.
+
+This commit removes sculpt colors from experimental
+status and unifies it with vertex colors. It
+introduces the concept of "color attributes", which
+are any attributes that represents colors.  Color
+attributes can be represented with byte or floating-point
+numbers and can be stored in either vertices or
+face corners.
+
+Color attributes share a common namespace
+(so you can no longer have a floating-point
+sculpt color attribute and a byte vertex color
+attribute with the same name).
+
+Note: this commit does not include vertex paint mode,
+      which is a separate patch, see:
+https://developer.blender.org/D14179
+Differential Revision:
+https://developer.blender.org/D12587
+Ref D12587
+-------
+).
+Internal Mesh Format
+¶
+The mesh data structure refactoring from earlier releases has continued
+in 3.5. See the similar section in the
+3.4 release
+notes
+.
+The active and default (for render) color attributes are now stored as
+  strings, making it easier to change them and access the correct
+  attributes
+  (
+6514bb05ea
+### Commit Summary: Mesh: Store active & default color attributes with strings · 6514bb05ea - blender - Blender Projects
+### Commit Details:
+Attributes are unifying around a name-based API, and we would like to
+be able to move away from CustomData in the future. This patch moves
+the identification of active and fallback (render) color attributes
+to strings on the mesh from flags on CustomDataLayer. This also
+removes some ugliness used to retrieve these attributes and maintain
+the active status.
+
+The design is described more here: T98366
+
+The patch keeps forward compatibility working until 4.0 with
+the same method as the mesh struct of array refactors (T95965).
+
+The strings are allowed to not correspond to an attribute, to allow
+setting the active/default attribute independently of actually filling
+its data. When applying a modifier, if the strings don't match an
+attribute, they will be removed.
+
+The realize instances / join node and join operator take the names from
+the first / active input mesh. While other heuristics may be helpful
+(and could be a future improvement), just using the first is simple
+and predictable.
+
+Differential Revision:
+https://developer.blender.org/D15169
+-------
+).
+Mesh vertex positions are now accessible via the builtin
+position
+attribute
+  (
+1af62cb3bf
+### Commit Summary: Mesh: Move positions to a generic attribute · 1af62cb3bf - blender - Blender Projects
+### Commit Details:
+**Changes**
+As described in T93602, this patch removes all use of the `MVert`
+struct, replacing it with a generic named attribute with the name
+`"position"`, consistent with other geometry types.
+
+Variable names have been changed from `verts` to `positions`, to align
+with the attribute name and the more generic design (positions are not
+vertices, they are just an attribute stored on the point domain).
+
+This change is made possible by previous commits that moved all other
+data out of `MVert` to runtime data or other generic attributes. What
+remains is mostly a simple type change. Though, the type still shows up
+859 times, so the patch is quite large.
+
+One compromise is that now `CD_MASK_BAREMESH` now contains
+`CD_PROP_FLOAT3`. With the general move towards generic attributes
+over custom data types, we are removing use of these type masks anyway.
+
+**Benefits**
+The most obvious benefit is reduced memory usage and the benefits
+that brings in memory-bound situations. `float3` is only 3 bytes, in
+comparison to `MVert` which was 4. When there are millions of vertices
+this starts to matter more.
+
+The other benefits come from using a more generic type. Instead of
+writing algorithms specifically for `MVert`, code can just use arrays
+of vectors. This will allow eliminating many temporary arrays or
+wrappers used to extract positions.
+
+Many possible improvements aren't implemented in this patch, though
+I did switch simplify or remove the process of creating temporary
+position arrays in a few places.
+
+The design clarity that "positions are just another attribute" brings
+allows removing explicit copying of vertices in some procedural
+operations-- they are just processed like most other attributes.
+
+**Performance**
+This touches so many areas that it's hard to benchmark exhaustively,
+but I observed some areas as examples.
+* The mesh line node with 4 million count was 1.5x (8ms to 12ms) faster.
+* The Spring splash screen went from ~4.3 to ~4.5 fps.
+* The subdivision surface modifier/node was slightly faster
+RNA access through Python may be slightly slower, since now we need
+a name lookup instead of just a custom data type lookup for each index.
+
+**Future Improvements**
+* Remove uses of "vert_coords" functions:
+  * `BKE_mesh_vert_coords_alloc`
+  * `BKE_mesh_vert_coords_get`
+  * `BKE_mesh_vert_coords_apply{_with_mat4}`
+* Remove more hidden copying of positions
+* General simplification now possible in many areas
+* Convert more code to C++ to use `float3` instead of `float[3]`
+  * Currently `reinterpret_cast` is used for those C-API functions
+
+Differential Revision:
+https://developer.blender.org/D15982
+-------
+).
+UV layers are now stored as generic 2D vector attributes on the face
+  corner domain
+  (
+6c774feba2
+### Commit Summary: Mesh: Move UV layers to generic attributes · 6c774feba2 - blender - Blender Projects
+### Commit Details:
+Currently the `MLoopUV` struct stores UV coordinates and flags related
+to editing UV maps in the UV editor. This patch changes the coordinates
+to use the generic 2D vector type, and moves the flags into three
+separate boolean attributes. This follows the design in T95965, with
+the ultimate intention of simplifying code and improving performance.
+
+Importantly, the change allows exporters and renderers to use UVs
+"touched" by geometry nodes, which only creates generic attributes.
+It also allows geometry nodes to create "proper" UV maps from scratch,
+though only with the Store Named Attribute node for now.
+
+The new design considers any 2D vector attribute on the corner domain
+to be a UV map. In the future, they might be distinguished from regular
+2D vectors with attribute metadata, which may be helpful because they
+are often interpolated differently.
+
+Most of the code changes deal with passing around UV BMesh custom data
+offsets and tracking the boolean "sublayers". The boolean layers are
+use the following prefixes for attribute names: vert selection: `.vs.`,
+edge selection: `.es.`, pinning: `.pn.`. Currently these are short to
+avoid using up the maximum length of attribute names. To accommodate
+for these 4 extra characters, the name length limit is enlarged to 68
+bytes, while the maximum user settable name length is still 64 bytes.
+
+Unfortunately Python/RNA API access to the UV flag data becomes slower.
+Accessing the boolean layers directly is be better for performance in
+general.
+
+Like the other mesh SoA refactors, backward and forward compatibility
+aren't affected, and won't be changed until 4.0. We pay for that by
+making mesh reading and writing more expensive with conversions.
+
+Resolves T85962
+
+Differential Revision:
+https://developer.blender.org/D14365
+-------
+)
+The
+MeshUVLoop
+Python type is deprecated and will be removed in
+  4.0. Its
+data
+collection member is also deprecated, replaced with
+  separate collection members named
+uv
+,
+vertex_selection
+,
+edge_selection
+, and
+pin
+. Accessing the
+data
+member is
+  emulated for backwards compatibility for now, but the emulation comes
+  with a performance penalty
+  (
+a82c12ae32
+### Commit Summary: Add collection properties to MeshUVLoopLayer to access UV and the associated bool attributes (Python API). · a82c12ae32 - blender - Blender Projects
+### Commit Details:
+This adds 4 collection properties to MeshUVLoopLayer to eventually replace the (MeshUVLoop) .data property.
+The added properties are:
+
+.uv
+.vertex_selection
+.edge_selection
+.pin
+
+The direct access to the separate arrays is much more efficient than the access via MeshUVLoop.
+
+Differential Revision:
+https://developer.blender.org/D16998
+-------
+).
+The sharp edge property is now stored as a generic attribute,
+  accessible with the
+sharp_edge
+name
+  (
+dd9e1eded0
+### Commit Summary: Mesh: Move sharp edge flag to generic attribute · dd9e1eded0 - blender - Blender Projects
+### Commit Details:
+Move the `ME_SHARP` flag for mesh edges to a generic boolean
+attribute. This will help allow changing mesh edges to just a pair
+of integers, giving performance improvements. In the future it could
+also give benefits for normal calculation, which could more easily
+check if all or no edges are marked sharp, which is helpful considering
+the plans in T93551.
+
+The attribute is generally only allocated when it's necessary. When
+leaving edit mode, it will only be created if an edge is marked sharp.
+The data can be edited with geometry nodes just like a regular edge
+domain boolean attribute.
+
+The attribute is named `sharp_edge`, aiming to reflect the similar
+`select_edge` naming and to allow a future `sharp_face` name in
+a separate commit.
+
+Ref T95966
+
+Differential Revision:
+https://developer.blender.org/D16921
+-------
+).
+Loose edge status is stored separately internally
+  (
+1ea169d90e
+### Commit Summary: Mesh: Move loose edge flag to a separate cache · 1ea169d90e - blender - Blender Projects
+### Commit Details:
+As part of T95966, this patch moves loose edge information out of the
+flag on each edge and into a new lazily calculated cache in mesh
+runtime data. The number of loose edges is also cached, so further
+processing can be skipped completely when there are no loose edges.
+
+Previously the `ME_LOOSEEDGE` flag was updated on a "best effort"
+basis. In order to be sure that it was correct, you had to be sure
+to call `BKE_mesh_calc_edges_loose` first. Now the loose edge tag
+is always correct. It also doesn't have to be calculated eagerly
+in various places like the screw modifier where the complexity
+wasn't worth the theoretical performance benefit.
+
+The patch also adds a function to eagerly set the number of loose
+edges to zero to avoid building the cache. This is used by various
+primitive nodes, with the goal of improving drawing performance.
+This results in a few ms shaved off extracting draw data for some
+large meshes in my tests.
+
+In the Python API, `MeshEdge.is_loose` is no longer editable.
+No built-in addons set the value anyway. The upside is that
+addons can be sure the data is correct based on the mesh.
+
+**Tests**
+There is one test failure in the Python OBJ exporter: `export_obj_cube`
+that happens because of existing incorrect versioning. Opening the
+file in master, all the edges were set to "loose", which is fixed
+by this patch.
+
+Differential Revision:
+https://developer.blender.org/D16504
+-------
+).
+The
+MeshEdge.is_loose
+property is no longer editable.
+Loose edge status can be recalculated with
+Mesh.update(calc_edges_loose=True)
+Data access is generally faster than before when accessed with the
+  attribute API (i.e.
+mesh.attributes["sharp_edge"]
+), but slightly
+  slower than before when accessed with the old properties.
+Bundled Libraries
+¶
+Python bindings for the following libraries are now bundled with
+Blender, and available to use by add-ons.
+USD
+OpenVDB
+OpenImageIO
+OpenColorIO
+MaterialX
+Other Changes
+¶
+The users site-packages are now available by default without having to
+  use
+--python-use-system-env
+(
+72c012ab4a
+### Commit Summary: Python: enable user site-packages without --python-use-system-env · 72c012ab4a - blender - Blender Projects
+### Commit Details:
+User site-packages were disabled unless `--python-use-system-env`
+argument was given. This was done to prevent Blender's Python
+unintentionally using modules that happened to be installed locally,
+however it meant so pip installing modules from Blender would fail to
+load those modules (for some users).
+
+Enable user site-packages since it's needed for installing additional
+packages via pip, see code-comments for details.
+
+Resolves T104000.
+-------
+)
+New
+ModifierData.execution_time
+property that can be used for
+  profiling and optimization. It's not exposed in the UI yet
+  (
+8adebaeb7c
+### Commit Summary: Modifiers: measure execution time and provide Python access · 8adebaeb7c - blender - Blender Projects
+### Commit Details:
+The goal is to give technical artists the ability to optimize modifier usage
+and/or geometry node groups for performance. In the long term, it
+would be useful if Blender could provide its own UI to display profiling
+information to users. However, right now, there are too many open
+design questions making it infeasible to tackle this in the short term.
+
+This commit uses a simpler approach: Instead of adding new ui for
+profiling data, it exposes the execution-time of modifiers in the Python
+API. This allows technical artists to access the information and to build
+their own UI to display the relevant information. In the long term this
+will hopefully also help us to integrate a native ui for this in Blender
+by observing how users use this information.
+
+Note: The execution time of a modifier highly depends on what other
+things the CPU is doing at the same time. For example, in many more
+complex files, many objects and therefore modifiers are evaluated at
+the same time by multiple threads which makes the measurement
+much less reliable. For best results, make sure that only one object
+is evaluated at a time (e.g. by changing it in isolation) and that no
+other process on the system keeps the CPU busy.
+
+As shown below, the execution time has to be accessed on the
+evaluated object, not the original object.
+
+```lang=python
+import bpy
+depsgraph = bpy.context.view_layer.depsgraph
+ob = bpy.context.active_object
+ob_eval = ob.evaluated_get(depsgraph)
+modifier_eval = ob_eval.modifiers[0]
+print(modifier_eval.execution_time, "s")
+```
+
+Differential Revision:
+https://developer.blender.org/D17185
+-------
+).
+New
+object.modifiers.move()
+method for reordering modifiers
+  without using operators.
+  (
+f7dd7d5454
+### Commit Summary: Python API: add a method for reordering modifiers. · f7dd7d5454 - blender - Blender Projects
+### Commit Details:
+Add an `object.modifiers.move()` method, similar to the one
+for constraints and some other collections. Currently reordering
+modifiers requires using operators, which depend on context.
+
+The implementation is straightforward, except for the need to
+make the severity of errors reported by the underlying editor
+code into a parameter, so that the new Python API function
+reports any problems as Python exceptions, and refactoring
+the code to allow aborting a blocked move before making any
+changes. I also turn the negative index condition from an assert
+into an error.
+
+Differential Revision:
+https://developer.blender.org/D16966
+-------
+)
+The active catalog of Asset Browsers can be changed via
+bpy.types.FileAssetSelectParams.catalog_id
+, it's no longer
+  read-only.
+  (
+80249ce6e4
+### Commit Summary: Asset Browser: Allow changing active catalog from Python · 80249ce6e4 - blender - Blender Projects
+### Commit Details:
+The active catalog ID (UUID) was a read only property. From a studio I
+got the request to make this editable, so their pipeline tooling can
+make certain assets visible.
+
+Differential Revision:
+https://developer.blender.org/D16356
+Reviewed by: Sybren Stüvel
+-------
+)
+Custom node tree now have a default name set to
+NodeTree.bl_label
+.
+  (
+59ce7bf
+### Commit Summary: Nodes: better default name for custom node tree datablocks · 59ce7bf5a9 - blender - Blender Projects
+### Commit Details:
+Use NodeTree.bl_label instead of "NodeTree" for more descriptive name.
+
+Implemented by Iliya Katueshenock.
+
+Differential Revision:
+https://developer.blender.org/D16856
+-------
+)
+
+'''''
+
+
+9. Cycles¶
+
+Cycles
+¶
+Light Sampling
+¶
+Cycles now uses a light tree to more effectively sample scenes with many
+lights. This can significantly reduce noise, at the cost of a somewhat
+longer render time per sample.
+Light tree sampling is enabled by default in new scenes. It can be
+  disabled in the Sampling > Lights panel.
+If the light tree yields different render results, the most likely
+  cause is light clamping. Clamping is a biased method that depends on
+  the sampling strategy. Generally if the light tree works well, there
+  will be less clamping and the render will be closer to the unbiased
+  result.
+The light tree works best in scenes with physically correct lighting,
+  that is no custom falloff or ray visibility tricks. These may
+  interfere with heuristics used in the light tree.
+Materials with emission now have a new Emission Sampling setting,
+  replacing the previous Multiple Importance Sample toggle. Auto is the
+  new default, and uses a heuristic to estimate the emitted light
+  intensity to determine of the mesh should be considered as a light for
+  sampling. For single sided emitters or closed meshes, setting this to
+  Front faces only can reduce noise with the light tree.
+The light tree is currently disabled for AMD GPUs on Windows, Linux and
+macOS. We hope to resolve this in the next release.
+No Light Tree
+Light Tree (equal render time)
+Scenes CC-BY 4.0 Amazon Lumberyard and CC-BY 4.0 NVIDIA.
+Open Shading Language
+¶
+OSL can now be used with OptiX on the GPU, in addition to existing
+support with CPU rendering.
+There are some limitations currently, in particular for image texture,
+AO and bevel nodes.
+See the
+OSL documentation
+### Commit Summary: Open Shading Language — Blender Manual
+### Commit Details:
+No details found
+-------
+for details.
+Apple Metal
+¶
+GPU rendering performance on Apple devices was improved, without various
+incremental changes and tunings.
+The big change is kernel specialization for shaders. This works
+transparently: rendering starts quickly with a generic shader and
+optimized shaders are compiled in the background and used when ready.
+This optimization can be configured in the preferences.
+Changes
+¶
+Improved adaptive sampling for overexposed scenes, reducing render
+  time by taking into account absolute light intensity.
+  (
+857bb1b
+### Commit Summary: Cycles: improve adaptive sampling for overexposed scenes · 857bb1b5ec - blender - Blender Projects
+### Commit Details:
+Render time is reduced for overexposed scenes, by taking into account absolute
+light intensity for adaptive sampling.
+
+This can negatively affect some scenes where compositing or color management
+are used to make the scene much darker or lighter. For best results adjust the
+Film > Exposure setting to bring the intensity into a good range, and then do
+further compositing and color management on top of that. Note that this setting
+is different than color management exposure.
+
+Previously Cycles' adaptive sampling used sqrt(I) to normalize noise level to
+conform to a viewer's eye sensitivity. It is great for darker regions of the
+image, but also requests too much samples in bright regions, sometimes several
+times more than needed. Highlights can tolerate more noise because in most
+examples it is still less noticeable then the noise in darker areas in the same
+render.
+
+Differential Revision:
+https://developer.blender.org/D16392
+-------
+)
+This can negatively affect some scenes where compositing or color
+  management are used to make the scene much darker or lighter. For best
+  results adjust the Film > Exposure setting to bring the intensity
+  into a good range, and then do further compositing and color
+  management on top of that. Note that this setting is not the same as
+  Color Management > Exposure.
+Spot lights support for non-uniform object scale.
+  (
+b454416
+### Commit Summary: Cycles: add non-uniform scaling to spot light size · b454416927 - blender - Blender Projects
+### Commit Details:
+Cycles ignores the size of spot lights, therefore the illuminated area doesn't match the gizmo. This patch resolves this discrepancy.
+| Before (Cycles) | After (Cycles) | Eevee
+|{F14200605}|{F14200595}|{F14200600}|
+This is done by scaling the ray direction by the size of the cone. The implementation of `spot_light_attenuation()` in `spot.h` matches `spot_attenuation()` in `lights_lib.glsl`.
+**Test file**:
+{F14200728}
+
+Differential Revision:
+https://developer.blender.org/D17129
+-------
+)
+Area lights with ellipse shape and spread have much reduced noise.
+  (
+53ef52f
+### Commit Summary: Cycles: improve sampling of ellipse area light with spread · 53ef52f165 - blender - Blender Projects
+### Commit Details:
+**Problem**:
+Area lights in Cycles have spread angle, in which case some part of the area light might be invisible to a shading point. The current implementation samples the whole area light, resulting some samples invisible and thus simply discarded. A technique is applied on rectangular light to sample a subset of the area light that is potentially visible (rB3f24cfb9582e1c826406301d37808df7ca6aa64c), however, ellipse (including disk) area lights remained untreated. The purpose of this patch is to apply a techniques to ellipse area light.
+**Related Task**:
+T87053
+**Results**:
+These are renderings before and after the patch:
+|16spp|Disk light|Ellipse light|Square light (for reference, no changes)
+|Before|{F13996789}|{F13996788}|{F13996822}
+|After|{F13996759}|{F13996787}|{F13996852}
+**Explanation**:
+The visible region on an area light is found by drawing a cone from the shading point to the plane where the area light lies, with the aperture of the cone being the light spread.
+{F13990078,height=200}
+Ideally, we would like to draw samples only from the intersection of the area light and the projection of the cone onto the plane (forming a circle). However, the shape of the intersection is often irregular and thus hard to sample from directly.
+{F13990104,height=200}
+Instead, the current implementation draws samples from the bounding rectangle of the intersection. In this case, we still end up with some invalid samples outside of the circle, but already much less than sampling the original area light, and the bounding rectangle is easy to sample from.
+{F13990125}
+The above technique is only applied to rectangle area lights, ellipse area light still suffers from poor sampling. We could apply a similar technique to ellipse area lights, that is, find the
+smallest regular shape (rectangle, circle, or ellipse) that covers the intersection (or maybe not the smallest but easy to compute).
+For disk area light, we consider the relative position of both circles. Denoting `dist` as the distance between the centre of two circles, and `r1`, `r2` their radii. If `dist > r1 + r2`, the area light is completely invisible, we directly return `false`. If `dist < abs(r1 - r2)`, the smaller circle lies inside the larger one, and we sample whichever circle is smaller. Otherwise, the two circles intersect, we compute the bounding rectangle of the intersection, in which case `axis_u`, `len_u`, `axis_v`, `len_v` needs to be computed anew. Depending on the distance between the two circles, `len_v` is either the diameter of the smaller circle or the length of the common chord.
+|{F13990211,height=195}|{F13990225,height=195}|{F13990274,height=195}|{F13990210,height=195}
+|`dist > r1 + r2`|`dist < abs(r1 - r2)`|`dist^2 < abs(r1^2 - r2^2)`|`dist^2 > abs(r1^2 - r2^2)`
+For ellipse area light, it's hard to find the smallest bounding shape of the intersection, therefore, we compute the bounding rectangle of the ellipse itself, then treat it as a rectangle light.
+|{F13990386,height=195}|{F13990385,height=195}|{F13990387,height=195}
+We also check the areas of the bounding rectangle of the intersection, the ellipse (disk) light, and the spread circle, then draw samples from the smallest shape of the three. For ellipse light, this also detects where one shape lies inside the other. I am not sure if we should add this measure to rectangle area light and sample from the spread circle when it has smaller area, as we seem to have a better sampling technique for rectangular (uniformly sample the solid angle). Maybe we could add [area-preserving parameterization for spherical
+ellipse](
+https://arxiv.org/pdf/1805.09048.pdf
+) in the future.
+**Limitation**:
+At some point we switch from sampling the ellipse to sampling the rectangle, depending on the area of the both, and there seems to be a visible line (with |slope| =1) on the final rendering
+which demonstrate at which point we switch between the two methods. We could see that the new sampling method clearly has lower variance near the boundaries, but close to that visible line,
+the rectangle sampling method seems to have larger variance. I could not spot any bug in the implementation, and I am not sure if this happens because different sampling patterns for ellipse and rectangle are used.
+|Before (256spp)|After (256spp)
+|{F13996995}|{F13996998}
+
+Differential Revision:
+https://developer.blender.org/D16694
+-------
+)
+Fix Anisotropic BSDF with Beckmann roughness using isotropic sampling
+  (
+eb657633ed
+### Commit Summary: Fix anisotropic Beckmann using isotropic sampling · eb657633ed - blender - Blender Projects
+### Commit Details:
+No details found
+-------
+)
+Anisotropic Beckmann before fix
+Anisotropic Beckmann after fix
+Anisotropic GGX for reference
+The shadow render pass was removed, as its design was incompatible
+  with the light tree. In many case shadow catcher passes can be used
+  instead.
+  (
+0731d78d
+### Commit Summary: Cycles: remove shadow pass · 0731d78d00 - blender - Blender Projects
+### Commit Details:
+This was not working well in non-trivial scenes before the light tree, and now
+it is even harder to make it work well with the light tree. It would average the
+with equal weight for every light object regardless of intensity or distance, and
+be quite noisy due to not working with multiple importance sampling.
+
+We may restore this if were enough good use cases for the previous implementation,
+but let's wait and see what the feedback is.
+
+Some uses cases for this have been replaced by the shadow catcher passes, which
+did not exist when this was added.
+
+Ref T77889
+-------
+)
+The Diffuse and Glossy Color passes now account for the color of
+  additional closures (e.g. the Principled BSDF's metallic and sheen
+  components), ensuring that the contribution is split into a color
+  component (in the Color pass) and a color-independent light component
+  (in the Direct/Indirect passes) as expected
+  (
+73000c792d
+### Commit Summary: Cycles: Reorganize Fresnel handling in Microfacet closures · 73000c792d - blender - Blender Projects
+### Commit Details:
+This is both a cleanup and a preparation for the Principled v2 changes.
+Notable changes:
+- Clearcoat weight is now folded into the closure weight, there's no reason
+  to track this separately.
+- There's a general-purpose helper for computing a Closure's albedo, which is
+  currently used by the denoising albedo and diffuse/gloss/transmission color
+  passes.
+- The d/g/t color passes didn't account for closure albedo before, this means
+  that e.g. metallic shaders with Principled v2 now have their color texture
+  included in the glossy color pass. Also fixes T104041 (sheen albedo).
+- Instead of precomputing and storing the albedo during shader setup, compute
+  it when needed. This is technically redundant since we still need to compute
+  it on shader setup to adjust the sample weight, but the operation is cheap
+  enough that freeing up the storage seems worth it.
+- Future changes (Principled v2) are easier to integrate since the Fresnel
+  handling isn't all over the place anymore.
+- Fresnel handling in the Multiscattering GGX code is still ugly, but since
+  removing that entirely is the next step, putting effort into cleaning it up
+  doesn't seem worth it.
+- Apart from the d/g/t color passes, no changes to render results are expected.
+
+Differential Revision:
+https://developer.blender.org/D17101
+-------
+)
+
+'''''
+
+
+10. Sculpt, Paint, Texture¶
+
+Sculpt, Paint, Texture
+¶
+New Features
+¶
+Support for
+Vector Displacement Map
+(VDM) brushes for the Draw
+  brush
+  (
+39f63c8c08
+### Commit Summary: Sculpting: Vector displacement for the sculpting draw brush · 39f63c8c08 - blender - Blender Projects
+### Commit Details:
+Sculpt: Added vector displacement for the sculpting draw brush (area plane mapping only for now)
+
+Vector displacement maps (VDM) provide a way to create complex displacements that can have overhangs in one brush dab.
+This is unlike standard displacement with height maps that only displace in the normal direction.
+Forms like ears, curled horns, etc can be created in one click if VMDs are used.
+There is a checkbox on the draw brush in the texture settings "Vector Displacement" that enables/disables this feature.
+
+Technical description: The RGB channels of a texture in a brush stroke are read and interpreted as individual vectors, that are used to offset vertices.
+As of now, this is only working for the draw brush using the area plane mapping. Symmetry and radial symmetry are working.
+
+A few things to consider when making VD-Maps:
+* UVs need to stay intact for the bake mesh (e.g. voxel remeshing can't be used to create VD Meshes)
+* When exporting a VD Map it should be in the file format OpenEXR (for positive and negative floating point values).
+* Export resolution can be 512x512 or lower (EXR files can get very large, but VDM brushes don't need a high resolution)
+
+And when using them:
+* Inside Blender clamping needs to be unchecked on the texture
+* The brush falloff should be set to constant (or nearly constant)
+
+This patch was inspired by this [right-click-select proposal](
+https://blender.community/c/rightclickselect/WqWx/
+) Thanks for the post!
+
+(Moved [this patch](
+https://archive.blender.org/developer/D17080
+) to here.)
+
+Co-authored-by: Robin Hohnsbeen
+Pull Request
+#104481
+-------
+)
+Added
+Extrude Mode
+for Trim tools. See manual for
+Box
+  Trim
+### Commit Summary: Box Trim — Blender Manual
+### Commit Details:
+No details found
+-------
+,
+Lasso
+  Trim
+### Commit Summary: Lasso Trim — Blender Manual
+### Commit Details:
+No details found
+-------
+.
+  (
+88e9826529
+### Commit Summary: Sculpt: Fix T102889: Sculpt trim tool extrudes in perspective · 88e9826529 - blender - Blender Projects
+### Commit Details:
+Added an extrude mode enum to the trim operators to
+control extrusion: "project" and "fixed."  "Fixed" just
+extrudes along a fixed normal and is the new default.
+-------
+)
+User Manual
+¶
+Visit the user manual at
+blender.org/manual
+### Commit Summary: General — Blender Manual
+### Commit Details:
+No details found
+-------
+The user manual got a major rewrite of many pages.
+  (
+rBM9824
+)
+Individual tool pages were rewritten and restructured.
+  (
+rBM9839
+)
+Additions and rewrites for Editing pages
+  (
+rBM9885
+)
+This adds:
+A multi-page Introduction section to sculpting
+User oriented sorting and more visual examples
+Fixing various out of date, missing or false information
+A new page for Expand to explain many use cases
+Shortcut Changes
+¶
+The shortcuts
+Shift R
+and
+Shift D
+to define density in sculpt
+  mode have been remapped to
+R
+(
+3e90390918
+### Commit Summary: Sculpt: Resolve `Shift R` shortcut conflicts · 3e90390918 - blender - Blender Projects
+### Commit Details:
+Based on T99607:
+- Existing Angle Control shortcuts are removed
+- Voxel, Dyntopo and Hair resolution shortcuts are remapped to `R`
+
+Since voxel remeshing is not compatible with dyntopo, each can use the shortcut `R` for the remeshing resolution without causing a conflict.
+The shortcut `R` is not currently used for anything important.
+The angle control menu is commonly not used.
+And sculpt mode is only coincidentally inheriting the rotate operator shortcut on `R` because nothing else is mapped to the key.
+
+Reviewed By: Julien Kaspar and Hans Goudey and Joseph Eagar
+Differential Revision:
+https://developer.blender.org/D16511
+Ref D16511
+-------
+)
+This change was done to prevent shortcut conflicts with Redo. Based on
+community feedback, not only this improves consistency across Blender,
+but the benefits of being able to redo certain operations outweigh the
+muscle memory adjustment.
+This change affects the Voxel Remesher, Dynamic Topology and the Hair
+Density brush.
+
+'''''
+
+
+11. User Interface¶
+
+User Interface
+¶
+General
+¶
+The icon preview shown in the material slots and material search menu
+  will no longer be rendered for linked in materials. This would cause
+  slowdowns and UI freezes every time the file is reloaded, since the
+  preview is never stored in files.
+  (
+571f373155
+### Commit Summary: UI: Don't render missing linked material previews, avoids UI freezing · 571f373155 - blender - Blender Projects
+### Commit Details:
+Opening the material selector after reloading files could cause long UI
+freezes, because some linked in materials don't have the preview stored
+in the source file. So Blender would keep rerendering it after every
+file load, which may involve compiling OpenGL shaders, which again
+freezes the UI typically. This was reported as quite an issue for the
+Heist Production by the Blender Studio.
+
+Don't render these missing material previews from linked data-blocks
+anymore.
+
+Differential Revision:
+https://developer.blender.org/D16538
+Reviewed by: Brecht Van Lommel, Jeroen Bakker
+-------
+)
+More menus align their item labels when some items include an icon and
+  some don't
+  (
+58752ad93c
+### Commit Summary: UI: Ensure menus with icons align all menu item labels · 58752ad93c - blender - Blender Projects
+### Commit Details:
+Usually in Blender, we try to align the labels of items within a menu,
+if necessary by adding a blank icon for padding. This wasn't done for
+menus generated from enum properties (RNA or custom property enums). Now
+we do it whenever there is at least one item with an icon.
+-------
+).
+Font previews now differentiate better between Korean, Japanese,
+  Simplified & Traditional Chinese
+  (
+485ab42075
+### Commit Summary: BLF: Improved CJK Font Preview Differentiation · 485ab42075 - blender - Blender Projects
+### Commit Details:
+Use font's OS/2 table code page range bits to help differentiate
+between Korean, Japanese, Simplified & Traditional Chinese fonts.
+
+See D16484 for details.
+
+Differential Revision:
+https://developer.blender.org/D16484
+Reviewed by Brecht Van Lommel
+-------
+)
+Viewport
+¶
+Cancelling viewport orbit/pan/zoom & dolly is now supported (by
+  pressing RMB), this allows orbiting out of camera or orthographic
+  views temporarily.
+  (
+0b85d6a030
+### Commit Summary: 3D View: support canceling viewport operations · 0b85d6a030 - blender - Blender Projects
+### Commit Details:
+Support Esc / RMB to cancel dolly, move, rotate & zoom.
+Previously only roll could be canceled.
+
+This can be useful to temporary orbit away from the camera or an
+orthographic view without having to manually set it back.
+-------
+)
+macOS
+¶
+User notifications for finishing renders and compiling shaders were
+  removed.
+  (
+3590e263e0
+### Commit Summary: macOS: Remove user notifications. · 3590e263e0 - blender - Blender Projects
+### Commit Details:
+User notifications in Blender were always annoying and therefore by default turned off.
+- When tweaking compositor/material tree a notification was shown.
+- When rendering an animation for each frame a notification was shown.
+
+The reason for this was that it was automatically shown when a background job was
+finished and Blender wasn't the top most application.
+
+In stead of migrating user notification to UserNotification.framework it was decided
+to remove it for now. If in the future notifications should be added back we should
+start with a design to figure out where notifications makes sense.
+
+Reviewed By: sergey, brecht
+
+Maniphest Tasks: T103757
+
+Differential Revision:
+https://developer.blender.org/D16955
+-------
+)
+
+'''''
+
+
+12. VFX & Video¶
+
+VFX & Video
+¶
+Optical Center in motion tracking
+¶
+The internal storage of the optical center has been changed in the
+7dea18b3aa
+### Commit Summary: Tracking: Store lens principal point in normalized space · 7dea18b3aa - blender - Blender Projects
+### Commit Details:
+This avoids need to do special trickery detecting whether the principal
+point is to be changed when reloading movie clip. This also allows to
+transfer the optical center from high-res footage to possibly its lower
+resolution proxy without manual adjustment.
+
+On a user level the difference is that the principal point is exposed in
+the normalized coordinates: frame center has coordinate of (0, 0), left
+bottom corner of a frame has coordinate of (-1, -1) and the right top
+corner has coordinate of (1, 1).
+
+Another user-visible change is that there is no more operator for setting
+the principal point to center: use backspace on the center sliders will
+reset values to 0 which corresponds to the center.
+
+The code implements versioning in both directions, so it should be
+possible to open file in older Blender versions without loosing
+configuration.
+
+For the Python API there are two ways to access the property:
+- `tracking.camera.principal_point` which is measured in the normalized
+  space.
+- `tracking.camera.principal_point_pixels` to access the pixel-space
+  principal point.
+
+Both properties are not animatable, so there will by no conflict coming.
+
+Differential Revision:
+https://developer.blender.org/D16573
+-------
+.
+The change allows to change the underlying movie clip resolution (for
+example, when going from 4K footage to manual 2K proxy) without loosing
+the non-frame-centered optical center. This effectively fixes an issue
+when changing the media file would reset the optical center to the frame
+center.
+On a user interface the optical center is now refered in a normalized
+space: coordinate
+(0, 0)
+corresponding to the frame center,
+(-1, -1)
+the left bottom frame corner,
+(1, 1)
+is the top right frame
+corner. Another change in the interface is the removed
+Set Principal to Center
+button.
+Such dedicated button is not needed anymore since
+backspace on the optical center properties will do just that.
+Sequencer
+¶
+Sequence transform has a new filtering mode "Nearest (3x3)". This mode
+  will use "Nearest" filtering when working in the sequencer, but during
+  rendering it will perform a 3x3 sub-sampling, improving the quality of
+  the final image.
+Copy drivers when strips are duplicated or pasted
+4e9c6929c1
+### Commit Summary: VSE: Handle drivers when duplicating strips · 4e9c6929c1 - blender - Blender Projects
+### Commit Details:
+Most operations where strips are duplicated use `SEQ_animation` API,
+which handles keyframe animation. Now drivers are handled as well.
+
+When group of strips is duplicated and driver references other strip,
+it will still reference original strip. However, this is much better,
+than previous behavior, when strip duplication results in "transfer" of
+driver from original strip to duplicated one.
+
+Fixes T104141
+-------
+.
+Added "Update Scene Strip Frame Range" operator
+90e9406866
+### Commit Summary: VSE: Add Update scene frame range operator · 90e9406866 - blender - Blender Projects
+### Commit Details:
+This operator updates scene strip internal length to reflect target
+scene length. Previously scene strip had to be deleted and added from
+scratch. Scene strip length in timeline will not be changed.
+-------
+.
+
+'''''
+
+
+13. Add-ons¶
+
+Add-ons
+¶
+Rigify
+¶
+Ported the ability to generate Action Constraint layers from Cloud Rig
+  (
+D16336
+,
+dddf346f1a
+).
+Storypencil
+¶
+UI Refactor: New Mode selector and settings for more discoverability
+  of the add-on two main modes (Switch and New Window).
+In Switch Mode the audio file in the video sequencer is copied
+  temporarily to the source scene allowing to keep audio in sync. This
+  can be disabled in the Storypencil settings panel.
+IN/OUT strip range markers ar now showed in Switch Mode.
+TAB key can be used now to edit the strip scene under the timeline
+  cursor.
+Bugs Fixed.
+  (
+6fcd157f24
+)
+Sun Position
+¶
+Add Show Surface and Show Analemmas options. These are useful to
+  visualize the trajectory of the Sun in the sky during the year, for
+  each hour of the day.
+  (
+29a67357a0
+)
+glTF 2.0
+¶
+Importer
+¶
+Custom primitive attributes are now imported as attributes
+  (
+4f8ccce4a5
+)
+Better uri management
+  (
+fc8bd7d6d4
+)
+Exporter
+¶
+Add an export identifier, usefull for glTF exporter called by another
+  addon
+  (
+665a82e171
+)
+Fix regression on Vertex Color export (face corner domain)
+  (
+d18a07f514
+)
+Fix when custom shader node has no type
+  (
+23661bdd40
+)
+Various fixed in shader node tree export
+  (
+5a774a6dad
+)
+Add option to choose jpeg quality
+  (
+bcc7923888
+)
+Manage future deprecation in numpy
+  (
+a131db64b9
+)
+Export custom attribute only when start with underscore, to avoid
+  exporing built-in attributes
+  (
+d5732014b1
+)
+Fix division by 0 when trans+spec
+  (
+2207539e32
+)
+Better uri management
+  (
+fc8bd7d6d4
+)
+For glTF separated mode, use tab as indent (save space)
+  (
+07157fbb8f
+)
+Better parent check, when bone parent is still set, but user moved to
+  "OBJECT" parent type, without resetting bone parent
+  (
+bddbd5ed5f
+)
+Update file filter in UI when user change the export mode
+  (
+*.glb
+/
+*.gltf
+)
+  (
+38890b51d3
+)
+Fix check for node tree
+  (
+0554223a84
+)
+Round normals to avoid vertex split
+  (
+48b114c178
+)
+Fix variable name collision that leads to crash
+  (
+c6c45a843e
+)
+Fix error after reloading scripts
+  (
+599f2c4fda
+)
+Manage new mirror texture option
+  (
+69beaa0e43
+)
+Fix object parented to bone TRS
+  (
+d31fa71a6b
+)
+Fix typo in tangent morph export
+  (
+afed066115
+)
+Add hook to change attribute
+  (
+d936a948e8
+)
+Contrib repository
+¶
+Contrib add-ons are now already excluded in beta, to better
+  communicate that releases aren't shipping with them. Also improve the
+  UI to only show the relevant categories for releases.
+  (
+e8c7866608
+### Commit Summary: Add-ons: Exclude contrib for beta, rc and release builds. · e8c7866608 - blender - Blender Projects
+### Commit Details:
+* Make it clearer that contrib isn't shipped with releases, by already excluding it in beta.
+* Improve the UI by hiding the "Testing" enum item in these case.
+
+Differential Revision:
+https://developer.blender.org/D16729
+-------
+)
+
+'''''
+

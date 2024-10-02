@@ -1,0 +1,4177 @@
+This work is licensed under the GNU General Public License v3.0 or later (GPL).
+For more information, see https://www.gnu.org/licenses/gpl-3.0.html.
+
+
+What's new in Blender 3.4
+
+'''''
+
+Blender 3.4 Table Of Contents
+
+Section 1. Animation & Rigging¶
+Section 2. Core¶
+Section 3. EEVEE¶
+Section 4. Grease Pencil¶
+Section 5. Modeling¶
+Section 6. Geometry Nodes¶
+Section 7. Pipeline, Assets & I/O¶
+Section 8. Platforms
+Section 9. Python API & Text Editor¶
+Section 10. Cycles¶
+Section 11. Sculpt, Paint, Texture¶
+Section 12. User Interface¶
+Section 13. Add-ons¶
+
+'''''
+
+1. Animation & Rigging¶
+
+Animation & Rigging
+¶
+Redo Panel
+¶
+The NLA, Dopesheet, and Timeline editors now have a Redo panel
+  (
+1f828a5a06
+### Commit Summary: Animation: Add redo panel to Dopesheet and NLA · 1f828a5a06 - blender - Blender Projects
+### Commit Details:
+Add the Redo panel to the dopesheet & NLA editors. This also implicitly
+adds it to the timeline editor, since it's a kind of action editor
+internally.
+
+This feature is needed for changing advanced properties of animation
+operators, such as select grouped (see D14811). But it can also be
+useful for existing operators, like precise keyframe position tweaking.
+
+Changes are basically the same as in D6286 (which added the redo panel
+for Graph Editor).
+
+Some operators have internal properties that should be hidden. A full
+list can be found in T98195. These will be fixed in a follow-up patch.
+
+Reviewed By: sybren
+
+Differential Revision:
+https://developer.blender.org/D14960
+-------
+,
+3132d2751e
+### Commit Summary: Animation: Fix operator properties for redo panel · 3132d2751e - blender - Blender Projects
+### Commit Details:
+After the redo panel is added to animation editors in D14960, many
+operators have now been adjusted to appear and function correctly.
+
+A full list of changes is tracked in T98195.
+
+This patch only includes actual usability fixes. It does not do any
+changes for the user's convenience, like adding other helpful properties
+to operators. This can be done in a follow-up patch.
+
+Reviewed By: sybren
+
+Maniphest Tasks: T98195
+
+Differential Revision:
+https://developer.blender.org/D14977
+-------
+).
+  Some properties shown in these redo panels may be superfluous (like
+  having a Z-axis when moving keys around); this is a known limitation.
+NLA
+¶
+Draw track background based on strip's extrapolation type
+  (
+2310daed3a
+### Commit Summary: NLA: draw track bg based on strip's extrapolation type · 2310daed3a - blender - Blender Projects
+### Commit Details:
+In the NLA, draw the track background based on the strip's extrapolation
+setting. Previously, this had no visual indicator; "Hold", "Hold
+Forward", and "Nothing"  were visually indistinguishable. Now "Nothing"
+actually shows nothing, "Hold Forward" shows a dimly colored background
+from the strip to its right, and "Hold" shows that in both directions.
+
+Reviewed By: RiggingDojo, sybren
+
+Maniphest Tasks: T97572
+
+Differential Revision:
+https://developer.blender.org/D14836
+-------
+).
+Adding an action clip now fails immediately if no NLA track is
+  selected
+  (
+ddfce277e0
+### Commit Summary: NLA: actionclip_add now fails on invoke if no NLA track is selected · ddfce277e0 - blender - Blender Projects
+### Commit Details:
+This makes the NLA_OT_actionclip_add operation (Shift+A while mousing
+over the NLA strips area) fail on invocation if no tracks are active.
+
+This stops the annoyance of using the Shift+A menu to select an action
+to add, but only getting the error after you select an action.
+
+Differential Revision:
+https://developer.blender.org/D15737
+-------
+).
+  Previously this only failed after you selected a specific action to
+  add.
+Removed the "Edited Action" tab for selected Action strips in the NLA
+  editor
+  (
+b6ebd5591c
+### Commit Summary: NLA: Remove Edited Action tab from NLA panel · b6ebd5591c - blender - Blender Projects
+### Commit Details:
+Removes the "Edited Action" tab for selected Action strips in the NLA
+editor. It is still available in the Action editor, where it is actually
+suitable/usable. Having it in the NLA got in the way of the actual NLA
+strip properties.
+
+Reviewed By: sybren, RiggingDojo
+
+Differential Revision:
+https://developer.blender.org/D14964
+-------
+).
+  It is still available in the Action editor, where it is actually
+  suitable/usable. Having it in the NLA got in the way of the actual NLA
+  strip properties. These are now available immediately by default.
+Pushing down an action to a new NLA track now automatically names that
+  track after the Action
+  (
+78fe6d7ab1
+### Commit Summary: NLA: Push down Action names the Track after the Action · 78fe6d7ab1 - blender - Blender Projects
+### Commit Details:
+When pushing down an Action to a new NLA track, the track is now named
+after the Action.
+-------
+).
+Driver Mute
+¶
+The driver editor and the "Edit Driver" popover now have a checkbox that
+can mute the driver
+(
+c592bff047
+### Commit Summary: Animation: Expose "mute" for drivers in their properties UI · c592bff047 - blender - Blender Projects
+### Commit Details:
+In the driver editor and the "edit driver" popover, add a checkbox that
+can mute the driver. This is the same functionality as the checkbox in
+the driver editor's channel list, but then exposed in a different place
+in the UI.
+
+This is for convenience, such that a driver can now be muted by
+right-clicking on the driven property, choosing "Edit Driver", then
+muting it there. The same checkbox was added to the regular driver
+editor's header for consistency.
+
+Reviewed By: Severin
+
+Maniphest Tasks: T101592
+
+Differential Revision:
+https://developer.blender.org/D16173
+-------
+).
+This is the same functionality as the checkbox in the driver editor's
+channel list, but then exposed in a different place in the UI. This is
+for convenience, such that a driver can now be muted by right-clicking
+on the driven property, choosing "Edit Driver", then muting it there.
+The same checkbox was added to the regular driver editor's header for
+consistency.
+Editor
+Driver pop-over
+
+'''''
+
+
+2. Core¶
+
+Core
+¶
+Overriding Resource Directories
+¶
+It is now possible to override all
+USER
+and
+SYSTEM
+paths using
+environment variables:
+BLENDER_USER_RESOURCES
+(accessed via
+bpy.utils.resource_path('USER')
+).
+BLENDER_SYSTEM_RESOURCES
+(accessed via
+bpy.utils.resource_path('SYSTEM')
+).
+Previously, sub-directories could be overridden via environment
+variables such as
+BLENDER_USER_CONFIG
+and
+BLENDER_SYSTEM_PYTHON
+(see the
+--help
+message for a full list). However there was no way
+to override the top level directories which scripts could access via
+bpy.utils.resource_path
+. Now the top-level directories can be
+overridden so the default USER or SYSTEM resource paths aren't used by
+accident
+(
+bf4926b30c
+### Commit Summary: Support environment variables to override USER & SYSTEM resource paths · bf4926b30c - blender - Blender Projects
+### Commit Details:
+Even though individual USER/SYSTEM paths could be set using environment variables,
+it wasn't possible to override the USER or SYSTEM paths.
+
+This meant the result of `bpy.utils.resource_path('USER')` &
+`bpy.utils.resource_path('SYSTEM')` could still be used by scripts,
+making the Blender session potentially the default USER directory
+(even when `BLENDER_USER_CONFIG`, `BLENDER_USER_SCRIPTS` &
+`BLENDER_USER_DATAFILES` all point elsewhere).
+
+Resolve by adding environment variables:
+
+- BLENDER_USER_RESOURCES
+- BLENDER_SYSTEM_RESOURCES
+
+These will be used for `bpy.utils.resource_path('USER')` &
+`bpy.utils.resource_path('SYSTEM')`, as well as a basis for user &
+system directories, unless those environment variables are
+set (`BLENDER_USER_*` or `BLENDER_SYSTEM_*`).
+
+Resolves issue raised by T101389.
+
+Example usage & output:
+
+{P3225}
+
+Reviewed By: brecht
+
+Ref D16111
+-------
+).
+Fonts
+¶
+New stack of fonts for improved language and symbol coverage
+  (
+e9bd6abde3
+### Commit Summary: BLF: New Font Stack for Better Language Coverage · e9bd6abde3 - blender - Blender Projects
+### Commit Details:
+Replace our existing two fonts with a stack of new fonts to increase
+and improve language coverage and to add many new symbols and icons.
+Covers glyphs of top 44 languages - 1.5 billion more potential users.
+
+See D10887 for lots of details.
+
+Differential Revision:
+https://developer.blender.org/D10887
+Reviewed by Brecht Van Lommel
+-------
+).
+FreeType caching to allow more simultaneous fonts with less resources
+  and increased performance.
+  (
+d39abb74a0
+### Commit Summary: BLF: FreeType Optional Caching · d39abb74a0 - blender - Blender Projects
+### Commit Details:
+Implementation of the FreeType 2 cache subsystem, which limits the
+number of concurrently-opened FT_Face and FT_Size objects, as well as
+caching information like character maps to speed up glyph id lookups.
+This time with the option of opening FontBLFs that are not cached.
+
+See D15686 for more details.
+
+Differential Revision:
+https://developer.blender.org/D15686
+Reviewed by Brecht Van Lommel
+-------
+)
+Avoid loading fonts that are not actually used
+  (
+c0845abd89
+### Commit Summary: BLF: Fonts with FT_Face Optional · c0845abd89 - blender - Blender Projects
+### Commit Details:
+Allow FontBLFs to exist with NULL FT_Face, added only when actually
+needed. Speeds up startup and unused fonts are not loaded.
+
+See D15258 for more details.
+
+Differential Revision:
+https://developer.blender.org/D15258
+Reviewed by Brecht Van Lommel
+-------
+).
+Font sizing now always assumes 72 DPI, simplifying code. DPI argument
+  to blf.size() is now optional and deprecated.
+  (
+cd1631b17d
+### Commit Summary: BLF: Refactor of DPI · cd1631b17d - blender - Blender Projects
+### Commit Details:
+Correction of U.dpi to hold actual monitor DPI. Simplify font sizing by
+omitting DPI as API argument, always using 72 internally.
+
+See D15961 for more details.
+
+Differential Revision:
+https://developer.blender.org/D15961
+Reviewed by Campbell Barton
+-------
+)
+Gamma correction for text output for improved anti-aliasing. Result is
+  also
+slightly
+fuller and brighter.
+  (
+d772e11b5a
+### Commit Summary: BLF: Gamma Correction · d772e11b5a - blender - Blender Projects
+### Commit Details:
+Gamma correction for glyph coverage values.
+
+See D13376 for details and examples.
+
+Differential Revision:
+https://developer.blender.org/D13376
+Reviewed by Julian Eisel
+-------
+)
+Performance
+¶
+Create preview thumbnails of WebP images a little quicker while using
+  much less RAM.
+  (
+8851790dd7
+### Commit Summary: IMBUF: Improved Thumbnailing of WebP Images · 8851790dd7 - blender - Blender Projects
+### Commit Details:
+Thumbnail WebP images quicker while using much less RAM.
+
+See D15908 for more details.
+
+Differential Revision:
+https://developer.blender.org/D15908
+Reviewed by Brecht Van Lommel
+-------
+)
+View layer sync operations are now postponed until the sync results
+  are needed. This greatly speeds up scripts that create many objects in
+  a single operation
+  (
+68589a31eb
+### Commit Summary: ViewLayer: Lazy sync of scene data. · 68589a31eb - blender - Blender Projects
+### Commit Details:
+When a change happens which invalidates view layers the syncing will be postponed until the first usage.
+This will improve importing or adding many objects in a single operation/script.
+
+`BKE_view_layer_need_resync_tag` is used to tag the view layer to be out of sync. Before accessing
+`BKE_view_layer_active_base_get`, `BKE_view_layer_active_object_get`, `BKE_view_layer_active_collection`
+or `BKE_view_layer_object_bases` the caller should call `BKE_view_layer_synced_ensure`.
+
+Having two functions ensures that partial syncing could be added as smaller patches in the future. Tagging a
+view layer out of sync could be replaced with a partial sync. Eventually the number of full resyncs could be
+reduced. After all tagging has been replaced with partial syncs the ensure_sync could be phased out.
+
+This patch has been added to discuss the details and consequences of the current approach. For clarity
+the call to BKE_view_layer_ensure_sync is placed close to the getters.
+In the future this could be placed in more strategical places to reduce the number of calls or improve
+performance. Finding those strategical places isn't that clear. When multiple operations are grouped
+in a single script you might want to always check for resync.
+
+Some areas found that can be improved. This list isn't complete.
+These areas aren't addressed by this patch as these changes would be hard to detect to the reviewer.
+The idea is to add changes to these areas as a separate patch. It might be that the initial commit would reduce
+performance compared to master, but will be fixed by the additional patches.
+
+**Object duplication**
+During object duplication the syncing is temporarily disabled. With this patch this isn't useful as when disabled
+the view_layer is accessed to locate bases. This can be improved by first locating the source bases, then duplicate
+and sync and locate the new bases. Will be solved in a separate patch for clarity reasons ({D15886}).
+
+**Object add**
+`BKE_object_add` not only adds a new object, but also selects and activates the new base. This requires the
+view_layer to be resynced. Some callers reverse the selection and activation (See `get_new_constraint_target`).
+We should make the selection and activation optional. This would make it possible to add multiple objects
+without having to resync per object.
+
+**Postpone Activate Base**
+Setting the basact is done in many locations. They follow a rule as after an action find the base and set
+the basact. Finding the base could require a resync. The idea is to store in the view_layer the object which
+base will be set in the basact during the next sync, reducing the times resyncing needs to happen.
+
+Reviewed By: mont29
+
+Maniphest Tasks: T73411
+
+Differential Revision:
+https://developer.blender.org/D15885
+-------
+).
+Depsgraph: Optimize evaluation of dependencies of disabled modifiers
+  (
+f12f7800c2
+### Commit Summary: Depsgraph: Optimize evaluation of dependencies of disabled modifiers · f12f7800c2 - blender - Blender Projects
+### Commit Details:
+Solves long-standing issue when dependencies of disabled modifiers are
+evaluated.
+
+Simple test case: no drivers or animation. Manually enabling modifier
+is expected to bring FPS up, enabling modifier will bring FPS (sine
+evaluation can not be avoided)
+
+F13336690
+
+More complex test case: modifier visibility is driven by an animated
+property. In am ideal world FPS during property being zero is fast
+and when property is 1 the FPS is low.
+
+F13336691.
+
+Differential Revision:
+https://developer.blender.org/D15625
+-------
+)
+Others
+¶
+Metaball objects are now evaluated as meshes. Render engines now only
+  need to process the corresponding evaluated mesh object and can skip
+  the evaluated metaball object.
+  (
+eaa87101cd
+### Commit Summary: Metaball: Evaluate metaball objects as mesh components · eaa87101cd - blender - Blender Projects
+### Commit Details:
+With the ultimate goal of simplifying drawing and evaluation,
+this patch makes the following changes and removes code:
+- Use `Mesh` instead of `DispList` for evaluated basis metaballs.
+- Remove all `DispList` drawing code, which is now unused.
+- Simplify code that converts evaluated metaballs to meshes.
+- Store the evaluated mesh in the evaluated geometry set.
+
+This has the following indirect benefits:
+- Evaluated meshes from metaball objects can be used in geometry nodes.
+- Renderers can ignore evaluated metaball objects completely
+- Cycles rendering no longer has to convert to mesh from `DispList`.
+- We get closer to removing `DispList` completely.
+- Optimizations to mesh rendering will also apply to metaball objects.
+
+The vertex normals on the evaluated mesh are technically invalid;
+the regular calculation wouldn't reproduce them. Metaball objects
+don't support modifiers though, so it shouldn't be a problem.
+Eventually we can support per-vertex custom normals (T93551).
+
+Differential Revision:
+https://developer.blender.org/D14593
+-------
+).
+Support extracting frames from WebM videos that dynamically change
+  resolution.
+  (
+d5554cdc7c
+### Commit Summary: Fix T100741: Update FFMPEG Dimensions · d5554cdc7c - blender - Blender Projects
+### Commit Details:
+Update the animation's dimensions within ffmpeg_fetchibuf in case it
+has changed because of dynamic resolution (possible with WebM).
+
+Differential Revision:
+https://developer.blender.org/D15842
+Reviewed by Richard Antalik
+-------
+).
+Video rendering: Support FFmpeg AV1 codec encoding.
+  (
+59a0b49c10
+### Commit Summary: Video rendering: FFMpeg AV1 codec encoding support · 59a0b49c10 - blender - Blender Projects
+### Commit Details:
+Previously, the Blender video renderer did not have support for
+encoding video to AV1 (not to be confused with the container AVI).
+The proposed solution is to leverage the existing FFMpeg renderer
+to encode to AV1.
+
+Note that avcodec_find_encoder(AV_CODEC_ID_AV1) usually returns
+"libaom-av1" which is the "reference implementation" for AV1 encoding
+(the default for FFMpeg, and is slow). "libsvtav1" is faster and
+preferred so there is extra handling when fetching the AV1 codec for
+encoding such that "libsvtav1" is used when possible.
+
+This commit should only affect the options available for video
+rendering, which includes the additional AV1 codec to choose from, and
+setting "-crf".
+
+Also note that the current release of FFMpeg for ArchLinux does not
+support "-crf" for "libsvtav1", but the equivalent option "-qp" is
+supported and used as a fallback when "libsvtav1" is used (as
+mentioned here:
+https://trac.ffmpeg.org/wiki/Encode/AV1#SVT-AV1
+).
+(Actually, both "-crf" and "-qp" is specified with the same value in
+the code. When a release of FFMpeg obtains support for "-crf" for
+"libsvtav1" is released, the code shouldn't be needed to change.)
+
+The usage of the AV1 codec should be very similar to the usage of the
+H264 codec, but is limited to the "mp4" and "mkv" containers.
+
+This patch pertains to the "VFX & Video" module, as its main purpose
+is to supplement the Video Sequencer tool with the additional AV1
+codec for encoded video output.
+
+Differential Revision:
+https://developer.blender.org/D14920
+Reviewed By: sergey , ISS, zeddb
+-------
+).
+libOverride: RNA API: Add option to make all overrides editable in
+override_hierarchy_create
+(
+a67b33acd0
+### Commit Summary: libOverride: RNA API: Add option to make all overrides editable in `override_hierarchy_create`. · a67b33acd0 - blender - Blender Projects
+### Commit Details:
+Request from Paul Golter (
+@paulgolter
+).
+-------
+).
+Support for the Wayland graphics system is now enabled for Linux
+  (
+f9ab2214ae
+### Commit Summary: Linux: enable WAYLAND by default · f9ab2214ae - blender - Blender Projects
+### Commit Details:
+Enable the following CMake options:
+
+- WITH_GHOST_WAYLAND
+  Enable Wayland which is now included as part the bundled dependencies.
+  When the pre-compiled libraries aren't used, only X11 will be enabled.
+
+- WITH_GHOST_WAYLAND_DYNLOAD
+  So systems without libwayland can fall back to X11.
+
+- WITH_GHOST_WAYLAND_LIBDECOR
+  To draw window frames on WAYLAND compositors such as gnome-shell which
+  expect client-side decorations (without this the Blender window is
+  borderless).
+
+  Unfortunately there doesn't seem to be a reliable way to know if the
+  compositors handles server-side decorations, so libdecor is required
+  for Wayland to be used even with KDE and tiling compositors where it's
+  not needed. Although this is an area that could use some further
+  investigation - possibly bundling libdecor or handling client-side
+  decorations in Blender.
+
+The final part of D16091.
+-------
+).
+
+'''''
+
+
+3. EEVEE¶
+
+EEVEE
+¶
+Headless rendering is now supported under Linux
+  (
+3195a38120
+### Commit Summary: Introduce headless OpenGL rendering on Linux · 3195a38120 - blender - Blender Projects
+### Commit Details:
+With this patch true headless OpenGL rendering is now possible on Linux.
+It changes the logic of the WITH_HEADLESS build flag.
+
+The headless backend is now always available with regular builds and
+Blender will try to fall back to it if it fails to initialize other
+backends while in background mode.
+
+The headless backend only works on Linux as EGL is not used on Mac or Windows.
+libepoxy does support windows and mac, so this can perhaps be remedied in the future.
+
+Reviewed By: Brecht, Jeroen, Campbell
+
+Differential Revision:
+http://developer.blender.org/D15555
+-------
+)
+
+'''''
+
+
+4. Grease Pencil¶
+
+Grease Pencil
+¶
+Operators
+¶
+Now SVG import allows to import several files in one operation. Also,
+  the name of the .SVG is used as Blender name.
+  (
+670ced9758
+### Commit Summary: GPencil: Allow import several SVG at time · 670ced9758 - blender - Blender Projects
+### Commit Details:
+For SVG is very convenient to be able to import several SVG in one operation. Each SVG is imported as a new Grease Pencil object.
+
+Also, now the SVG file name is used as Object name.
+
+Important: As all SVG imported are converted to Grease Pencil object in the same location of the 3D cursor, the SVG imported are not moved and the result may require a manual fix of location. The same is applied for depth order, the files are imported in alphabetic order according to the File list.
+
+Reviewed By: mendio, pepeland
+
+Differential Revision:
+https://developer.blender.org/D14865
+-------
+)
+New
+Outline
+operator to convert strokes to perimeter.
+  (
+aa7b2f1dd9
+### Commit Summary: GPencil: New operator to convert strokes to perimeter. · aa7b2f1dd9 - blender - Blender Projects
+### Commit Details:
+This operator converts any stroke of gpencil with a center line into a stroke with the perimeter.
+
+It's possible to assign the active material, keep current or create a new material for all perimeters.
+
+The conversion is only done for strokes with a material using `Stroke`. Only `Fill` strokes are not converted.
+
+Known issues: As the perimter has not boolean implementation, some perimeters can be overlaped. This could be solved in the future when a new 2D boolean library will be developed.
+
+Reviewed By: mendio, pepeland, frogstomp
+
+Differential Revision:
+https://developer.blender.org/D15664
+-------
+)
+New
+Outline
+option at brush level to convert to outline the last
+  stroke drawn.
+  (
+613b6ad9e5
+### Commit Summary: GPencil: New conversion to outline in draw mode · 613b6ad9e5 - blender - Blender Projects
+### Commit Details:
+This new option converts the stroke to outline perimeter as soon as is drawn.
+
+If no alternative material is set, the actual material is used.
+
+The algorithm is similar to the new operator in D15664
+
+Reviewed By: pepeland
+
+Differential Revision:
+https://developer.blender.org/D15738
+-------
+)
+New
+Set Start Point
+operator to define the start point for cyclic
+  strokes.
+  (
+98c4e1e590
+### Commit Summary: GPencil: New Set Start point operator · 98c4e1e590 - blender - Blender Projects
+### Commit Details:
+This operator allows to set the start point for any cyclic stroke.
+
+This is very handy to fit interpolation issues or
+use thickness modifier.
+
+Note: There is small change in this commit to fix
+a typo error in the name of the operator.
+
+Reviewed By: mendio, frogstomp
+
+Maniphest Tasks: T100827
+
+Differential Revision:
+https://developer.blender.org/D15881
+-------
+)
+New
+Offset
+parameter in reproject operator for surface mode.
+  (
+5c33704ffa
+### Commit Summary: GPencil: Add `offset` parameter to reproject operator Redo Panel · 5c33704ffa - blender - Blender Projects
+### Commit Details:
+Now it's possible to set an offset in the surface reprojection.
+Before, this was only possible while drawing, but not in the
+reproject operator.
+
+Differential Revision:
+https://developer.blender.org/D15610
+-------
+)
+Tools
+¶
+Fill tool has been improved adding a new algorithm to close gaps.
+  (
+468f2ccc0e
+### Commit Summary: GPencil: Add more types of stroke extensions when filling · 468f2ccc0e - blender - Blender Projects
+### Commit Details:
+The motivation for this change: while working on an animation recently, I found that there are some gaps that won't close easily via stroke extension or leak size checking. In D14698, I attempted to address this by changing the algorithm of the raster-space flood fill. This patch attempts to address the same issue in vector space by adding two new cases where stroke extensions are added, as suggested by
+@frogstomp
+:
+
+  # **Points of high curvature:** when the curvature at a point is high enough that it's hard to visually distinguish between it and an endpoint, add a stroke extension out along the normal (pointing in the opposite direction of the stroke's acceleration.) This addresses cases where technically the endpoint points up, but there's a sharp corner right below it that should extend to connect.
+
+  # **Stroke endpoints within a radius**: when two endpoints are close together, regardless of the angle they make, connect them if they are within a radius. This addresses cases like where the two endpoints have effectively parallel tangents, so extensions won't close the gap.
+
+Reviewed By: antoniov, mendio, frogstomp
+
+Differential Revision:
+https://developer.blender.org/D14809
+-------
+,
+dd0ef74887
+### Commit Summary: GPencil: Hide the help Circles for gaps when gap is closed · dd0ef74887 - blender - Blender Projects
+### Commit Details:
+To avoid too much noise, the help circles are only visible if the
+the gap is still open. When the gap is closed, the circles are hidden.
+
+Hiding the circles makes it easier to focus on what is problematic.
+instead, to see many circles that are already resolved.
+-------
+,
+742268c50b
+### Commit Summary: GPencil: Move Gap Closure option to separated subpanel · 742268c50b - blender - Blender Projects
+### Commit Details:
+Also removed leak size
+-------
+,
+bdbf24772a
+### Commit Summary: GPencil: Remove Leak Size · bdbf24772a - blender - Blender Projects
+### Commit Details:
+This value was used to close gaps, but now with the new system is not needed.
+
+Internally, still we need to keep a small leak size, but after doing a lot of test a 
+value of 3 is perfect, so it's harcoded.
+-------
+,
+392855ce50
+### Commit Summary: GPencil: Improve Fill Tool Extend lines · 392855ce50 - blender - Blender Projects
+### Commit Details:
+* Improve how the extend lines collision is calculated.
+* Added `S` key to switch between modes.
+*  Now extend factor does not disable visual aids (thi sis done with checkbox).
+* Reduce the use of linked list and now memory array is used.
+* Refactor Radius functions.
+* Fixed bug of Radius mode when object is rotated.
+* Cleanup code.
+
+Differential Revision:
+https://developer.blender.org/D16022
+-------
+,
+fe19de5fcc
+### Commit Summary: GPencil: Fill Tool - Check if extensions collide with real strokes · fe19de5fcc - blender - Blender Projects
+### Commit Details:
+This commit is an improvement in the previous fill tool
+changes in order to improve how the extended strokes
+are managed.
+
+* Now, the algorithm checks if the extend cross a standard stroke, not only extend strokes.
+
+* Option to enable or disable the stroke cross checking
+because this can be slow in very complex scenes.
+
+* Added `D` key to toggle stroke cross option.
+
+* Option to use only collide strokes to be used as fill limit.
+
+If the option to use only collide strokes is enabled, the
+open extensions are in different color.
+
+* Status text now shows mode and the actual extend factor.
+
+This commits also contains a refactor of the loops
+to use arrays as much as possible.
+
+Reviewed By: mendio, pepeland
+
+Differential Revision:
+https://developer.blender.org/D16052
+-------
+)
+The new method determines when to close the strokes based on how close
+they are using a circle radius. This new method is better suited than
+the old one (now renamed Extend) when the extended strokes never cross
+If the gap between strokes is greater than the actual radius, the system
+shows circles. To change the size of the circle use
+Wheel Mouse
+or
+PageUp
+/
+PageDown
+. Also it's possible to use
+MMB
+of the
+mouse or pen.
+As soon the radius determine that the gap is closed, the help circles
+are hidden. This allows to focus in pending gaps, keeping only circles
+in pending ones.
+The Advanced panel was rearranged and now has a new section for
+Gap Closure
+with all the new options.
+Note: The old gap closure method using straight lines has been renamed
+as
+Extend
+and the
+Leak Size
+has been removed because new
+algorithms make this parameter obsolete.
+Fill tool extend lines now are clipped when there is a collision.
+  (
+5c13c7cd30
+### Commit Summary: GPencil: Cut Extended lines in Fill tool when collide · 5c13c7cd30 - blender - Blender Projects
+### Commit Details:
+Before, the lines could be extended endless, but this added too noise. 
+Now, the lines are not extended more if collide.
+
+Before:
+
+{F13504186}
+
+After:
+
+{F13504187}
+
+Reviewed By: mendio, frogstomp
+
+Differential Revision:
+https://developer.blender.org/D15992
+-------
+)
+New option to check if extension collide with normal strokes (not
+  extensions). If enabled, if the extension collide, the color will be
+  blue. Only blue extension will be used to limit fill area.
+Use
+S
+key to toggle extend method from Extend->Radius->Extend.
+Use
+D
+key to toggle stroke collision check.
+Modifiers
+¶
+New Outline modifier to generate perimeter stroke from camera view.
+  (
+5f7259a001
+### Commit Summary: GPencil: New Outline modifier · 5f7259a001 - blender - Blender Projects
+### Commit Details:
+This modifier converts any stroke (no fill strokes) into perimeter
+from camera view.  Also, it's possible to define an alternative 
+material for the outline.
+
+There is an option to include a target object to manipulate the start 
+point of the strokes. The start point will be the nearest point 
+to the target object.
+
+Reviewed By: mendio, frogstomp
+
+Maniphest Tasks: T100826
+
+Differential Revision:
+https://developer.blender.org/D15882
+Note: Icon will be updated in T101155
+-------
+)
+LineArt: New "Forced Intersection" option that allows objects to
+  always produce intersections even against objects that are set as "No
+  Intersection". This allows more flexible configuration of more complex
+  scenes.
+  (
+0bdb5239c1
+### Commit Summary: LineArt: Force intersection option. · 0bdb5239c1 - blender - Blender Projects
+### Commit Details:
+This option allows easier setup of intersection overrides on more
+complex scene structures. Setting force intersection would allow objects
+to always produce intersection lines even against no-intersection ones.
+
+Reviewed By: Aleš Jelovčan (frogstomp) Antonio Vazquez (antoniov)
+
+Differential Revision:
+https://developer.blender.org/D15978
+-------
+)
+New
+Chain
+mode in Time Offset modifier that allows run one after
+  another different Offset types.
+  (
+b0d70a9c80
+### Commit Summary: Gpencil:  Time Offset modifier new Chain mode · b0d70a9c80 - blender - Blender Projects
+### Commit Details:
+This patch adds 5th mode to Time offset modifier, which should allow 
+to create time segments list.
+
+This will allow users to chain together multiple time ranges in 4 modes:
+
+- Forward
+- Backwards
+- Pingpong
+- Reverse  Pingpong
+
+It also comes with additional Repeat parameter which specifies number 
+of times particular segment should run.
+
+The mechanic of it is transforming initial parameters into array of frames which 
+are mapped to existing cfra (current frame) value.
+Prototype :
+https://jsfiddle.net/ha2sjw8p/3/
+This is also closely aligned to community request:
+https://blender.community/c/rightclickselect/Txhbbc/
+This should allow creation of complex animations like dancing, 
+which consists of repeating loops and transitions to the next.
+One important side effect of this is dramatically reduced 
+file sizes, as user no longer needs to copy paste keyframes.
+
+Reviewed By: antoniov, mendio, pepeland
+
+Differential Revision:
+https://developer.blender.org/D15052
+-------
+)
+Python API
+¶
+New Trace Frame parameter in Trace operator.
+  (
+903709c4eb
+### Commit Summary: GPencil: Add frame number to Trace operator · 903709c4eb - blender - Blender Projects
+### Commit Details:
+The default trace can only trace an image or a sequence, but
+it was not possible to trace only selected frames in a sequence. 
+This new parameter allows to define what frame trace.
+
+If the value is 0, the trace is done as before.
+
+The parameter is not exposed in the UI because this is logic
+if it is managed by a python API, but it has no sense in the UI.
+
+This feature was included after receiving feedback from Studios
+which need to trace videos only for some frames using custom
+python scripts.
+-------
+)
+The default trace can only trace an image or a sequence, but it was not
+possible to trace only selected frames in a sequence. This new parameter
+allows to define what frame trace. If the value is 0, the trace is done
+as before. The parameter is not exposed in the UI because this is only
+logic if it is managed by a python API.
+
+'''''
+
+
+5. Modeling¶
+
+Modeling
+¶
+Modifiers
+¶
+The Subdivision Surface modifier and node's performance has been
+  improved when many loose edges are subdivided.
+  (
+12c235a1c5
+### Commit Summary: Subdiv: Avoid quadratic runtime for loose edges · 12c235a1c5 - blender - Blender Projects
+### Commit Details:
+Currently, when subdividing every single vertex on every loose edge,
+Blender iterates over all other edges to find neighbors. This has
+quadratic runtime and can be very slow. Instead, first create a
+map of edges connected to each vertex.
+
+With about 10000 edges, the performance goes from very slow to very
+smooth in my tests. Because of the nature of quadratic runtime, the
+improvement will depend massively on the number of elements.
+
+The only downside to this is that the map will still be built when
+there are only a couple loose edges, but that case is probably not
+so common.
+
+Differential Revision:
+https://developer.blender.org/D15923
+-------
+)
+UV Editing
+¶
+Sculpt Tools
+¶
+Show Geometry driven relax
+option
+The big new change in the UV editor for Blender 3.4 is the addition of a
+new geometry-based relax brush. This improves the quality of the UV
+mapping by making the UVs more closely follow the 3D geometry. As this
+is a brush, the user can drive the relaxation process.
+(
+74ea0bee9c
+### Commit Summary: UV: add geometry driven uv relax brush · 74ea0bee9c - blender - Blender Projects
+### Commit Details:
+Differential Revision:
+https://developer.blender.org/D15530
+-------
+)
+To support the new relax brush mode, there has been additional UV Sculpt
+and UV Relax tool improvements:
+Fix boundary edges for
+UV Relax
+tool.
+  (
+3c351da89f
+### Commit Summary: UV: improve uv sculpt tools with boundary support and pin support · 3c351da89f - blender - Blender Projects
+### Commit Details:
+Fix boundary conditions for the Relax UV tool with the Laplacian method.
+
+Add Pinned UV support to Relax UV tool (all modes) and Pinch UV tool.
+
+Differential Revision:
+https://developer.blender.org/D15669
+-------
+)
+UV Sculpt tools now respect pinned vertices.
+  (
+3c351da89f
+### Commit Summary: UV: improve uv sculpt tools with boundary support and pin support · 3c351da89f - blender - Blender Projects
+### Commit Details:
+Fix boundary conditions for the Relax UV tool with the Laplacian method.
+
+Add Pinned UV support to Relax UV tool (all modes) and Pinch UV tool.
+
+Differential Revision:
+https://developer.blender.org/D15669
+-------
+)
+UV Sculpt tools now work with
+constrain to bounds
+.
+  (
+66822319d3
+### Commit Summary: UV: add constrain-to-bounds support for uv relax, uv grab and uv pinch · 66822319d3 - blender - Blender Projects
+### Commit Details:
+Differential Revision:
+https://developer.blender.org/D15683
+-------
+)
+UV Sculpt tools now ignore winding, preventing orphaned islands.
+  (
+dcf50cf046
+### Commit Summary: Fix T100132: Disable winding when calculating islands for uv sculpt tools · dcf50cf046 - blender - Blender Projects
+### Commit Details:
+Winding was originally added to island detection in
+5197aa04c6
+.
+However the sculpt tools can flip faces, potentially creating orphaned
+islands if winding is enabled.
+
+Differential Revision:
+https://developer.blender.org/D15600
+-------
+)
+UV Grab tool now supports
+Live Unwrap
+.
+  (
+836c07f29c
+### Commit Summary: UV: grab tool supports live unwrap · 836c07f29c - blender - Blender Projects
+### Commit Details:
+Differential Revision:
+https://developer.blender.org/D15709
+-------
+)
+UV Packing
+¶
+Specify exact margin when packing.
+  (
+c2256bf7f7
+### Commit Summary: Fix T90782: add uv pack option to specify margin as a fraction · c2256bf7f7 - blender - Blender Projects
+### Commit Details:
+A refactor of the margin calculation of UV packing, in anticipation
+of multiple packing methods soon becoming available.
+
+Three margin scaling methods are now available:
+
+* "Add", Simple method, just add the margin. [0]
+    (The default margin scale from Blender 2.8 and earlier.)
+* "Scaled", Use scale of existing UVs to multiply margin.
+    (The default from Blender 3.3+)
+* "Fraction", a new (slow) method to precisely specify
+    a fraction of the UV unit square for margin. [1]
+
+The "fraction" code path implements a novel combined search / secant
+root finding method which exploits domain knowledge to accelerate
+convergence while remaining robust against bad input.
+
+[0]: Resolves T85978
+[1]: Resolves T90782
+
+Differential Revision:
+https://developer.blender.org/D16121
+-------
+)
+Add option to use Blender 2.8 margin calculation.
+  (
+c2256bf7f7
+### Commit Summary: Fix T90782: add uv pack option to specify margin as a fraction · c2256bf7f7 - blender - Blender Projects
+### Commit Details:
+A refactor of the margin calculation of UV packing, in anticipation
+of multiple packing methods soon becoming available.
+
+Three margin scaling methods are now available:
+
+* "Add", Simple method, just add the margin. [0]
+    (The default margin scale from Blender 2.8 and earlier.)
+* "Scaled", Use scale of existing UVs to multiply margin.
+    (The default from Blender 3.3+)
+* "Fraction", a new (slow) method to precisely specify
+    a fraction of the UV unit square for margin. [1]
+
+The "fraction" code path implements a novel combined search / secant
+root finding method which exploits domain knowledge to accelerate
+convergence while remaining robust against bad input.
+
+[0]: Resolves T85978
+[1]: Resolves T90782
+
+Differential Revision:
+https://developer.blender.org/D16121
+-------
+)
+Many UV Packing operations now work with non-manifold geometry. (many
+  commits)
+UV Grid and Selection
+¶
+Allow non-uniform grids.
+  (
+b7decab07e
+### Commit Summary: UV: add grid shape source to the uv editor, and add new "pixel" option · b7decab07e - blender - Blender Projects
+### Commit Details:
+This change is part of a wider set of changes to implement Grid and Pixel
+snapping in the UV Editor. This particular change adds a new third option,
+`pixel grid`, to the previous grid options, `dynamic grid` and `fixed grid`.
+
+Maniphest Tasks : T78391
+
+Differential Revision:
+https://developer.blender.org/D16197
+-------
+)
+Add option to use pixel spacing for UV Grid. (Also
+b7decab07e
+### Commit Summary: UV: add grid shape source to the uv editor, and add new "pixel" option · b7decab07e - blender - Blender Projects
+### Commit Details:
+This change is part of a wider set of changes to implement Grid and Pixel
+snapping in the UV Editor. This particular change adds a new third option,
+`pixel grid`, to the previous grid options, `dynamic grid` and `fixed grid`.
+
+Maniphest Tasks : T78391
+
+Differential Revision:
+https://developer.blender.org/D16197
+-------
+)
+Show UV grid over the top of the image.
+  (
+c50335b359
+### Commit Summary: UV: add toggle to show the grid over the image · c50335b359 - blender - Blender Projects
+### Commit Details:
+In UV editor, previously unable to see grid and image at same time.
+
+Maniphest Tasks: T78391
+
+Differential Revision:
+https://developer.blender.org/D16038
+-------
+)
+Rename "UV Snap To Pixels" -> "UV Round To Pixels".
+  (
+b5115ed80f
+### Commit Summary: UV: rename "Pixel Snap Mode" to "Pixel Round Mode" · b5115ed80f - blender - Blender Projects
+### Commit Details:
+Maniphest Tasks: T78391
+
+Differential Revision:
+https://developer.blender.org/D15952
+-------
+)
+New Operators
+¶
+Additional new operators have been added affecting island rotation:
+Add new operator,
+Randomize Islands
+.
+  (
+de570dc87e
+### Commit Summary: Fix T78406: create uv randomize islands operator · de570dc87e - blender - Blender Projects
+### Commit Details:
+Implement a new operator to randomize the scale, rotation and offset
+of selected UV islands.
+-------
+)
+Add new operator,
+UV Align Rotation
+.
+  (
+20daaeffce
+### Commit Summary: UV: add new operator, uvcalc_align_rotation · 20daaeffce - blender - Blender Projects
+### Commit Details:
+Adds a new operator to automatically rotate UV Islands into alignment.
+
+Modes:
+* Auto (All edges)
+* Geometry (V direction will point in geometry direction) [1]
+* Edge (Rotate until selected edge is in V direction)
+
+Also adds uv_sync_selection support to UV Randomize Transform.
+
+Resolves: T78399
+Differential Revision:
+https://developer.blender.org/D15820
+[1] Listed as "World" in Task description.
+-------
+)
+Other Improvements and Fixes
+¶
+Rotation operator supports
+constrain to bounds
+.
+  (
+d527aa4dd5
+### Commit Summary: UV: support constrain-to-bounds for uv rotation operator · d527aa4dd5 - blender - Blender Projects
+### Commit Details:
+Differential Revision:
+https://developer.blender.org/D15730
+-------
+)
+Respect UV Selection in
+Spherical Project
+,
+Cylindrical Project
+,
+Cube Project
+and
+Smart UV
+  Project
+.(
+a5c696a0c2
+### Commit Summary: UV: respect uv selection for smart uv, cube, sphere and cylinder projection · a5c696a0c2 - blender - Blender Projects
+### Commit Details:
+Differential Revision:
+https://developer.blender.org/D15711
+-------
+)
+Fix UV Island calculation with hidden faces.
+  (
+8f543a73ab
+### Commit Summary: Fix T99659: Improve UV Island calculation with hidden faces. · 8f543a73ab - blender - Blender Projects
+### Commit Details:
+Simplify interface, regularize implementation and some light cleanup.
+
+See also: T79304 and D15419.
+-------
+)
+Fix bugs in UV Island calculation when in edge selection mode.
+  (
+178868cf42
+### Commit Summary: Fix T79304: improve uv island calculation when in edge selection mode · 178868cf42 - blender - Blender Projects
+### Commit Details:
+Differential Revision:
+https://developer.blender.org/D15419
+-------
+)
+More options for
+UV Select Similar
+operator,
+Face
+,
+Area
+and
+Area UV
+.
+  (
+a581460728
+### Commit Summary: UV: Add options for uv select similar in island mode · a581460728 - blender - Blender Projects
+### Commit Details:
+In island selection mode, add new options for uv select similar:
+
+* Area UV
+* Area 3D
+* Face (number of faces in island)
+
+See also
+https://developer.blender.org/T47437
+Differential Revision:
+https://developer.blender.org/D15553
+-------
+)
+Fix
+UV Unwrap
+with degenerate triangles.
+  (
+94e211ced9
+### Commit Summary: Fix T100874: improve uv unwrap of degenerate geometry · 94e211ced9 - blender - Blender Projects
+### Commit Details:
+Provide reasonable defaults for UV unwrap for triangles with zero area:
+
+* Three vertices are arranged in a line.
+* Two vertices are at the same 3D location.
+* All three vertices are at the same 3D location.
+
+Change fixes quads / ngons which have triangulations with zero area.
+
+Change fixes both "Angle Based" method and "Conformal" method.
+
+Differential Revision:
+https://developer.blender.org/D15922
+-------
+)
+
+'''''
+
+
+6. Geometry Nodes¶
+
+Geometry Nodes
+¶
+Viewer Node
+¶
+The
+Viewer Node
+now has the ability to preview geometry and
+  attributes in the viewport as well as the spreadsheet
+  (
+c55d38f00b
+### Commit Summary: Geometry Nodes: viewport preview · c55d38f00b - blender - Blender Projects
+### Commit Details:
+This adds support for showing geometry passed to the Viewer in the 3d
+viewport (instead of just in the spreadsheet). The "viewer geometry"
+bypasses the group output. So it is not necessary to change the final
+output of the node group to be able to see the intermediate geometry.
+
+**Activation and deactivation of a viewer node**
+* A viewer node is activated by clicking on it.
+* Ctrl+shift+click on any node/socket connects it to the viewer and
+  makes it active.
+* Ctrl+shift+click in empty space deactivates the active viewer.
+* When the active viewer is not visible anymore (e.g. another object
+  is selected, or the current node group is exit), it is deactivated.
+* Clicking on the icon in the header of the Viewer node toggles whether
+  its active or not.
+
+**Pinning**
+* The spreadsheet still allows pinning the active viewer as before.
+  When pinned, the spreadsheet still references the viewer node even
+  when it becomes inactive.
+* The viewport does not support pinning at the moment. It always shows
+  the active viewer.
+
+**Attribute**
+* When a field is linked to the second input of the viewer node it is
+  displayed as an overlay in the viewport.
+* When possible the correct domain for the attribute is determined
+  automatically. This does not work in all cases. It falls back to the
+  face corner domain on meshes and the point domain on curves. When
+  necessary, the domain can be picked manually.
+* The spreadsheet now only shows the "Viewer" column for the domain
+  that is selected in the Viewer node.
+* Instance attributes are visualized as a constant color per instance.
+
+**Viewport Options**
+* The attribute overlay opacity can be controlled with the "Viewer Node"
+  setting in the overlays popover.
+* A viewport can be configured not to show intermediate viewer-geometry
+  by disabling the "Viewer Node" option in the "View" menu.
+
+**Implementation Details**
+* The "spreadsheet context path" was generalized to a "viewer path" that
+  is used in more places now.
+* The viewer node itself determines the attribute domain, evaluates the
+  field and stores the result in a `.viewer` attribute.
+* A new "viewer attribute' overlay displays the data from the `.viewer`
+  attribute.
+* The ground truth for the active viewer node is stored in the workspace
+  now. Node editors, spreadsheets and viewports retrieve the active
+  viewer from there unless they are pinned.
+* The depsgraph object iterator has a new "viewer path" setting. When set,
+  the viewed geometry of the corresponding object is part of the iterator
+  instead of the final evaluated geometry.
+* To support the instance attribute overlay `DupliObject` was extended
+  to contain the information necessary for drawing the overlay.
+* The ctrl+shift+click operator has been refactored so that it can make
+  existing links to viewers active again.
+* The auto-domain-detection in the Viewer node works by checking the
+  "preferred domain" for every field input. If there is not exactly one
+  preferred domain, the fallback is used.
+
+Known limitations:
+* Loose edges of meshes don't have the attribute overlay. This could be
+  added separately if necessary.
+* Some attributes are hard to visualize as a color directly. For example,
+  the values might have to be normalized or some should be drawn as arrays.
+  For now, we encourage users to build node groups that generate appropriate
+  viewer-geometry. We might include some of that functionality in future versions.
+  Support for displaying attribute values as text in the viewport is planned as well.
+* There seems to be an issue with the attribute overlay for pointclouds on
+  nvidia gpus, to be investigated.
+
+Differential Revision:
+https://developer.blender.org/D15954
+-------
+).
+When a field is linked to the second input of the viewer node it is
+  displayed as an overlay in the viewport.
+A viewer node is activated by clicking on it.
+The attribute overlay opacity can be controlled with the "Viewer
+  Node" setting in the overlays popover.
+A viewport can be configured not to show intermediate
+  viewer-geometry by disabling the "Viewer Node" option in the "View"
+  menu.
+Viewer nodes now have a domain dropdown. It determines which domain
+  the field will be evaluated on.
+General
+¶
+The
+Self Object
+retrieves the current modifier object for
+  retrieving transforms
+  (
+dd5131bd70
+### Commit Summary: Geometry Nodes: Add Self Object Node · dd5131bd70 - blender - Blender Projects
+### Commit Details:
+From the nodes' description: "Retrieve the object that contains
+the geometry nodes modifier currently being executed". This was
+discussed in the most recent geometry nodes module meeting.
+
+Because the node allows you to retrieve the position of the modifier
+object, it has to add a depsgraph relation to object transform.
+Expect that modifiers will be reevaluated when moving the object.
+In the future, better static analysis of node trees could make this
+check smarter.
+
+Differential Revision:
+https://developer.blender.org/D16037
+-------
+).
+The
+Transfer Attribute
+node has been removed and split into multiple
+  more specific nodes
+  (
+dedc679eca
+### Commit Summary: Geometry Nodes: Split transfer attribute node · dedc679eca - blender - Blender Projects
+### Commit Details:
+This patch replaces the existing transfer attribute node with three
+nodes, "Sample Nearest Surface", "Sample Index", and "Sample Nearest".
+This follows the design in T100010, allowing for new nodes like UV
+sampling in the future. There is versioning so the new nodes replace
+the old ones and are relinked as necessary.
+
+The "Sample Nearest Surface" node is meant for the more complex
+sampling algorithms that only work on meshes and interpolate
+values inside of faces.
+
+The new "Sample Index" just retrieves attributes from a geometry at
+specific indices. It doesn't have implicit behavior like the old
+transfer mode, which should make it more predictable. In order to not
+change the behavior from existing files, the node has a has a "Clamp",
+which is off by default for consistency with the "Field at Index" node.
+
+The "Sample Nearest" node returns the index of the nearest element
+on a geometry. It can be combined with the "Sample Index" node for
+the same functionality as the old transfer node. This node can support
+curves in the future.
+
+Backwards compatibility is handled by versioning, but old versions can
+not understand these nodes. The warning from
+680fa8a523
+should make
+this explicit in 3.3 and earlier.
+
+Differential Revision:
+https://developer.blender.org/D15909
+-------
+).
+The
+Sample Index
+node retrieves data from specific geometry
+  elements by index.
+The
+Sample Nearest
+node retrieves the indices from the closest
+  geometry elements
+The
+Sample Nearest Surface
+node interpolates a field input to
+  the closest location on a mesh surface.
+Meshes
+¶
+The new
+Face Set Boundaries
+node finds the edges between different
+  patches of faces
+  (
+3ff15a9e23
+### Commit Summary: Geometry Nodes: New Face Set Boundaries node · 3ff15a9e23 - blender - Blender Projects
+### Commit Details:
+With the recent addition of the UV unwrapping node, there is a need to
+be able to create seams easily. This node does that by outputting a
+selection of the boundaries between different input face sets. In the
+context of UV mapping, one inputs the "patches" you want, and the node
+gives you the seams needed to make those patches.
+
+Differential Revision:
+https://developer.blender.org/D15423
+-------
+).
+Access to mesh topology information has been improved, with new nodes
+  and other changes .
+Corners of Face
+Retrieves corners that make up a face
+  (
+482d431bb6
+### Commit Summary: Geometry Nodes: Curve and mesh topology access nodes · 482d431bb6 - blender - Blender Projects
+### Commit Details:
+This patch contains an initial set of nodes to access basic
+mesh topology information, as explored in T100020.
+
+The nodes allow six direct topology mappings for meshes:
+- **Corner -> Face** The face a corner is in, the index in the face
+- **Vertex -> Edge** Choose an edge attached to the vertex
+- **Vertex -> Corner** Choose a corner attached to the vertex
+- **Corner -> Edge** The next and previous edge at each face corner
+- **Corner -> Vertex** The vertex associated with a corner
+- **Corner -> Corner** Offset a corner index within a face
+
+And two new topology mappings for curves:
+- **Curve -> Points** Choose a point within a curve
+- **Point -> Curve** The curve a point is in, the index in the curve
+
+The idea is that some of the 16 possible mesh mappings are more
+important, and that this is a useful set of nodes to start exploring
+this area. For mappings with an arbitrary number of connections, we
+must sort them and use an index to choose a single element, because
+geometry nodes does not support list fields. Note that the sort
+index has repeating behavior as it goes over the "Total" number of
+connections, and negative sort indices choose from the end.
+
+Currently which of the "start" elements is used is determined by the
+field context, so the "Field at Index" and "Interpolate Domain" nodes
+will be quite important. Also, currently the "Sort Index" inputs are
+clamped to the number of connections.
+
+One important feature that isn't implemented here is using the winding
+order for the output elements. This can be a separate mode for some
+of these nodes. It will be optional because of the performance impact.
+
+There are several todos for separate commits after this:
+- Rename "Control Point Neighbors" to be consistent with this naming
+- Version away the "Vertex Neighbors" node which is fully redundant now
+- Implement a special case for when no weights are used for performance
+- De-duplicating some of the sorting logic between the nodes
+- Improve performance and memory use of topology mappings
+- Look into caching some of the mappings on meshes
+
+Differential Revision:
+https://developer.blender.org/D16029
+-------
+).
+Corners of Vertex
+Retrieves face corners connected to vertices
+  (
+482d431bb6
+### Commit Summary: Geometry Nodes: Curve and mesh topology access nodes · 482d431bb6 - blender - Blender Projects
+### Commit Details:
+This patch contains an initial set of nodes to access basic
+mesh topology information, as explored in T100020.
+
+The nodes allow six direct topology mappings for meshes:
+- **Corner -> Face** The face a corner is in, the index in the face
+- **Vertex -> Edge** Choose an edge attached to the vertex
+- **Vertex -> Corner** Choose a corner attached to the vertex
+- **Corner -> Edge** The next and previous edge at each face corner
+- **Corner -> Vertex** The vertex associated with a corner
+- **Corner -> Corner** Offset a corner index within a face
+
+And two new topology mappings for curves:
+- **Curve -> Points** Choose a point within a curve
+- **Point -> Curve** The curve a point is in, the index in the curve
+
+The idea is that some of the 16 possible mesh mappings are more
+important, and that this is a useful set of nodes to start exploring
+this area. For mappings with an arbitrary number of connections, we
+must sort them and use an index to choose a single element, because
+geometry nodes does not support list fields. Note that the sort
+index has repeating behavior as it goes over the "Total" number of
+connections, and negative sort indices choose from the end.
+
+Currently which of the "start" elements is used is determined by the
+field context, so the "Field at Index" and "Interpolate Domain" nodes
+will be quite important. Also, currently the "Sort Index" inputs are
+clamped to the number of connections.
+
+One important feature that isn't implemented here is using the winding
+order for the output elements. This can be a separate mode for some
+of these nodes. It will be optional because of the performance impact.
+
+There are several todos for separate commits after this:
+- Rename "Control Point Neighbors" to be consistent with this naming
+- Version away the "Vertex Neighbors" node which is fully redundant now
+- Implement a special case for when no weights are used for performance
+- De-duplicating some of the sorting logic between the nodes
+- Improve performance and memory use of topology mappings
+- Look into caching some of the mappings on meshes
+
+Differential Revision:
+https://developer.blender.org/D16029
+-------
+).
+Edges of Corner
+Retrieves the edges on boths sides of a face
+  corner
+  (
+482d431bb6
+### Commit Summary: Geometry Nodes: Curve and mesh topology access nodes · 482d431bb6 - blender - Blender Projects
+### Commit Details:
+This patch contains an initial set of nodes to access basic
+mesh topology information, as explored in T100020.
+
+The nodes allow six direct topology mappings for meshes:
+- **Corner -> Face** The face a corner is in, the index in the face
+- **Vertex -> Edge** Choose an edge attached to the vertex
+- **Vertex -> Corner** Choose a corner attached to the vertex
+- **Corner -> Edge** The next and previous edge at each face corner
+- **Corner -> Vertex** The vertex associated with a corner
+- **Corner -> Corner** Offset a corner index within a face
+
+And two new topology mappings for curves:
+- **Curve -> Points** Choose a point within a curve
+- **Point -> Curve** The curve a point is in, the index in the curve
+
+The idea is that some of the 16 possible mesh mappings are more
+important, and that this is a useful set of nodes to start exploring
+this area. For mappings with an arbitrary number of connections, we
+must sort them and use an index to choose a single element, because
+geometry nodes does not support list fields. Note that the sort
+index has repeating behavior as it goes over the "Total" number of
+connections, and negative sort indices choose from the end.
+
+Currently which of the "start" elements is used is determined by the
+field context, so the "Field at Index" and "Interpolate Domain" nodes
+will be quite important. Also, currently the "Sort Index" inputs are
+clamped to the number of connections.
+
+One important feature that isn't implemented here is using the winding
+order for the output elements. This can be a separate mode for some
+of these nodes. It will be optional because of the performance impact.
+
+There are several todos for separate commits after this:
+- Rename "Control Point Neighbors" to be consistent with this naming
+- Version away the "Vertex Neighbors" node which is fully redundant now
+- Implement a special case for when no weights are used for performance
+- De-duplicating some of the sorting logic between the nodes
+- Improve performance and memory use of topology mappings
+- Look into caching some of the mappings on meshes
+
+Differential Revision:
+https://developer.blender.org/D16029
+-------
+).
+Edges of Vertex
+Retrieves the edges connected to each vertex
+  (
+482d431bb6
+### Commit Summary: Geometry Nodes: Curve and mesh topology access nodes · 482d431bb6 - blender - Blender Projects
+### Commit Details:
+This patch contains an initial set of nodes to access basic
+mesh topology information, as explored in T100020.
+
+The nodes allow six direct topology mappings for meshes:
+- **Corner -> Face** The face a corner is in, the index in the face
+- **Vertex -> Edge** Choose an edge attached to the vertex
+- **Vertex -> Corner** Choose a corner attached to the vertex
+- **Corner -> Edge** The next and previous edge at each face corner
+- **Corner -> Vertex** The vertex associated with a corner
+- **Corner -> Corner** Offset a corner index within a face
+
+And two new topology mappings for curves:
+- **Curve -> Points** Choose a point within a curve
+- **Point -> Curve** The curve a point is in, the index in the curve
+
+The idea is that some of the 16 possible mesh mappings are more
+important, and that this is a useful set of nodes to start exploring
+this area. For mappings with an arbitrary number of connections, we
+must sort them and use an index to choose a single element, because
+geometry nodes does not support list fields. Note that the sort
+index has repeating behavior as it goes over the "Total" number of
+connections, and negative sort indices choose from the end.
+
+Currently which of the "start" elements is used is determined by the
+field context, so the "Field at Index" and "Interpolate Domain" nodes
+will be quite important. Also, currently the "Sort Index" inputs are
+clamped to the number of connections.
+
+One important feature that isn't implemented here is using the winding
+order for the output elements. This can be a separate mode for some
+of these nodes. It will be optional because of the performance impact.
+
+There are several todos for separate commits after this:
+- Rename "Control Point Neighbors" to be consistent with this naming
+- Version away the "Vertex Neighbors" node which is fully redundant now
+- Implement a special case for when no weights are used for performance
+- De-duplicating some of the sorting logic between the nodes
+- Improve performance and memory use of topology mappings
+- Look into caching some of the mappings on meshes
+
+Differential Revision:
+https://developer.blender.org/D16029
+-------
+).
+Face of Corner
+Retrieves the face each face corner is part of
+  (
+482d431bb6
+### Commit Summary: Geometry Nodes: Curve and mesh topology access nodes · 482d431bb6 - blender - Blender Projects
+### Commit Details:
+This patch contains an initial set of nodes to access basic
+mesh topology information, as explored in T100020.
+
+The nodes allow six direct topology mappings for meshes:
+- **Corner -> Face** The face a corner is in, the index in the face
+- **Vertex -> Edge** Choose an edge attached to the vertex
+- **Vertex -> Corner** Choose a corner attached to the vertex
+- **Corner -> Edge** The next and previous edge at each face corner
+- **Corner -> Vertex** The vertex associated with a corner
+- **Corner -> Corner** Offset a corner index within a face
+
+And two new topology mappings for curves:
+- **Curve -> Points** Choose a point within a curve
+- **Point -> Curve** The curve a point is in, the index in the curve
+
+The idea is that some of the 16 possible mesh mappings are more
+important, and that this is a useful set of nodes to start exploring
+this area. For mappings with an arbitrary number of connections, we
+must sort them and use an index to choose a single element, because
+geometry nodes does not support list fields. Note that the sort
+index has repeating behavior as it goes over the "Total" number of
+connections, and negative sort indices choose from the end.
+
+Currently which of the "start" elements is used is determined by the
+field context, so the "Field at Index" and "Interpolate Domain" nodes
+will be quite important. Also, currently the "Sort Index" inputs are
+clamped to the number of connections.
+
+One important feature that isn't implemented here is using the winding
+order for the output elements. This can be a separate mode for some
+of these nodes. It will be optional because of the performance impact.
+
+There are several todos for separate commits after this:
+- Rename "Control Point Neighbors" to be consistent with this naming
+- Version away the "Vertex Neighbors" node which is fully redundant now
+- Implement a special case for when no weights are used for performance
+- De-duplicating some of the sorting logic between the nodes
+- Improve performance and memory use of topology mappings
+- Look into caching some of the mappings on meshes
+
+Differential Revision:
+https://developer.blender.org/D16029
+-------
+).
+Offset Corner in Face
+Retrieves neighboring corners within a
+  face
+  (
+482d431bb6
+### Commit Summary: Geometry Nodes: Curve and mesh topology access nodes · 482d431bb6 - blender - Blender Projects
+### Commit Details:
+This patch contains an initial set of nodes to access basic
+mesh topology information, as explored in T100020.
+
+The nodes allow six direct topology mappings for meshes:
+- **Corner -> Face** The face a corner is in, the index in the face
+- **Vertex -> Edge** Choose an edge attached to the vertex
+- **Vertex -> Corner** Choose a corner attached to the vertex
+- **Corner -> Edge** The next and previous edge at each face corner
+- **Corner -> Vertex** The vertex associated with a corner
+- **Corner -> Corner** Offset a corner index within a face
+
+And two new topology mappings for curves:
+- **Curve -> Points** Choose a point within a curve
+- **Point -> Curve** The curve a point is in, the index in the curve
+
+The idea is that some of the 16 possible mesh mappings are more
+important, and that this is a useful set of nodes to start exploring
+this area. For mappings with an arbitrary number of connections, we
+must sort them and use an index to choose a single element, because
+geometry nodes does not support list fields. Note that the sort
+index has repeating behavior as it goes over the "Total" number of
+connections, and negative sort indices choose from the end.
+
+Currently which of the "start" elements is used is determined by the
+field context, so the "Field at Index" and "Interpolate Domain" nodes
+will be quite important. Also, currently the "Sort Index" inputs are
+clamped to the number of connections.
+
+One important feature that isn't implemented here is using the winding
+order for the output elements. This can be a separate mode for some
+of these nodes. It will be optional because of the performance impact.
+
+There are several todos for separate commits after this:
+- Rename "Control Point Neighbors" to be consistent with this naming
+- Version away the "Vertex Neighbors" node which is fully redundant now
+- Implement a special case for when no weights are used for performance
+- De-duplicating some of the sorting logic between the nodes
+- Improve performance and memory use of topology mappings
+- Look into caching some of the mappings on meshes
+
+Differential Revision:
+https://developer.blender.org/D16029
+-------
+).
+Vertex of Corner
+Retrieves the vertex each face corner is
+  attached to
+  (
+482d431bb6
+### Commit Summary: Geometry Nodes: Curve and mesh topology access nodes · 482d431bb6 - blender - Blender Projects
+### Commit Details:
+This patch contains an initial set of nodes to access basic
+mesh topology information, as explored in T100020.
+
+The nodes allow six direct topology mappings for meshes:
+- **Corner -> Face** The face a corner is in, the index in the face
+- **Vertex -> Edge** Choose an edge attached to the vertex
+- **Vertex -> Corner** Choose a corner attached to the vertex
+- **Corner -> Edge** The next and previous edge at each face corner
+- **Corner -> Vertex** The vertex associated with a corner
+- **Corner -> Corner** Offset a corner index within a face
+
+And two new topology mappings for curves:
+- **Curve -> Points** Choose a point within a curve
+- **Point -> Curve** The curve a point is in, the index in the curve
+
+The idea is that some of the 16 possible mesh mappings are more
+important, and that this is a useful set of nodes to start exploring
+this area. For mappings with an arbitrary number of connections, we
+must sort them and use an index to choose a single element, because
+geometry nodes does not support list fields. Note that the sort
+index has repeating behavior as it goes over the "Total" number of
+connections, and negative sort indices choose from the end.
+
+Currently which of the "start" elements is used is determined by the
+field context, so the "Field at Index" and "Interpolate Domain" nodes
+will be quite important. Also, currently the "Sort Index" inputs are
+clamped to the number of connections.
+
+One important feature that isn't implemented here is using the winding
+order for the output elements. This can be a separate mode for some
+of these nodes. It will be optional because of the performance impact.
+
+There are several todos for separate commits after this:
+- Rename "Control Point Neighbors" to be consistent with this naming
+- Version away the "Vertex Neighbors" node which is fully redundant now
+- Implement a special case for when no weights are used for performance
+- De-duplicating some of the sorting logic between the nodes
+- Improve performance and memory use of topology mappings
+- Look into caching some of the mappings on meshes
+
+Differential Revision:
+https://developer.blender.org/D16029
+-------
+).
+The
+Edge Vertices
+node now has an index input so it can be more
+  easily combined with the other nodes
+  (
+4ddc5a936e
+### Commit Summary: Geometry Nodes: Add index input to Edge Vertices node · 4ddc5a936e - blender - Blender Projects
+### Commit Details:
+Previously the edge index was always determined by the field context,
+and the node didn't work when the context was in any other domain.
+Adding an index input makes it work much more nicely with the other
+topology nodes. It's now in the topology submenu too.
+
+I also reimplemented the edge positions input to use the field at index
+node internally. That will probably make it slower for now, but we need
+to optimize that to do nothing in some special cases anyway.
+
+Differential Revision:
+https://developer.blender.org/D16105
+-------
+).
+The new
+Sample UV Surface
+node allows getting an attribute value
+  based on a UV coordinate
+  (
+e65598b4fa
+### Commit Summary: Geometry Nodes: new Sample UV Surface node · e65598b4fa - blender - Blender Projects
+### Commit Details:
+This node allows sampling an attribute on a mesh surface based
+on a UV coordinate. Internally, this has to do a "reverse uv lookup",
+i.e. the node has to find the polygon that corresponds to the uv
+coordinate. Therefore, the uv map of the mesh should not have
+overlapping faces.
+
+Differential Revision:
+https://developer.blender.org/D15440
+-------
+).
+Curves
+¶
+The
+Trim Curves
+node now supports cyclic curves
+  (
+eaf416693d
+### Commit Summary: Geometry Nodes: Port the trim curve node to the new data-block · eaf416693d - blender - Blender Projects
+### Commit Details:
+The trim functionality is implemented in the geometry module, and
+generalized a bit to be potentially useful for bisecting in the future.
+The implementation is based on a helper type called `IndexRangeCyclic`
+which allows iteration over all control points between two points on a
+curve.
+
+Catmull Rom curves are now supported-- trimmed without resampling first.
+However, maintaining the exact shape is not possible. NURBS splines are
+still converted to polylines using the evaluated curve concept.
+
+Performance is equivalent or faster then a 3.1 build with regards to
+node timings. Compared to 3.3 and 3.2, it's easy to observe test cases
+where the node is at least 3 or 4 times faster.
+
+Differential Revision:
+https://developer.blender.org/D14481
+-------
+).
+New nodes give access to topology information about the mapping
+  between curves and points.
+Curve of Point
+Retrieves the curve a control point is part of
+  (
+482d431bb6
+### Commit Summary: Geometry Nodes: Curve and mesh topology access nodes · 482d431bb6 - blender - Blender Projects
+### Commit Details:
+This patch contains an initial set of nodes to access basic
+mesh topology information, as explored in T100020.
+
+The nodes allow six direct topology mappings for meshes:
+- **Corner -> Face** The face a corner is in, the index in the face
+- **Vertex -> Edge** Choose an edge attached to the vertex
+- **Vertex -> Corner** Choose a corner attached to the vertex
+- **Corner -> Edge** The next and previous edge at each face corner
+- **Corner -> Vertex** The vertex associated with a corner
+- **Corner -> Corner** Offset a corner index within a face
+
+And two new topology mappings for curves:
+- **Curve -> Points** Choose a point within a curve
+- **Point -> Curve** The curve a point is in, the index in the curve
+
+The idea is that some of the 16 possible mesh mappings are more
+important, and that this is a useful set of nodes to start exploring
+this area. For mappings with an arbitrary number of connections, we
+must sort them and use an index to choose a single element, because
+geometry nodes does not support list fields. Note that the sort
+index has repeating behavior as it goes over the "Total" number of
+connections, and negative sort indices choose from the end.
+
+Currently which of the "start" elements is used is determined by the
+field context, so the "Field at Index" and "Interpolate Domain" nodes
+will be quite important. Also, currently the "Sort Index" inputs are
+clamped to the number of connections.
+
+One important feature that isn't implemented here is using the winding
+order for the output elements. This can be a separate mode for some
+of these nodes. It will be optional because of the performance impact.
+
+There are several todos for separate commits after this:
+- Rename "Control Point Neighbors" to be consistent with this naming
+- Version away the "Vertex Neighbors" node which is fully redundant now
+- Implement a special case for when no weights are used for performance
+- De-duplicating some of the sorting logic between the nodes
+- Improve performance and memory use of topology mappings
+- Look into caching some of the mappings on meshes
+
+Differential Revision:
+https://developer.blender.org/D16029
+-------
+).
+Points of Curve
+Retrieves a point index within a curve
+  (
+482d431bb6
+### Commit Summary: Geometry Nodes: Curve and mesh topology access nodes · 482d431bb6 - blender - Blender Projects
+### Commit Details:
+This patch contains an initial set of nodes to access basic
+mesh topology information, as explored in T100020.
+
+The nodes allow six direct topology mappings for meshes:
+- **Corner -> Face** The face a corner is in, the index in the face
+- **Vertex -> Edge** Choose an edge attached to the vertex
+- **Vertex -> Corner** Choose a corner attached to the vertex
+- **Corner -> Edge** The next and previous edge at each face corner
+- **Corner -> Vertex** The vertex associated with a corner
+- **Corner -> Corner** Offset a corner index within a face
+
+And two new topology mappings for curves:
+- **Curve -> Points** Choose a point within a curve
+- **Point -> Curve** The curve a point is in, the index in the curve
+
+The idea is that some of the 16 possible mesh mappings are more
+important, and that this is a useful set of nodes to start exploring
+this area. For mappings with an arbitrary number of connections, we
+must sort them and use an index to choose a single element, because
+geometry nodes does not support list fields. Note that the sort
+index has repeating behavior as it goes over the "Total" number of
+connections, and negative sort indices choose from the end.
+
+Currently which of the "start" elements is used is determined by the
+field context, so the "Field at Index" and "Interpolate Domain" nodes
+will be quite important. Also, currently the "Sort Index" inputs are
+clamped to the number of connections.
+
+One important feature that isn't implemented here is using the winding
+order for the output elements. This can be a separate mode for some
+of these nodes. It will be optional because of the performance impact.
+
+There are several todos for separate commits after this:
+- Rename "Control Point Neighbors" to be consistent with this naming
+- Version away the "Vertex Neighbors" node which is fully redundant now
+- Implement a special case for when no weights are used for performance
+- De-duplicating some of the sorting logic between the nodes
+- Improve performance and memory use of topology mappings
+- Look into caching some of the mappings on meshes
+
+Differential Revision:
+https://developer.blender.org/D16029
+-------
+).
+Offset Point in Curve
+Offset a control point index within its
+  curve
+  (
+8a6dc0fac7
+### Commit Summary: Geometry Nodes: Control Point Neighbors Node · 8a6dc0fac7 - blender - Blender Projects
+### Commit Details:
+This node allows access to the indices of neighboring control points
+within a curve via an offset. This includes taking into consideration
+curves that are cyclic.
+
+Differential Revision: D13373
+-------
+,
+  (
+248def7e48
+### Commit Summary: Geometry Nodes: Change order of outputs in topology nodes · 248def7e48 - blender - Blender Projects
+### Commit Details:
+It's a bit more natural if the "Total" output come second, and it's
+also consistent with the Accumulate Field node.
+-------
+)).
+The
+Set Curve Normal
+allows choosing the normal evaluation mode
+  for curves
+  (
+748fda32ed
+### Commit Summary: Geometry Nodes: Set Curve Normal · 748fda32ed - blender - Blender Projects
+### Commit Details:
+This node allows for curves to have their evaluated normal mode changed
+between MINIMUM_TWIST and Z_UP. A selection input allows for choosing
+which spline in the curves object will be affected.
+
+Differential Revision: D16118
+-------
+).
+The
+Sample Curve
+node now has inputs for the curve index and a
+  custom value to sample
+  (
+5f7ca5462d
+### Commit Summary: Geometry Nodes: Add index and value inputs to sample curve node · 5f7ca5462d - blender - Blender Projects
+### Commit Details:
+As described in T92474 and T91650, this patch adds two features to the
+sample curve node. First is an index input, to allow choosing the curve
+to sample for each point. Second is a custom field input, which is
+evaluated on the control points of the curve and then sampled like the
+other outputs. There is an "All Curves" option for the old behavior
+which takes the length of all curves into account.
+
+For invalid curve indices, the node outputs zeros (default values).
+Invalid lengths and factors are clamped.
+
+There have been various discussions about splitting the node up more,
+but this is an intuitive combination of options and will work well
+enough for current use cases. The node could still be generalized more
+in the future.
+
+Keep in mind that the source field is evaluated on curve control points,
+not the evaluated points used for sampling. This is necessary so that
+fields like "Index" work as expected.
+
+Differential Revision:
+https://developer.blender.org/D16147
+-------
+).
+Volumes
+¶
+The
+Distribute Points in Volume
+node creates points inside of
+  volume grids
+  (
+b6e26a410c
+### Commit Summary: Geometry Nodes: Distribute Points in Volume · b6e26a410c - blender - Blender Projects
+### Commit Details:
+This commit adds a node to distribute points inside of volume grids.
+The "Random" mode usese OpenVDB's "point scatter" implementation, and
+there is also a "Grid" mode for uniform distributions. Both methods
+operate on all of the float grids in the volume, using every voxel with
+a value higher than the threshold. The random method is not stable as
+the input volume deforms.
+
+Based on a patch by Angus Stanton (@abstanton), which was based on a
+patch by Kenzie (
+@kenziemac130
+).
+
+Differential Revision:
+https://developer.blender.org/D15375
+-------
+).
+Instances
+¶
+Attributes of instances created via geometry nodes are now accessible
+  from materials through the Instancer mode of the Attribute node
+  (
+2f7234d3e1
+### Commit Summary: Attribute Node: access geometry node instance attributes. · 2f7234d3e1 - blender - Blender Projects
+### Commit Details:
+The Instancer mode of the node is intended for varying material
+behavior between instances. Since Geometry Nodes support arbitrary
+named instance attributes, this mode should include them in lookup.
+
+To implement this it is sufficient to store references to Geometry
+Node data in DupliObject, and check it during dupli attribute lookup.
+
+In order to reduce the memory usage of DupliObject, only 4 array
+entries are allocated, even though the current dupli recursion stack
+limit is 8. This assumes that not every entry would be associated with
+a GeometrySet instance. Hopefully, soon the whole system will be
+rewritten to remove the hard limits altogether.
+
+Differential Revision:
+https://developer.blender.org/D16114
+-------
+).
+Performance
+¶
+Geometry nodes has a new evaluation system
+  (
+4130f1e674
+### Commit Summary: Geometry Nodes: new evaluation system · 4130f1e674 - blender - Blender Projects
+### Commit Details:
+This refactors the geometry nodes evaluation system. No changes for the
+user are expected. At a high level the goals are:
+* Support using geometry nodes outside of the geometry nodes modifier.
+* Support using the evaluator infrastructure for other purposes like field evaluation.
+* Support more nodes, especially when many of them are disabled behind switch nodes.
+* Support doing preprocessing on node groups.
+
+For more details see T98492.
+
+There are fairly detailed comments in the code, but here is a high level overview
+for how it works now:
+* There is a new "lazy-function" system. It is similar in spirit to the multi-function
+  system but with different goals. Instead of optimizing throughput for highly
+  parallelizable work, this system is designed to compute only the data that is actually
+  necessary. What data is necessary can be determined dynamically during evaluation.
+  Many lazy-functions can be composed in a graph to form a new lazy-function, which can
+  again be used in a graph etc.
+* Each geometry node group is converted into a lazy-function graph prior to evaluation.
+  To evaluate geometry nodes, one then just has to evaluate that graph. Node groups are
+  no longer inlined into their parents.
+
+Next steps for the evaluation system is to reduce the use of threads in some situations
+to avoid overhead. Many small node groups don't benefit from multi-threading at all.
+This is much easier to do now because not everything has to be inlined in one huge
+node tree anymore.
+
+Differential Revision:
+https://developer.blender.org/D15914
+-------
+).
+The evaluator can provide better performance when many complex node
+  groups are used.
+Performance can be increased when there are very many small nodes
+  (
+5c81d3bd46
+### Commit Summary: Geometry Nodes: improve evaluator with lazy threading · 5c81d3bd46 - blender - Blender Projects
+### Commit Details:
+In large node setup the threading overhead was sometimes very significant.
+That's especially true when most nodes do very little work.
+
+This commit improves the scheduling by not using multi-threading in many
+cases unless it's likely that it will be worth it. For more details see the comments
+in `BLI_lazy_threading.hh`.
+
+Differential Revision:
+https://developer.blender.org/D15976
+-------
+).
+The
+Trim Curves
+node has been ported to the new data-block and can
+  be 3-4 times faster than in 3.2 or 3.3
+  (
+eaf416693d
+### Commit Summary: Geometry Nodes: Port the trim curve node to the new data-block · eaf416693d - blender - Blender Projects
+### Commit Details:
+The trim functionality is implemented in the geometry module, and
+generalized a bit to be potentially useful for bisecting in the future.
+The implementation is based on a helper type called `IndexRangeCyclic`
+which allows iteration over all control points between two points on a
+curve.
+
+Catmull Rom curves are now supported-- trimmed without resampling first.
+However, maintaining the exact shape is not possible. NURBS splines are
+still converted to polylines using the evaluated curve concept.
+
+Performance is equivalent or faster then a 3.1 build with regards to
+node timings. Compared to 3.3 and 3.2, it's easy to observe test cases
+where the node is at least 3 or 4 times faster.
+
+Differential Revision:
+https://developer.blender.org/D14481
+-------
+).
+Mesh and curve domain interpolation can be skipped for single values
+  (
+e89b2b1221
+### Commit Summary: Mesh: Skip some domain interpolations for single values · e89b2b1221 - blender - Blender Projects
+### Commit Details:
+Completely skip the work of interpolating domains for single values
+for many to and from combinations. Similar to
+535f50e5a6
+,
+but slightly more complex because of the possibility of loose elements
+on some mesh domains.
+
+From D16054, with added comments.
+-------
+,
+535f50e5a6
+### Commit Summary: Curves: Use early out when apapting domain of single value · 535f50e5a6 - blender - Blender Projects
+### Commit Details:
+When adapting the domain of a single value virtual array, skip
+allocating an array for the result and just return another single
+value. Among other cases, this can help when everything is selected
+in sculpt mode, moving domain interpolation from 5% of perf samples
+to 0% when sculpting.
+-------
+).
+Node Editor
+¶
+Assets
+¶
+Node group assets are visible in the add menus of the node editor
+  (
+bdb5754147
+### Commit Summary: Nodes: Add node group assets to search menus · bdb5754147 - blender - Blender Projects
+### Commit Details:
+Currently node group assets are supported, but using them by dragging
+from the asset browser is cumbersome. This patch adds all node group
+assets from user asset libraries and the current file libraries to the
+add node search menu and the link drag search menu.
+
+Node groups added through the search will have their "options" hidden,
+meaning the data-block selector is displayed. This helps keep the UI
+clean, and the selector shouldn't be necessary anyway.
+
+To make that possible, metadata like the node tree type and its inputs
+and outputs has to be saved in the file. This requires re-saving the
+files that contain the assets with the patch applied.
+
+The node add search operator is moved from Python to C++ to ease
+development and allow more flexibility. It supports a tooltip that
+gives the description of assets.
+
+Currently the node groups are added with the asset system's existing
+"Append & Reuse" behavior. It's likely that linking should be possible
+in the future too, but for now the idea is to use the more foolproof
+option that doesn't create dependencies between files.
+
+Because loading assets can potentially take a long time, the search
+menu refreshes its items as new assets are loaded. However, changing
+the search field is necessary to see the update.
+
+Differential Revision:
+https://developer.blender.org/D15568
+-------
+).
+User Interface
+¶
+Show data-block use count in the Context Path and Group node header
+  (
+84825e4ed2
+### Commit Summary: UI: Icon number indicator for data-blocks · 84825e4ed2 - blender - Blender Projects
+### Commit Details:
+Adds the possibility of having a little number on top of icons.
+
+At the moment this is used for:
+* Outliner
+* Node Editor bread-crumb
+* Node Group node header
+
+For the outliner there is almost no functional change. It is mostly a refactor
+to handle the indicators as part of the icon shader instead of the outliner
+draw code. (note that this was already recently changed in
+a5d3b648e3
+).
+
+The difference is that now we use rounded border rectangle instead of
+circles, and we can go up to 999 elements.
+
+So for the outliner this shows the number of collapsed elements of a
+certain type (e.g., mesh objects inside a collapsed collection).
+
+For the node editors is being used to show the use count for the data-block.
+This is important for the node editor, so users know whether the node-group
+they are editing (or are about to edit) is used elsewhere. This is
+particularly important when the Node Options are hidden, which is the
+default for node groups appended from the asset libraries.
+
+---
+
+Note: This can be easily enabled for ID templates which can then be part
+of T84669. It just need to call UI_but_icon_indicator_number_set in the
+function template_add_button_search_menu.
+
+---
+
+Special thanks Clément Foucault for the help figuring out the shader,
+Julian Eisel for the help navigating the UI code, and Pablo Vazquez for
+the collaboration in this design solution.
+
+For images showing the result check the Differential Revision.
+Differential Revision:
+https://developer.blender.org/D16284
+-------
+).
+Node links have been tweaked to make them fit better with the overall
+  look of the node editor
+  (
+9a86255da8
+### Commit Summary: Node Editor: Visual tweaks to node links · 9a86255da8 - blender - Blender Projects
+### Commit Details:
+Several visual tweaks to node links to make them overall fit in
+better with the look of the node editor:
+
+- Change the link thickness with the zoom level to a certain degree.
+- Remove the fuzziness of the node link and its shadow/outline.
+- The link outline color can now be made transparent.
+- Add circles at the end of dragged links when connecting to sockets.
+- Improve the banding of the color interpolation along the link.
+- Adjust the spacing of dashes along straight node links.
+
+Reviewed By: Pablo Vazquez, Hans Goudey
+
+Differential Revision:
+http://developer.blender.org/D15036
+-------
+).
+Link curving has been adjusted to make vertical links look better
+  (
+67308d73a4
+### Commit Summary: Node Editor: Adjust node link curving · 67308d73a4 - blender - Blender Projects
+### Commit Details:
+Clamp node link curving when the link is close to horizontal to prevent
+overshooting at the ends.
+
+Reviewed By: Pablo Vazquez, Hans Goudey
+
+Differential Revision:
+http://developer.blender.org/D16041
+-------
+).
+Input sockets are reused when creating new node groups
+  (
+14e4c96b64
+### Commit Summary: Nodes: Reuse input sockets when creating new node groups · 14e4c96b64 - blender - Blender Projects
+### Commit Details:
+**Problem**
+Currently multiple input sockets are created when a new node group is
+made from selected nodes. Some of these are linked from the same source.
+It is not convenient to sort out and remove multiple input sockets that
+represent the same input. These inputs usually have meaningless names
+like 'value', 'x', etc.
+
+**Solution**
+Create common input sockets for each link starting from the same input.
+Move links inside the new group's node tree and reroute it to connect
+the common input socket to the original nodes. This is done by building
+up a mapping between the incoming link sources to the input interfaces
+created for them. The input interfaces are reused by the rest of the
+links having the same source.
+
+This patch also changes the way the input sockets get their names.
+Output socket names of the group nodes usually are specific and are
+given consciously. Use the output socket names from group nodes instead
+of the inputs where the links point to.
+
+Differential Revision:
+https://developer.blender.org/D15802
+-------
+).
+Duplicate Linked
+¶
+Duplicate Linked operator and user Preference option for Node Tree
+  data duplication
+  (
+6beeba1ef5
+### Commit Summary: Nodes: Duplicate Linked operator + User Preference option for Node Tree · 6beeba1ef5 - blender - Blender Projects
+### Commit Details:
+This operator (Alt + D) allows users to explicitly create a linked copy
+of a group node (same current behaviour for the Duplicate operator).
+
+The duplicate operator (Shift + D) now takes the new User Preference
+duplicate data option for Node Tree into account. It is by default
+disabled, leading to no functional change for users.
+
+Although we could make in the future make this option "on" by default,
+to make it consistent with the rest of Blender we do not at the time.
+
+Differential Revision:
+https://developer.blender.org/D16210
+-------
+).
+
+'''''
+
+
+7. Pipeline, Assets & I/O¶
+
+Pipeline, Assets & I/O
+¶
+OBJ
+¶
+Support for "PBR" extensions in .mtl files
+  (
+a99a62231e
+### Commit Summary: obj: implement support for PBR .mtl extensions · a99a62231e - blender - Blender Projects
+### Commit Details:
+Implement import & export support for "PBR extensions" in .mtl files
+(T101029, also fixes T86736).
+
+Newly supported parameters:
+- Roughness (Pr, map_Pr)
+- Metallic (Pm, map_Pm)
+- Sheen (Ps, map_Ps)
+- Clearcoat thickness (Pc) and roughness (Pcr)
+- Anisotropy (aniso) and rotation (anisor)
+- Transmittance (Tf / Kt)
+
+Exporter has an option to enable these additional PBR parameters
+export; defaults to off since not all software understands that.
+
+Exporter UI tweaked and all material-related options were put into
+their own separate box.
+
+Added/extended test files in Subversion repository for test coverage.
+-------
+).
+  This adds roughness, metallic, sheen, clearcoat, anisotropy,
+  transmission parameters of Principled BSDF materials. Use "PBR
+  Extensions" toggle in export settings to enable it.
+Global scaling factor was added to the OBJ importer
+  (
+42b1a7d4c6
+### Commit Summary: OBJ: add global scale factor import setting · 42b1a7d4c6 - blender - Blender Projects
+### Commit Details:
+Requested in D16095 proposal - also USD & Alembic have import scale
+option; OBJ has an export scale object but the import scale
+was not there for some reason.
+-------
+).
+glTF 2.0
+¶
+glTF I/O is an python addon, change logs can be retrieved on
+Addon
+page
+
+'''''
+
+
+8. Platforms
+
+Platforms
+Linux
+¶
+The Wayland windowing environment is now supported in addition to X11,
+  see the
+user-manual
+### Commit Summary: Linux Windowing Environment — Blender Manual
+### Commit Details:
+No details found
+-------
+& this
+blog-post
+for details.
+Windows
+¶
+Allow Windows Explorer thumbnails of Blend files at maximum
+  resolution.
+  (
+ff27b68f41
+### Commit Summary: Fix T101295: Allow Large Windows Thumbnails · ff27b68f41 - blender - Blender Projects
+### Commit Details:
+Allow our Windows Thumbnail Handler to supply thumbnails up to the
+maximum 256x256 size.
+
+Differential Revision:
+https://developer.blender.org/D16051
+Reviewed by Ray Molenkamp
+-------
+).
+
+'''''
+
+
+9. Python API & Text Editor¶
+
+Python API & Text Editor
+¶
+Blender as a Python Module
+¶
+Various changes have been made to improve support for running Blender as
+a Python module.
+bpy 3.4.0 is available on PyPi
+, and
+  can be installed through
+pip install bpy
+. Note that this requires
+  Python 3.10 (matching Blender releases), other versions do not work.
+bpy.app.program_path
+defaults to an empty string which can be
+  written to, allowing scripts to point to a Blender binary
+  (
+f7a4ede79f
+### Commit Summary: Python: change bpy.app.binary_path behavior WITH_PYTHON_MODULE · f7a4ede79f - blender - Blender Projects
+### Commit Details:
+The following changes have been made to this attribute with
+WITH_PYTHON_MODULE is defined:
+
+- Defaults to an empty string (instead of pointing to __init__.so).
+- It's writable, so script authors can point to a valid Blender binary.
+
+`where_am_i(..)` is no longer used by BKE_appdir_program_path_init,
+there is now a separate code-path for setting the initial program
+directory, calls after this can be used to set the binary path.
+-------
+).
+The module is now built as a self contained Python-package "bpy"
+  (
+81558783e4
+### Commit Summary: Python: install "bpy" as a package WITH_PYTHON_MODULE · 81558783e4 - blender - Blender Projects
+### Commit Details:
+Building WITH_PYTHON_MODULE was creating a "bpy" module that required
+Blenders data-files to be located in the module search path too.
+
+This mean that a typical installation on Linux would create:
+
+- `/usr/lib/python3.10/site-packages/bpy.so`
+- `/usr/lib/python3.10/site-packages/3.4`
+  (containing `scripts` & `datafiles`).
+
+The new behavior creates:
+
+- `/usr/lib/python3.10/site-packages/bpy/__init__.so`
+- `/usr/lib/python3.10/site-packages/bpy/3.4`
+
+With the advantage that the "bpy" directory is the self contained Python
+module.
+
+No changes are needed for the module loading logic as the mechanism to
+swap in blend internal Python "bpy" module
+(defined in `release/scripts/modules/bpy/__init__.py`)
+works the same in both instances.
+
+Thanks to Brecht for macOS support.
+
+Reviewed by brecht
+
+Ref D15911
+-------
+).
+GPU rendering via (EEVEE / WorkBench) is now supported on Linux
+  (
+3195a38120
+### Commit Summary: Introduce headless OpenGL rendering on Linux · 3195a38120 - blender - Blender Projects
+### Commit Details:
+With this patch true headless OpenGL rendering is now possible on Linux.
+It changes the logic of the WITH_HEADLESS build flag.
+
+The headless backend is now always available with regular builds and
+Blender will try to fall back to it if it fails to initialize other
+backends while in background mode.
+
+The headless backend only works on Linux as EGL is not used on Mac or Windows.
+libepoxy does support windows and mac, so this can perhaps be remedied in the future.
+
+Reviewed By: Brecht, Jeroen, Campbell
+
+Differential Revision:
+http://developer.blender.org/D15555
+-------
+).
+Additions
+¶
+New GPU built-in shader enums that work for both 2D and 3D. The 2D and
+  3D versions are deprecated.
+  (
+8cfca8e1bd
+### Commit Summary: PyGPU: only use 3D shaders and rename string enums · 8cfca8e1bd - blender - Blender Projects
+### Commit Details:
+Since rB6269d66da, creating formats no longer depends solely on the
+shader, but now depends on the dimensions used to fill the VBOs.
+
+This allows 3D shaders to work flawlessly when assigned dimensions are
+2D.
+
+So there's no real benefit to us having shaders that are limited to 2D
+use anymore.
+
+This limitation makes it difficult to implement other builtin shaders
+as they indirectly require a 2D version.
+
+So this commit removes the 2D versions of the builtin sahders used in
+Python , renames the string enums but keeps the old enums working for
+backward compatibility.
+
+(This brings parts of the changes reviewed in D15836).
+-------
+)
+New function
+bmesh_utils.bmesh_linked_uv_islands
+to access UV
+  islands from a BMesh
+  (
+de570dc87e
+### Commit Summary: Fix T78406: create uv randomize islands operator · de570dc87e - blender - Blender Projects
+### Commit Details:
+Implement a new operator to randomize the scale, rotation and offset
+of selected UV islands.
+-------
+).
+File select dialogs will now call the
+update
+callbacks of the
+  attached operator's
+directory
+,
+filename
+and
+filepath
+properties
+  (
+48d7ff68f0
+### Commit Summary: Make File Select dialog update operator's file & path properties · 48d7ff68f0 - blender - Blender Projects
+### Commit Details:
+When an operator is attached to a file select dialog, the update
+callback function for the operator's directory, filename and filepath
+properties will be called as the user navigates through the dialog.
+
+This will allow add-on authors to make more interactive import
+operators.
+
+Differential Revision:
+https://developer.blender.org/D15543
+-------
+).
+  This will allow for much more interactive dialogs since, for example,
+  operators can now present different options based on what file is
+  currently selected.
+Internal Mesh Format
+¶
+The internal data structure for meshes has undergone significant
+changes, mainly by splitting up data to be stored in separate arrays.
+More information is available on the
+a design
+task
+. More mesh data is now
+accessible with the generic attribute system, accessible with Python as
+mesh.attributes[name]
+. The existing API to retrieve this data
+remains, but it will be slower. The new methods should be faster in most
+situations. The attributes may not exist, so they must be created first.
+The "hidden" status of Mesh vertices, edges, and polygons is now
+  stored in separate generic boolean attributes
+  (
+2480b55f21
+### Commit Summary: Mesh: Move hide flags to generic attributes · 2480b55f21 - blender - Blender Projects
+### Commit Details:
+This commit moves the hide status of mesh vertices, edges, and faces
+from the `ME_FLAG` to optional generic boolean attributes. Storing this
+data as generic attributes can significantly simplify and improve code,
+as described in T95965.
+
+The attributes are called `.hide_vert`, `.hide_edge`, and `.hide_poly`,
+using the attribute name semantics discussed in T97452. The `.` prefix
+means they are "UI attributes", so they still contain original data
+edited by users, but they aren't meant to be accessed procedurally by
+the user in arbitrary situations. They are also be hidden in the
+spreadsheet and the attribute list by default,
+
+Until 4.0, the attributes are still written to and read from the mesh
+in the old way, so neither forward nor backward compatibility are
+affected. This means memory requirements will be increased by one byte
+per element when the hide status is used. When the flags are removed
+completely, requirements will decrease when hiding is unused.
+
+Further notes:
+ * Some code can be further simplified to skip some processing when the
+   hide attributes don't exist.
+ * The data is still stored in flags for `BMesh`, necessitating some
+   complexity in the conversion to and from `Mesh`.
+ * Access to the "hide" property of mesh elements in RNA is slower.
+   The separate boolean arrays should be used where possible.
+
+Ref T95965
+
+Differential Revision:
+https://developer.blender.org/D14685
+-------
+).
+The attribute names are
+.hide_vert
+,
+.hide_edge
+, and
+.hide_poly
+, and have
+BOOLEAN
+type.
+Similarly, mesh selection has also been moved to generic attributes
+  (
+12becbf0df
+### Commit Summary: Mesh: Move selection flags to generic attributes · 12becbf0df - blender - Blender Projects
+### Commit Details:
+Using the attribute name semantics from T97452, this patch moves the
+selection status of mesh elements from the `SELECT` of vertices, and
+edges, and the `ME_FACE_SEL` of faces to generic boolean attribute
+Storing this data as generic attributes can significantly simplify and
+improve code, as described in T95965.
+
+The attributes are called `.select_vert`, `.select_edge`, and
+`.select_poly`. The `.` prefix means they are "UI attributes",so they
+still contain original data edited by users, but they aren't meant to
+be accessed procedurally by the user in arbitrary situations. They are
+also be hidden in the spreadsheet and the attribute list.
+
+Until 4.0, the attributes are still written to and read from the mesh
+in the old way, so neither forward nor backward compatibility are
+affected. This means memory requirements will be increased by one byte
+per element when selection is used. When the flags are removed
+completely, requirements will decrease.
+
+Further notes:
+* The `MVert` flag is empty at runtime now, so it can be ignored.
+* `BMesh` is unchanged, otherwise the change would be much larger.
+* Many tests have slightly different results, since the selection
+  attribute uses more generic propagation. Previously you couldn't
+  really rely on edit mode selections being propagated procedurally.
+  Now it mostly works as expected.
+
+Similar to
+2480b55f21
+Ref T95965
+
+Differential Revision:
+https://developer.blender.org/D15795
+-------
+).
+The attribute names are
+.select_vert
+,
+.select_edge
+, and
+.select_poly
+and have
+BOOLEAN
+type.
+Mesh polygon material indices are now stored in a generic attribute
+  (
+f1c0249f34
+### Commit Summary: Mesh: Move material indices to a generic attribute · f1c0249f34 - blender - Blender Projects
+### Commit Details:
+This patch moves material indices from the mesh `MPoly` struct to a
+generic integer attribute. The builtin material index was already
+exposed in geometry nodes, but this makes it a "proper" attribute
+accessible with Python and visible in the "Attributes" panel.
+
+The goals of the refactor are code simplification and memory and
+performance improvements, mainly because the attribute doesn't have
+to be stored and processed if there are no materials. However, until
+4.0, material indices will still be read and written in the old
+format, meaning there may be a temporary increase in memory usage.
+
+Further notes:
+* Completely removing the `MPoly.mat_nr` after 4.0 may require
+  changes to DNA or introducing a new `MPoly` type.
+* Geometry nodes regression tests didn't look at material indices,
+  so the change reveals a bug in the realize instances node that I fixed.
+* Access to material indices from the RNA `MeshPolygon` type is slower
+  with this patch. The `material_index` attribute can be used instead.
+* Cycles is changed to read from the attribute instead.
+* BMesh isn't changed in this patch. Theoretically it could be though,
+  to save 2 bytes per face when less than two materials are used.
+* Eventually we could use a 16 bit integer attribute type instead.
+
+Ref T95967
+
+Differential Revision:
+https://developer.blender.org/D15675
+-------
+).
+The attribute name is
+material_index
+, with the
+INT
+type.
+Sculpt face sets are stored in a generic attribute, now accessible
+  with the Python API
+  (
+060a534141
+### Commit Summary: Mesh: Move sculpt face sets to a generic attribute · 060a534141 - blender - Blender Projects
+### Commit Details:
+Similar to the other refactors from T95965, this commit moves sculpt
+face sets to use a generic integer attribute named `".sculpt_face_set"`.
+This makes face sets accessible in the Python API.
+
+The attribute is not visible in the attributes list or the spreadsheet
+because it is meant for internal use, though that could be an option
+in the future along with other similar attributes. Currently the change
+is small, but in the future this could simplify code by allowing use
+of more generic attribute APIs.
+
+Differential Revision:
+https://developer.blender.org/D16045
+-------
+).
+The name is "
+.sculpt_face_set
+", with the
+INT
+type.
+Internally, bevel weights are now stored optionally in separate
+  arrays, though the attribute for accessing them remains unchanged
+  (
+291c313f80
+### Commit Summary: Mesh: Move bevel weight out of MVert and MEdge · 291c313f80 - blender - Blender Projects
+### Commit Details:
+As described in T95966, the goal is to move to a "struct of arrays"
+approach rather than gathering an arbitrary set of data in hard-coded
+structs. This has performance benefits, but also code complexity
+benefits (this patch removes plenty of code, though the boilerplate
+for the new operators outweighs that here).
+
+To mirror the internal change, the options for storing mesh bevel
+weights are converted into operators that add or remove the layer,
+like for some other layers.
+
+The most complex change is to the solidify modifier, where bevel
+weights had special handling. Other than that, most changes are
+removing clearing of the weights, boilerplate for the add/remove
+operators, and removing the manual transfer of bevel weights
+in bmesh - mesh conversion.
+
+Eventually bevel weights can become a fully generic attribute,
+but for now this patch aims to avoid most functional changes.
+
+Bevel weights are still written and read from the mesh in the old way,
+so neither forward nor backward compatibility are affected. As described
+in T95965, writing in the old format will be done until 4.0.
+
+Differential Revision:
+https://developer.blender.org/D14077
+-------
+).
+The
+use_customdata_vertex_bevel
+and
+use_customdata_edge_bevel
+properties have been replaced with
+  operators for removing and adding the layers:
+MESH_OT_customdata_bevel_weight_{vertex,edge}_{add,clear}
+Subdivision surface edge creases are now stored optionally in a
+  separate array
+  (
+a8a454287a
+### Commit Summary: Mesh: Move edge crease out of MEdge · a8a454287a - blender - Blender Projects
+### Commit Details:
+This is very similar to D14077. There are two differences though.
+First is that vertex creases are already stored in a separate layer,
+and second is that we can now completely remove use of `Mesh.cd_flag`,
+since that information is now inherent to whether the layers exist.
+
+There are two functional differences here:
+ * Operators are used to add and remove layers instead of a property.
+ * The "crease" attribute can be created and removed by geometry nodes.
+
+The second change should make various geometry nodes slightly faster,
+since the "crease" attribute was always processed before. Creases are
+now interpolated generically in the CustomData API too, which should
+help maintain the values across edits better.
+
+Meshes get an `edge_creases` RNA property like the existing vertex
+property, to provide more efficient access to the data in Cycles.
+
+One test failure is expected, where different rounding between float
+the old char storage means that 5 additional points are scattered in
+a geometry nodes test.
+
+Differential Revision:
+https://developer.blender.org/D15927
+-------
+).
+Meshes have a new
+edge_creases
+property used to access crease
+  values separately from edges (which is faster).
+The properties
+use_customdata_vertex_crease
+and
+use_customdata_edge_crease
+have been removed. They can be
+  replaced by the API above or the
+MESH_OT_customdata_crease_{vertex,edge}_{add,clear}
+operators.
+As an example, here the sculpt face sets are created if they don't
+exist.
+if
+".sculpt_face_set"
+not
+in
+mesh
+.
+attributes
+:
+face_sets
+=
+mesh
+.
+attributes
+.
+new
+(
+".sculpt_face_set"
+,
+"INT"
+,
+"FACE"
+)
+face_sets
+.
+data
+[
+10
+]
+=
+14
+Breaking Changes
+¶
+The unused node "add and link node" operator
+NODE_OT_add_and_link_node
+was removed
+  (
+543ea41569
+### Commit Summary: Cleanup: Remove unused node "add and link node" operator · 543ea41569 - blender - Blender Projects
+### Commit Details:
+The link drag search from
+11be151d58
+implements
+this now. It was added in
+3ebe7d970e
+but never used.
+-------
+).
+Unused operators
+MESH_OT_vertex_color_add
+,
+MESH_OT_vertex_color_remove
+,
+MESH_OT_sculpt_vertex_color_add
+,
+  and
+MESH_OT_sculpt_vertex_color_remove
+were removed.
+These operators can be
+replaced
+with the
+Mesh.vertex_colors.new()
+and
+.remove()
+functions
+  (which are also deprecated), or with the attribute API
+  (
+Mesh.attributes
+).
+The
+Mesh
+properties
+use_customdata_vertex_bevel
+,
+use_customdata_edge_bevel
+,
+use_customdata_vertex_bevel
+, and
+use_customdata_edge_crease
+have been replaced with
+has_bevel_weight_edge
+,
+has_bevel_weight_vertex
+,
+has_crease_edge
+, and specific operators for adding and clearing
+  the layer:
+MESH_OT_customdata_bevel_weight_{vertex/edge}_{clear/add}
+, and
+MESH_OT_customdata_crease_{vertex,edge}_{add,clear}
+(
+291c313f80
+### Commit Summary: Mesh: Move bevel weight out of MVert and MEdge · 291c313f80 - blender - Blender Projects
+### Commit Details:
+As described in T95966, the goal is to move to a "struct of arrays"
+approach rather than gathering an arbitrary set of data in hard-coded
+structs. This has performance benefits, but also code complexity
+benefits (this patch removes plenty of code, though the boilerplate
+for the new operators outweighs that here).
+
+To mirror the internal change, the options for storing mesh bevel
+weights are converted into operators that add or remove the layer,
+like for some other layers.
+
+The most complex change is to the solidify modifier, where bevel
+weights had special handling. Other than that, most changes are
+removing clearing of the weights, boilerplate for the add/remove
+operators, and removing the manual transfer of bevel weights
+in bmesh - mesh conversion.
+
+Eventually bevel weights can become a fully generic attribute,
+but for now this patch aims to avoid most functional changes.
+
+Bevel weights are still written and read from the mesh in the old way,
+so neither forward nor backward compatibility are affected. As described
+in T95965, writing in the old format will be done until 4.0.
+
+Differential Revision:
+https://developer.blender.org/D14077
+-------
+,
+a8a454287a
+### Commit Summary: Mesh: Move edge crease out of MEdge · a8a454287a - blender - Blender Projects
+### Commit Details:
+This is very similar to D14077. There are two differences though.
+First is that vertex creases are already stored in a separate layer,
+and second is that we can now completely remove use of `Mesh.cd_flag`,
+since that information is now inherent to whether the layers exist.
+
+There are two functional differences here:
+ * Operators are used to add and remove layers instead of a property.
+ * The "crease" attribute can be created and removed by geometry nodes.
+
+The second change should make various geometry nodes slightly faster,
+since the "crease" attribute was always processed before. Creases are
+now interpolated generically in the CustomData API too, which should
+help maintain the values across edits better.
+
+Meshes get an `edge_creases` RNA property like the existing vertex
+property, to provide more efficient access to the data in Cycles.
+
+One test failure is expected, where different rounding between float
+the old char storage means that 5 additional points are scattered in
+a geometry nodes test.
+
+Differential Revision:
+https://developer.blender.org/D15927
+-------
+).
+Leak Size
+for Grease Pencil Fill tool has been removed.
+  (
+bdbf24772a
+### Commit Summary: GPencil: Remove Leak Size · bdbf24772a - blender - Blender Projects
+### Commit Details:
+This value was used to close gaps, but now with the new system is not needed.
+
+Internally, still we need to keep a small leak size, but after doing a lot of test a 
+value of 3 is perfect, so it's harcoded.
+-------
+)
+Added new methods to define how the lines are extender for Grease
+  Pencil Fill tool
+  (
+172b0ebe6a
+### Commit Summary: GPencil: Rename Fill closure methods · 172b0ebe6a - blender - Blender Projects
+### Commit Details:
+The new names are:
+
+* Radius
+* Extend
+
+The mode Radius + Extend has been removed.
+
+Also, some code cleanup and format.
+-------
+).
+UV editing rounding mode,
+Snap to Pixels
+has been renamed
+Round to Pixels
+(
+b5115ed80f
+### Commit Summary: UV: rename "Pixel Snap Mode" to "Pixel Round Mode" · b5115ed80f - blender - Blender Projects
+### Commit Details:
+Maniphest Tasks: T78391
+
+Differential Revision:
+https://developer.blender.org/D15952
+-------
+).
+UV custom grid subdivisions can now be set for X and Y axis separately
+  (
+a24fc6bbc1
+### Commit Summary: UV: extend custom grid sizes to set each axis separately · a24fc6bbc1 - blender - Blender Projects
+### Commit Details:
+For example, allows a custom UV grid size of 4 x 12.
+
+TODO: Fix snapping with custom UV grid sizes.
+
+Manifest Tasks: T78391
+
+Differential Revision:
+https://developer.blender.org/D16000
+-------
+).
+Geometry nodes do not use the
+NodeItem
+system anymore
+  (
+837144b457
+### Commit Summary: Nodes: Use plain menus for geometry nodes add menu · 837144b457 - blender - Blender Projects
+### Commit Details:
+At the cost of slightly more boilerplate code, we can avoid the `NodeItem`
+and `NodeCategory` abstractions used to build the node add menu.
+This makes the menus more flexible and more obvious, which will
+make them easier to extend with assets.
+
+The identifiers for the new menu types are inconsistent with regular
+class naming for backwards compatibility with the old "category"
+menu naming.
+
+Also adds an item for the "Self Object" node missed in
+dd5131bd70
+.
+
+Differential Revision:
+https://developer.blender.org/D15973
+-------
+).
+Functions like
+nodeitems_utils.node_items_iter
+will not retrieve
+  them anymore. Instead, one should iterate over node types directly.
+Adding/removing/moving sockets on built-in node types is not possible
+  anymore
+  (
+52bd198153
+### Commit Summary: Fix T100872: restrict Python API on built-in nodes · 52bd198153 - blender - Blender Projects
+### Commit Details:
+Differential Revision:
+https://developer.blender.org/D16304
+-------
+).
+Nodes from newly created materials get their names translated if
+  translation is enabled. They should not be referenced by name any more
+  (
+9d732445b9
+### Commit Summary: I18n: make a few messages translatable. · 9d732445b9 - blender - Blender Projects
+### Commit Details:
+I18n: make a few messages translatable
+
+    * Missing Paths * in the Presets menu when no preset exists yet.
+    The White Noise entry in the Add Node menu is the only one lacking a "Texture" suffix, which doesn't seem justified since the node itself is already called "White Noise Texture". Rename the entry its name can be extracted and used for the node--and for consistency.
+    New object material node names (Principled BSDF, Material Output) come from a preset node tree. The nodes' names need to be translated after creation.
+    Extract the "Fallback Tool" pie menu title.
+    Translate grease pencil options in the viewport overlay menu.
+
+Ref T102030.
+
+Reviewed By: mont29
+
+Differential Revision:
+https://developer.blender.org/D16345
+-------
+).
+Render Engines Passes
+¶
+Render results by default now only have a Combined pass, and render
+engines need to explicitly specify all other passes they produce.
+Blender queries the render engine's
+update_render_passes
+function
+and adds all render passes that the engine specifies using
+register_pass
+.
+(
+3411a96e74
+### Commit Summary: Fix T93382: Blender still generates subsurface render passes · 3411a96e74 - blender - Blender Projects
+### Commit Details:
+In T93382, the problem was that the Blender-side rendering code was
+still generating the subsurface passes because the old render pass
+flags were set, even though Cycles doesn't generate them anymore.
+
+After a closer look, it turns out that the entire hardcoded pass
+creation code can be removed. We already have an Engine API function
+to query the list of render passes from the engine, so we might as
+well just call that and create the returned passes.
+
+Turns out that Eevee already did this anyways. On the Cycles side, it
+allows to deduplicate a lot of `BlenderSync::sync_render_passes`.
+Before, passes were defined in engine.py and in sync.cpp. Now, all
+passes that engine.py returns are created automatically, so sync.cpp
+only needs to handle a few special cases.
+
+I'm not really concerned about affecting external renderer addons,
+since they already needed to handle the old "builtin passes" in
+their Engine API implementation anyways to make them show up in the
+compositor. So, unless they missed that for like 10 releases, they
+should not notice any difference.
+
+Differential Revision:
+https://developer.blender.org/D16295
+-------
+)
+Previously, a number of built-in render passes were automatically added
+when the corresponding
+ViewLayer.use_pass_\*
+property was enabled.
+If a render engine relied on this, the pass now needs to be explicitly
+added in
+update_render_passes
+.
+
+'''''
+
+
+10. Cycles¶
+
+Cycles
+¶
+Path Guiding
+¶
+Path guiding was integrated
+(
+75a6d3abf7
+### Commit Summary: Cycles: add Path Guiding on CPU through Intel OpenPGL · 75a6d3abf7 - blender - Blender Projects
+### Commit Details:
+This adds path guiding features into Cycles by integrating Intel's Open Path
+Guiding Library. It can be enabled in the Sampling > Path Guiding panel in the
+render properties.
+
+This feature helps reduce noise in scenes where finding a path to light is
+difficult for regular path tracing.
+
+The current implementation supports guiding directional sampling decisions on
+surfaces, when the material contains a least one diffuse component, and in
+volumes with isotropic and anisotropic Henyey-Greenstein phase functions.
+
+On surfaces, the guided sampling decision is proportional to the product of
+the incident radiance and the normal-oriented cosine lobe and in volumes it
+is proportional to the product of the incident radiance and the phase function.
+
+The incident radiance field of a scene is learned and updated during rendering
+after each per-frame rendering iteration/progression.
+
+At the moment, path guiding is only supported by the CPU backend. Support for
+GPU backends will be added in future versions of OpenPGL.
+
+Ref T92571
+
+Differential Revision:
+https://developer.blender.org/D15286
+-------
+)
+into Cycles using Intel's
+Open Path Guiding Library
+.
+This feature improves the sampling quality of individual paths reducing
+the noise in complex lighting scenarios such as; long indirect light
+bounces, indirectly illuminated shadow areas, or reflected light
+sources.
+Note:
+While Path Guiding helps to render scenes containing simple
+caustics (e.g., water surface), it is not designed to be a caustic
+solver, such as MNEE, meaning it might not help render scenes containing
+complex caustics.
+During rendering, path guiding learns an approximation of the scene's
+light distribution (direct and indirect). This information is then used
+to guide paths into important directions that might not be explored well
+using standard directional sampling methods that only consider the local
+material or the directly visible light sources.
+More details about path guiding, how it works, and how it is integrated
+into Cycles are presented in the BCON2022 talk
+Follow the light: introducing path guiding in Cycles
+.
+At the moment, path guiding is only available for CPU rendering and can
+be enabled in the render properties panel under ‘Sampling->Path
+Guiding’. The current implementation supports guiding on surfaces with
+diffuse BSDFs components as well as inside volumes.
+The following images show the effects of path guiding in practice when
+applied in different scenes with complex lighting scenarios. Each
+comparison is rendered at an equal time.
+Without Guiding
+With Guiding
+Scenes by Andy Goralczyk, Alaska and Jesus Sandoval.
+Improvements
+¶
+Attribute node: support for using attributes of geometry nodes
+  instances. Additionally, boolean and integer array attributes can be
+  read from objects.
+  (
+2f7234d3e1
+### Commit Summary: Attribute Node: access geometry node instance attributes. · 2f7234d3e1 - blender - Blender Projects
+### Commit Details:
+The Instancer mode of the node is intended for varying material
+behavior between instances. Since Geometry Nodes support arbitrary
+named instance attributes, this mode should include them in lookup.
+
+To implement this it is sufficient to store references to Geometry
+Node data in DupliObject, and check it during dupli attribute lookup.
+
+In order to reduce the memory usage of DupliObject, only 4 array
+entries are allocated, even though the current dupli recursion stack
+limit is 8. This assumes that not every entry would be associated with
+a GeometrySet instance. Hopefully, soon the whole system will be
+rewritten to remove the hard limits altogether.
+
+Differential Revision:
+https://developer.blender.org/D16114
+-------
+,
+554afabf75
+### Commit Summary: Attribute Node: refactor lookup to remove duplication between engines. · 554afabf75 - blender - Blender Projects
+### Commit Details:
+Currently lookup of Object and Instancer attributes is completely
+duplicated between Cycles, Eevee and Eevee Next. This is bad design,
+so this patch aims to deduplicate it by introducing a common API
+in blenkernel.
+
+In case of Cycles this requires certain hacks, but according to
+Brecht it is planned to be rewritten later for more direct access
+to internal Blender data anyway.
+
+Differential Revision:
+https://developer.blender.org/D16117
+-------
+)
+Attribute node: new View Layer mode for accessing attributes of the
+  current View Layer, Scene or World
+  (
+f61ff22967
+### Commit Summary: Attribute Node: support accessing attributes of View Layer and Scene. · f61ff22967 - blender - Blender Projects
+### Commit Details:
+The attribute node already allows accessing attributes associated
+with objects and meshes, which allows changing the behavior of the
+same material between different objects or instances. The same idea
+can be extended to an even more global level of layers and scenes.
+
+Currently view layers provide an option to replace all materials
+with a different one. However, since the same material will be applied
+to all objects in the layer, varying the behavior between layers while
+preserving distinct materials requires duplicating objects.
+
+Providing access to properties of layers and scenes via the attribute
+node enables making materials with built-in switches or settings that
+can be controlled globally at the view layer level. This is probably
+most useful for complex NPR shading and compositing. Like with objects,
+the node can also access built-in scene properties, like render resolution
+or FOV of the active camera. Lookup is also attempted in World, similar
+to how the Object mode checks the Mesh datablock.
+
+In Cycles this mode is implemented by replacing the attribute node with
+the attribute value during sync, allowing constant folding to take the
+values into account. This means however that materials that use this
+feature have to be re-synced upon any changes to scene, world or camera.
+
+The Eevee version uses a new uniform buffer containing a sorted array
+mapping name hashes to values, with binary search lookup. The array
+is limited to 512 entries, which is effectively limitless even
+considering it is shared by all materials in the scene; it is also
+just 16KB of memory so no point trying to optimize further.
+The buffer has to be rebuilt when new attributes are detected in a
+material, so the draw engine keeps a table of recently seen attribute
+names to minimize the chance of extra rebuilds mid-draw.
+
+Differential Revision:
+https://developer.blender.org/D15941
+-------
+)
+Baking: new option to bake specular effects from the active camera
+  view, instead of above the surface. This may be useful when baking
+  textures that will be viewed from a fixed position or with limited
+  camera motion.
+  (
+b475506
+### Commit Summary: Cycles: add option to bake specular from active camera viewpoint · b475506cfb - blender - Blender Projects
+### Commit Details:
+Previously it would bake viewed from above the surface. The new option can be
+useful when the baked result is meant to be viewed from a fixed viewpoint or
+with limited camera motion.
+
+Some effort is made to give a continuous reflection on parts of the surface
+invisible to the camera, but this is necessarily only a rough approximation.
+
+Differential Revision:
+https://developer.blender.org/D15921
+-------
+)
+Sampling: improved patterns to reduce noise in some scenes,
+  particularly for volumes and long area lights.
+  (
+50df9ca
+### Commit Summary: Cycles: improve Progressive Multi-Jittered sampling · 50df9caef0 - blender - Blender Projects
+### Commit Details:
+Fix two issues in the previous implementation:
+* Only power-of-two prefixes were progressively stratified, not suffixes.
+  This resulted in unnecessarily increased noise when using non-power-of-two
+  sample counts.
+* In order to try to get away with just a single sample pattern, the code
+  used a combination of sample index shuffling and Cranley-Patterson rotation.
+  Index shuffling is normally fine, but due to the sample patterns themselves
+  not being quite right (as described above) this actually resulted in
+  additional increased noise. Cranley-Patterson, on the other hand, always
+  increases noise with randomized (t,s) nets like PMJ02, and should be avoided
+  with these kinds of sequences.
+
+Addressed with the following changes:
+* Replace the sample pattern generation code with a much simpler algorithm
+  recently published in the paper "Stochastic Generation of (t, s) Sample
+  Sequences". This new implementation is easier to verify, produces fully
+  progressively stratified PMJ02, and is *far* faster than the previous code,
+  being O(N) in the number of samples generated.
+* It keeps the sample index shuffling, which works correctly now due to the
+  improved sample patterns. But it now uses a newer high-quality hash instead
+  of the original Laine-Karras hash.
+* The scrambling distance feature cannot (to my knowledge) be implemented with
+  any decorrelation strategy other than Cranley-Patterson, so Cranley-Patterson
+  is still used when that feature is enabled. But it is now disabled otherwise,
+  since it increases noise.
+* In place of Cranley-Patterson, multiple independent patterns are generated
+  and randomly chosen for different pixels and dimensions as described in the
+  original PMJ paper. In this patch, the pattern selection is done via
+  hash-based shuffling to ensure there are no repeats within a single pixel
+  until all patterns have been used.
+
+The combination of these fixes brings the quality of Cycles' PMJ sampler in
+line with the previously submitted Sobol-Burley sampler in D15679. They are
+essentially indistinguishable in terms of quality/noise, which is expected
+since they are both randomized (0,2) sequences.
+
+Differential Revision:
+https://developer.blender.org/D15746
+-------
+,
+a06c9b5
+### Commit Summary: Cycles: add Sobol-Burley sampling pattern · a06c9b5ca8 - blender - Blender Projects
+### Commit Details:
+Based on the paper "Practical Hash-based Owen Scrambling" by Brent Burley,
+2020, Journal of Computer Graphics Techniques.
+
+It is distinct from the existing Sobol sampler in two important ways:
+* It is Owen scrambled, which gives it a much better convergence rate in many
+  situations.
+* It uses padding for higher dimensions, rather than using higher Sobol
+  dimensions directly. In practice this is advantagous because high-dimensional
+  Sobol sequences have holes in their sampling patterns that don't resolve
+  until an unreasonable number of samples are taken. (See Burley's paper for
+  details.)
+
+The pattern reduces noise in some benchmark scenes, however it is also slower,
+particularly on the CPU. So for now Progressive Multi-Jittered sampling remains
+the default.
+
+Differential Revision:
+https://developer.blender.org/D15679
+-------
+)
+GPU Rendering
+¶
+AMD HIP
+AMD Radeon RX 7000 series graphics cards (RDNA3 architecture) now
+  supported.
+On Linux, upgrade to ROCm 5.3 or newer to fix issues with textures
+  on Vega and RDNA1 graphics cards.
+Apple Metal
+Shadow caustics enabled.
+Intel GPUs now supported starting with macOS 13.
+Intel OneAPI
+Upgrade to driver version 101.3430 or newer to fix user interface
+  crashes.
+Open Shading Language
+¶
+Open Shading Language was upgraded to version 1.12.6.
+This comes with change in behavior for input parameters with a
+non-constant initializer. For such parameters, the input socket on the
+node now shows no editable value, it can only be linked. This can also
+be specified through metadata.
+shader
+test
+(
+normal
+Normal
+=
+N
+,
+/* Value hidden due to initializer. */
+float
+A
+=
+0.0
+[[
+string
+widget
+=
+"null"
+]])
+/* Value hidden through metadata. */
+
+'''''
+
+
+11. Sculpt, Paint, Texture¶
+
+Sculpt, Paint, Texture
+¶
+Performance
+¶
+Performance and memory usage have been improved when face sets,
+  hiding, and masking aren't used
+  (
+b5f7af31d6
+### Commit Summary: When these features aren't used, there is no sense in storing the · b5f7af31d6 - blender - Blender Projects
+### Commit Details:
+corresponding data layers and using their values for computations.
+Avoiding that should increase performance in many operations that
+would otherwise have to read, write, or propagate these values.
+It also means decreased memory usage-- not just for sculpt mode
+but for any mesh that was in sculpt mode. Previously the mask, face set,
+and hide status layers were *always* allocated by sculpt mode.
+
+Here are a few basic tests when masking and face sets are not used:
+
+| Test | Before | After |
+| Subsurf Modifier | 148 ms | 126 ms |
+| Sculpt Overlay Extraction | 24 ms every redraw | 0 ms |
+| Memory usage | 252 MB | 236 MB |
+
+I wouldn't expect any difference when they are used though.
+
+The code changes are mostly just making sculpt features safe for when
+the layers aren't stored, and some changes to the conversion to and
+from the hide layers. Use of the ".hide_poly" attribute replaces testing
+whether face sets are negative in many places.
+
+Differential Revision:
+https://developer.blender.org/D15937
+-------
+).
+Significant performance improvement for reprojecting attributes when
+  using the voxel remesher
+  (
+bad55d56bc
+### Commit Summary: Mesh: Parallelize remesh reprojections · bad55d56bc - blender - Blender Projects
+### Commit Details:
+In high poly meshes the reprojections after remesh can become slow.
+This parallelizes reprojection of face sets, paint mask and vertex paint.
+It also adds flags to disable dependency graph updates on
+setting remesh options to remove UI lag.
+
+Profiling of remeshing a 3.4M poly mesh (in sculpt mode):
+Before: 19.6s
+After: 8.7s
+
+Differential Revision:
+https://developer.blender.org/D15638
+-------
+).
+Auto-Masking
+¶
+New popover in the 3D Viewport header to manage all auto-masking
+  options
+  (
+db40b62252
+### Commit Summary: Sculpt: Auto-masking UI improvements · db40b62252 - blender - Blender Projects
+### Commit Details:
+Add auto-masking as a popover in the header while in Sculpt mode,
+following the design in T101593.
+
+These properties were present in the Options panel (and popover),
+they have been removed from there.
+
+Moreover, this commit makes the auto-masking section in Brush settings
+match the new popover.
+
+In the future this popover can be used for other modes that support
+auto-masking such as Grease Pencil.
+
+See D16145 for details and screenshots.
+
+Reviewed By: JulienKaspar
+
+Differential Revision:
+https://developer.blender.org/D16145
+-------
+).
+This UI makes the auto-masking toggles more accessible and discoverable.
+Each setting is now properly ordered. For even faster access use the pie
+menu shortcut
+Alt-A
+.
+The same UI is used for the brush settings as well. Any brush
+auto-masking toggle of the active brush will override the mode
+auto-masking toggles.
+Cavity auto-masking toggles in the options and brush settings
+  (
+0156a677c7
+### Commit Summary: Sculpt: New Cavity Automasking Mode · 0156a677c7 - blender - Blender Projects
+### Commit Details:
+Add new cavity automasking mode based on local mesh
+curvature.  Cavity masking is a great way to quickly add
+detail in crevices and the like.  It's meant to be used
+with the Paint brush in color attribute mode.  It does
+work with other brushes but the results can be unpredictable.
+
+{F13131497}
+
+The old "dirty mask" operator has been replace with a new
+"mask from cavity" operator that shares the same code with
+cavity automasking.
+
+Differences from the sculpt-dev implementation:
+    * It uses the word "cavity."  When I first implemented
+this I wasn't aware
+      this feature existed in other software (and other
+paint modes in Blender),
+      and for reasons that escape me today I initially
+decided to call it a concave or
+      concavity mask.
+    * The cavity factor works a bit differently.  It's
+      no longer non-linear and functions as a simple
+      scale around 0.5f.
+    * Supports custom curves.
+    * Supports blurring.
+
+Reviewed By: Julian Kaspar, Jeroen Bakker and Campbell Barton
+Differential Revision:
+https://developer.blender.org/D15122
+Ref D15122
+-------
+).
+Instead of manually creating a cavity mask, this auto-masking option
+provides a faster way of painting and sculpting with Cavity.
+"Inverted", "Factor", "Blur" and a "Custom Curve" give extra control to
+fine tune the cavity mask. Use the "Create Mask" button to convert the
+auto-mask into a regular mask attribute (To edit it further or just
+visualize it).
+Artwork by Steffen Hartmann
+This includes a new "Mask From Cavity" operator, which replaced the old
+"Dirty Mask" menu operator.
+Area and View Normal auto-masking toggles in the options and brush
+  settings
+  (
+0156a677c7
+### Commit Summary: Sculpt: New Cavity Automasking Mode · 0156a677c7 - blender - Blender Projects
+### Commit Details:
+Add new cavity automasking mode based on local mesh
+curvature.  Cavity masking is a great way to quickly add
+detail in crevices and the like.  It's meant to be used
+with the Paint brush in color attribute mode.  It does
+work with other brushes but the results can be unpredictable.
+
+{F13131497}
+
+The old "dirty mask" operator has been replace with a new
+"mask from cavity" operator that shares the same code with
+cavity automasking.
+
+Differences from the sculpt-dev implementation:
+    * It uses the word "cavity."  When I first implemented
+this I wasn't aware
+      this feature existed in other software (and other
+paint modes in Blender),
+      and for reasons that escape me today I initially
+decided to call it a concave or
+      concavity mask.
+    * The cavity factor works a bit differently.  It's
+      no longer non-linear and functions as a simple
+      scale around 0.5f.
+    * Supports custom curves.
+    * Supports blurring.
+
+Reviewed By: Julian Kaspar, Jeroen Bakker and Campbell Barton
+Differential Revision:
+https://developer.blender.org/D15122
+Ref D15122
+-------
+).
+Artwork by Ramil Roosileht
+These auto-masking options are great for selectively painting/sculpting
+from specific angles. "View Normal" uses the viewing angle, while "Area
+Normal" uses the normal direction of the brush cursor from the start of
+the stroke.
+"Limit" & "Falloff" define how many angles are included in the auto-mask
+and how soft the mask is.
+An additional "Occlusion" toggle allows more precise projection painting
+at the cost of performance.
+For more information see
+auto-masking
+documentation
+### Commit Summary: Controls — Blender Manual
+### Commit Details:
+No details found
+-------
+in the manual.
+Other
+¶
+Face Sets are now opt-in, meaning that primitive objects do not have a
+  Face Set attribute by default. As a result when objects are joined or
+  modeling changes are made in Edit Mode, any new geometry will not
+  automatically be assigned a Face Set, improving performance and
+  removing visual clutter when not used.
+  (
+e8291f4504
+### Commit Summary: Sculpt: Remove face sets from default cube · e8291f4504 - blender - Blender Projects
+### Commit Details:
+As discussed in T101623, since face sets have become optionally stored,
+(see
+b5f7af31d6
+) the default cube shouldn't have face sets--
+they should be created explicitly by the user instead. This may improve
+performance when modifying the default cube mesh.
+-------
+)
+Weight and Vertex painting will use the whole modifier stack if it
+  produces no topology changes, to allow painting with weight layering
+  using Geometry Nodes or Weight Mix modifiers.
+  (
+9823a8f72b
+### Commit Summary: Weight Paint: use coordinates from normal evaluated mesh if same topology. · 9823a8f72b - blender - Blender Projects
+### Commit Details:
+Weight and Vertex paint don't change coordinates and thus don't need
+crazyspace data, which allows using coordinates from normal evaluated
+meshes.
+
+Since painting uses original topology, the deform only mesh is used,
+but if the fully evaluated mesh has the same topology, it is preferred.
+This is useful because not only Geometry Nodes, but even simple weight
+computation modifiers are excluded from the deform only mesh evaluation.
+
+Differential Revision:
+https://developer.blender.org/D15501
+-------
+)
+
+'''''
+
+
+12. User Interface¶
+
+User Interface
+¶
+Outliner
+¶
+Searching by name isn't possible anymore in the Hierarchies view of
+  the Library Overrides display mode. This is to workaround big
+  performance issues in complex scenes.
+  (
+21b92a5f31
+### Commit Summary: Outliner: Hide search button for library overrides hierarchies view · 21b92a5f31 - blender - Blender Projects
+### Commit Details:
+c9a9967903
+added a workaround for performance issues in heavy
+production scenes in the library overrides hierarchies view, reducing
+the amounts of elements to be built. Searching for elements would still
+have to build the entire tree, so Blender would essentially freeze when
+searching in mentioned heavy scenes. Removing the search functionality
+works around this issue for now.
+-------
+)
+The data-block type filter was removed from the Properties view of the
+  Library Overrides display mode. It isn't needed anymore since
+  data-blocks are now grouped by type anyway.
+  (
+b5fc8f611e
+### Commit Summary: Outliner: Hide ID type filter for library overrides · b5fc8f611e - blender - Blender Projects
+### Commit Details:
+a) There were two filter icons next to each other in the header which
+isn't exactly professional, b) the filter was redundant since IDs are
+now grouped under an ID type element ("Objects", "Collection", ...)
+anyway.
+In the hierarchies view it was already hidden (because the whole point
+of it is to show relationships between IDs, you wouldn't want to have
+any parts of the hierarchy hidden).
+-------
+)
+The context menu doesn't show whole sections of operations that cannot
+  operate on the selected elements anymore.
+  (
+7eda9d8dda
+### Commit Summary: Outliner: Hide "data operations" context menu entries unless supported · 7eda9d8dda - blender - Blender Projects
+### Commit Details:
+The context menu would always show a section with "Select", "Deselect",
+"Hide", "Unhide" and "Select Linked" if there were no more specific
+operators to show (e.g. modifier operations). For many tree elements
+they did not make sense and simply would do nothing. Only show the
+section for supported types.
+-------
+)
+Improved element count display with better readability and higher
+  numbers.(
+a5d3b648e3
+### Commit Summary: Outliner: Use row background color for elements count indicator · a5d3b648e3 - blender - Blender Projects
+### Commit Details:
+From T101799:
+
+Currently, the count indicator background and color are hardcoded to
+black and white in an attempt to maximize contrast, at the expense of
+being too prominent even when not needed.
+
+Changing the background color to match the row (or any other element)
+background, would make it look like the data-block icon is masked
+out, improving readability while not standing out too much.
+
+The circle background color should not have transparency, as it does
+now. And the text inside should match the color of the text used for the
+parent element (instead of hardcoded white). This should make it look
+good in any theme.
+
+---
+
+Before:
+{F13674265, size=full}
+
+After:
+{F13674269, size=full}
+
+Differential Revision:
+https://developer.blender.org/D16246
+-------
+,
+84825e4ed2
+### Commit Summary: UI: Icon number indicator for data-blocks · 84825e4ed2 - blender - Blender Projects
+### Commit Details:
+Adds the possibility of having a little number on top of icons.
+
+At the moment this is used for:
+* Outliner
+* Node Editor bread-crumb
+* Node Group node header
+
+For the outliner there is almost no functional change. It is mostly a refactor
+to handle the indicators as part of the icon shader instead of the outliner
+draw code. (note that this was already recently changed in
+a5d3b648e3
+).
+
+The difference is that now we use rounded border rectangle instead of
+circles, and we can go up to 999 elements.
+
+So for the outliner this shows the number of collapsed elements of a
+certain type (e.g., mesh objects inside a collapsed collection).
+
+For the node editors is being used to show the use count for the data-block.
+This is important for the node editor, so users know whether the node-group
+they are editing (or are about to edit) is used elsewhere. This is
+particularly important when the Node Options are hidden, which is the
+default for node groups appended from the asset libraries.
+
+---
+
+Note: This can be easily enabled for ID templates which can then be part
+of T84669. It just need to call UI_but_icon_indicator_number_set in the
+function template_add_button_search_menu.
+
+---
+
+Special thanks Clément Foucault for the help figuring out the shader,
+Julian Eisel for the help navigating the UI code, and Pablo Vazquez for
+the collaboration in this design solution.
+
+For images showing the result check the Differential Revision.
+Differential Revision:
+https://developer.blender.org/D16284
+-------
+).
+Before
+After
+Viewport
+¶
+The select menu (accessed by holding Alt while picking objects &
+  bones) now orders results by distance (nearest first)
+  (
+47d3e76567
+### Commit Summary: 3D View: depth sort candidates in the selection menu · 47d3e76567 - blender - Blender Projects
+### Commit Details:
+Objects/bones in the selection menu weren't ordered usefully,
+worse, the closest items could be left out of the menu since items
+would stop being added once the menu-size limit was reached.
+
+Resolve this by sorting the menu items by depth, removing the most
+distant when the number of items exceeds the limit.
+
+When Ctrl is held, order by the distance to the object center
+instead of depth.
+-------
+).
+Improved display of text caret and selection when editing 3D Text
+  Objects
+  (
+a1e01f4c02
+### Commit Summary: UI: 3D Text Caret · a1e01f4c02 - blender - Blender Projects
+### Commit Details:
+Changes to the text caret (cursor) when editing Text objects in the
+3D Viewport.
+
+See D15797 for more details and examples.
+
+Differential Revision:
+https://developer.blender.org/D15797
+Reviewed by Brecht Van Lommel
+-------
+).
+General
+¶
+Added shortcuts
+PageUp
+and
+PageDown
+to
+  the console to scroll entire pages, as well as
+↖ Home
+to
+  reset scrolling to the bottom.
+  (
+82fc52ffc8
+### Commit Summary: Console: Support page up/down and home keys for scrolling · 82fc52ffc8 - blender - Blender Projects
+### Commit Details:
+- Page up/down scrolls up/down an entire page
+- Home resets the scrolling back to the bottom.
+
+The fact that these were missing was probably an oversight. Other
+similar editors have them.
+
+This works by including the "View2D Buttons List" keymap for the
+console, which the other similar editors use as well.
+-------
+)
+Detect existing file and add +/- auto-increase for output filepaths
+  (render filepath and File Output node for now)
+  (
+78bfaf1a4f
+### Commit Summary: File Browser: Manual auto-increase name support for output filepaths · 78bfaf1a4f - blender - Blender Projects
+### Commit Details:
+This functionality was present until Blender 2.80.  Basically it adds back the
+"+" and "-" buttons in the file browser when it stores an output filepath.
+
+This is useful for someone rendering multiple versions of an animation (or a
+composition) to compare.
+
+At the moment this is used for the render output, and the File Output node in
+the compositor.
+
+Differential Revision:
+https://developer.blender.org/D15968
+-------
+).
+Font thumbnails now preview languages, shapes, content, and intended
+  use better.
+  (
+4e7983e073
+### Commit Summary: UI: Improved Font Thumbnails ¬∑ 4e7983e073 - blender - Blender Projects
+### Commit Details:
+Thumbnails of fonts that better show design, shapes, contents, intent,
+and intended language. Previews almost every known language - living
+and dead - and symbol, specialty fonts, etc.
+
+See D12032 for more details and samples.
+
+Differential Revision:
+https://developer.blender.org/D12032
+Reviewed by Campbell Barton
+-------
+).
+Improved editing of text that contains non-precomposed diacritical
+  marks.
+  (
+12fdf9069a
+### Commit Summary: BLF: Editing Text with Combining Characters · 12fdf9069a - blender - Blender Projects
+### Commit Details:
+Corrections for caret insertion & movement and deletion for text
+strings that include non-precomposed diacritical marks (Unicode
+combining characters).
+
+See D15659 for more details and examples.
+
+Differential Revision:
+https://developer.blender.org/D15659
+Reviewed by Campbell Barton
+-------
+).
+
+'''''
+
+
+13. Add-ons¶
+
+Add-ons
+¶
+Image import as Plane
+¶
+Update improving the UI and adding several common material settings
+  (
+D15744
+,
+2ec6aba72c
+).
+New add-ons
+¶
+New Storypencil add-on for Storyboarding in addons-contrib.
+  (
+T100665
+)
+glTF 2.0
+¶
+Importer
+¶
+Fix import SK when there is no target on each primitives
+  (
+70ee1a5b66
+)
+Code cleanup
+  (
+b9c0e2878e
+)
+Add hook before glTF import
+  (
+a1706bd0f0
+)
+Tweaks vertex color import
+  (
+cd2d9df925
+)
+Fix ortho camera frame import/export
+  (
+8a2443844d
+)
+Import/Export lights using correct units
+  (
+9d903a93f0
+)
+Exporter
+¶
+Reset pose bone between each action
+  (
+e77b55e45a
+)
+Option to export Active Collection only / with or without nested
+  (
+90732dddff
+,
+712f007c71
+)
+Big refactoring of primitive extraction, manage custom attributes
+  (
+51e15a9db4
+,
+33e87824dc
+,
+7e2fa377ab
+,
+4be7119ac5
+)
+Fix object parented to bone when using rest pose
+  (
+4cb6ebd874
+,
+106cb51ab9
+,
+eb07144ea7
+)
+Manage delta transforms animations
+  (
+58db76bcc6
+,
+726d08c903
+)
+Avoid crash when using apply modifiers + shapekeys
+  (
+bb77e697e1
+)
+Fix scene evaluation
+  (
+3c19be6ffa
+)
+Fix resolve UVMap
+  (
+bccd6c669d
+)
+Better skin checks
+  (
+97bb515d3a
+)
+Clamp base color factor to [0,1]
+  (
+e890169e0a
+)
+Various hooks & fixes for animation
+  (
+eb3dcfc70c
+)
+Avoid adding multiple neutral bone on same armature
+  (
+8466799187
+)
+Fix TRS when parent is skined
+  (
+83290c67a6
+)
+Fix ortho camera frame import/export
+  (
+8a2443844d
+)
+Import/Export lights using correct units
+  (
+9d903a93f0
+)
+Non active action objects TRS is now restored at end of actions
+  (
+5dbcd4a388
+)
+When user don't export SK, driver corrective SK animations must not be
+  exported
+  (
+c4dddb88e7
+)
+Do not export special attributes, used internally by Blender
+  (
+addeb64f82
+)
+Export SK on no modifiers objects even if 'apply modifier' is on
+  (
+896ee4698f
+)
+Fix Traceback in Variant UI
+  (
+61ff4faf8c
+)
+Fix exporting skined mesh without armature
+  (
+0b4844ede9
+)
+Fix crash with weird missing datablock node group
+  (
+b665525d03
+)
+
+'''''
+

@@ -1,0 +1,3459 @@
+This work is licensed under the GNU General Public License v3.0 or later (GPL).
+For more information, see https://www.gnu.org/licenses/gpl-3.0.html.
+
+
+What's new in Blender 3.6
+
+'''''
+
+Blender 3.6 Table Of Contents
+
+Section 1. Animation & Rigging¶
+Section 2. Core¶
+Section 3. EEVEE & Viewport¶
+Section 4. Grease Pencil¶
+Section 5. Modeling¶
+Section 6. Nodes & Physics¶
+Section 7. Pipeline, Assets & I/O¶
+Section 8. Python API & Text Editor¶
+Section 9. Cycles¶
+Section 10. Sculpt, Paint, Texture¶
+Section 11. User Interface¶
+Section 12. Add-ons¶
+Section 13. Asset Bundles¶
+
+'''''
+
+1. Animation & Rigging¶
+
+Animation & Rigging
+¶
+General
+¶
+Slider Operators are now available with hotkeys. ALT+S for smoothing
+  operators and ALT+D for blending operators.
+PR#107866
+Animation: change Slider Popup menu hotkeys
+The iTaSC IK solver now supports keeping root bones (i.e. without
+  parent) positioned where they are, instead of always moving them to
+  the armature's origin. For backward compatibility the old behavior is
+  retained; new armatures will get the new behavior. This can be
+  controlled via the new "Translate Roots" checkbox.
+  (
+51c2a0f816
+### Commit Summary: Fix #104606: iTaSC solver moves root bone to origin and imobilizes it · 51c2a0f816 - blender - Blender Projects
+### Commit Details:
+Add a new flag that determines whether root bones (i.e. bones without a
+parent) should be translated to the armature object's origin. This can
+be found in the Armature's IK properties panel.
+
+By default this flag is disabled, so new rigs will not see this 'locking
+to the origin' behaviour. Versioning code ensures that the flag is
+enabled on older files, to preserve the behaviour of existing rigs.
+
+This also bumps the Blender subversion and at the same time fixes an
+incorrect bump in
+ee08b2ddff
+(where the
+'minimum compatible version' was updated instead of the current Blender
+version).
+
+Pull request:
+#107869
+-------
+)
+Ctrl-LMB
+shortcut for channel renaming is removed. It is now used
+  for Extend channel selection
+  (
+6c4da68ad2
+### Commit Summary: Fix #107718: Extend channel selection not working due to key conflicts · 6c4da68ad2 - blender - Blender Projects
+### Commit Details:
+In
+80feb13665
+, preference for extend channel selection is changed to
+ctrl-click. But some channel type invokes rename operation due to key
+conflicts. Since double-click is also used for renaming, remove
+ctrl-click keys for renaming.
+
+#107719
+-------
+).
+Extend Paint Mask Selection
+¶
+Add the option to grow/shrink the selection just as in Edit Mode.
+PR#105633
+PR#105607
+Duration Display in the Status Bar
+¶
+It is now possible to display the scene duration in the status bar. The
+format is the following:
+Duration: <timecode> (Frame <current frame>/<total frames>)
+The timecode format follows the user preferences.
+PR#104882
+Scene Duration Display
+Frame Channels Operator
+¶
+Allows to frame onto the contents of a channel, or a selection of
+channels. Works in the Graph Editor and the Dope Sheet.
+PR#104523
+It
+is called with "." on the numpad or right click the channels and choose
+the "Frame Selected Channels" option. Alternatively press ALT+MMB to
+frame the channel under the cursor.
+Copy Global Transform
+¶
+The Copy Global Transform add-on can now also mirror the transform
+(
+606e4b35f2
+).
+Options of Copy Global Transform
+Object but no bone name: the transform will be mirrored relative to
+  the object
+Object and bone name: the transform will be mirrored relative to that
+  specific bone of that specific armature
+Bone name but no object: the transform will be mirrored relative to
+  the named bone of the current armature
+Bone Relation Lines
+¶
+Instead of always drawing the relationship line from the head of the
+child to the
+tail
+of the parent, there is now choice for the parent
+side of the line. This can be toggled between the
+head
+and the
+tail
+of the bone, where the tail is Blender's original behavior and is
+retained as default value
+(
+45c1deac4f
+### Commit Summary: Bone relation lines: optionally draw between bone heads · 45c1deac4f - blender - Blender Projects
+### Commit Details:
+Add control over how bone relation lines are drawn. Instead of always
+drawing from the head of the child to the tail of the parent, give users
+a choice for the parent side of the line. This can now be toggled
+between the head and the tail of the bone, where the tail is Blender's
+original behaviour and is retained as default value.
+
+Pull request:
+#105427
+-------
+).
+Options of bone relation lines
+Different bone relation lines
+Context properties
+¶
+PR#105132
+Drivers: Introduce the Context Properties
+A special type for driver variable has been added: the Context Property.
+The property is implicitly referring to either a scene or a view layer
+of the currently evaluating animation system. This is a weak reference
+which does not lead to the scene or view layer referenced from the
+driver to be linked when linking animation data.
+An example when such properties comes in play is referring to a
+transformation of the active camera. It is possible to setup driver in a
+character file, and make the driver use the set camera when the
+character is linked into a set.
+New Parent Space transformation
+¶
+PR#104724
+Animation: New parent space transformation aligns child objects /
+armature bones to parent space.
+Child object using parent space transformation gizmo
+Child bone using parent space transformation gizmo
+Graph Editor
+¶
+Settings moved to the User Preferences
+¶
+Two view options in the Graph Editor have been moved to the User
+Preferences (Only Selected Curve Keyframes, Use High Quality Display).
+(
+PR#104532
+Animation: Move Graph Editor settings to User Preferences)
+Key menu cleaned up
+¶
+The "Key" menu in the Graph Editor has been cleaned up. Things that have
+to do with channels were moved into the "Channels" menu. The rest has
+been grouped into sub-menus where possible.
+PR#106113
+Animation: Clean up "Key" menu in Graph Editor
+Gaussian Smooth Operator
+¶
+PR#105635
+A new operator to smooth keyframe data. It improves on the current
+implementation in the following ways.
+Supports modal operations
+Is independent of key density
+More options in the redo panel
+Smooths sudden spikes more predictable
+Demo of the Gaussian Smooth operator
+Keyframes
+¶
+Add option to insert keyframes only on the active F-Curve.
+PR#106307
+Pasting keys in the Graph Editor now has value offset options.
+PR#104512
+Small Tweaks
+¶
+When hitting normalize, the y extents of visible F-Curves are frame
+  automatically.
+PR#105857
+When the view is normalized, the area outside of -1/1 is drawn
+  slightly darker.
+PR#106302
+Ignore hidden curves when jumping to keyframes in the Graph Editor.
+PR#108549
+Dope Sheet
+¶
+Added the pin icon to the channels in the Dope Sheet
+Clamp the viewport in the Dope Sheet so channels cannot go off screen.
+PR#104516
+NLA
+¶
+Clicking the NLA/Graph Editor search box no longer scrolls the items
+  below it.
+  (
+d1219b727c
+### Commit Summary: Fix #97530: Overlapping Content Causing Region Scrolling · d1219b727c - blender - Blender Projects
+### Commit Details:
+Selecting filter in NLA/Graph Editor causes scrolling in the region
+below it. This PR makes `UI_but_ensure_in_view` not occur if the block
+has UI_BLOCK_CLIP_EVENTS.
+
+#107404
+-------
+).
+NLA solo button now right aligned
+NLA track Solo button has been moved on the to be right aligned to
+  group it logically with Mute, Lock track
+  buttons.(
+d8024135a5
+### Commit Summary: UI: Changes to NLA Solo Button · d8024135a5 - blender - Blender Projects
+### Commit Details:
+Move the NLA Solo button to right side of channel row.
+-------
+).
+NLA strips can now be dragged horizontal through other strips on the
+  same track
+  (
+8833f5dbf9
+### Commit Summary: Animation: Allow NLA strips to be horizontally shuffled · 8833f5dbf9 - blender - Blender Projects
+### Commit Details:
+Allows NLA strips to horizontally translated over each other. If a strip is dropped when translating, it'll cause the strip to shuffle into place.
+
+---
+
+Abstracted large conditional branch in `recalcData_nla` into it's own `nlastrip_fix_overlapping` method for increased readability. No logical changes were made.
+
+---
+[Archived Phabricator Patch](
+https://archive.blender.org/developer/D10102
+)
+
+#105532
+-------
+).
+NLA horizontal drag and drop
+Python API
+¶
+FCurve key deduplication + exposing the innards of
+fcurve.update()
+¶
+New functions on
+fcurve.keyframe_points
+(
+85ed2e8c36
+### Commit Summary: Animation: add function for deduplicating FCurve keys · 85ed2e8c36 - blender - Blender Projects
+### Commit Details:
+Introduce `BKE_fcurve_deduplicate_keys()` to merge keys that are on the
+same time, or within the time comparison threshold (1/100th of a frame).
+
+When merging two consecutive keys, the last one 'wins' and determines
+the final key *value*. The first key's *time* is retained, to ensure the
+reference point for the next comparisons is stable. The only exception
+here is when there is a key exactly on an integer frame number, in which
+case that one is preferred.
+
+The function is exposed in RNA as `fcurve.keyframe_points.deduplicate()`
+
+This commit also introduces a new function `BKE_fcurve_bezt_shrink(fcu,
+new_totvert);` that can reallocate the `bezt` array to ensure removed
+keys no longer take up memory.
+
+The RNA function `fcurve.update()` currently performs two steps, which
+are now exposed to RNA as well, as `keyframe_points.sort()` and
+`keyframe_points.handles_recalc()`. This is so that Python code can
+sort, deduplicate, and then recalculate the handles only once (calling
+`update` + `deduplicate` would do the latter twice).
+
+In Blender 4.0 the deduplication will also be part of `fcurve.update()`,
+see
+#107126
+.
+
+Reviewed on
+#107089
+-------
+):
+-
+deduplicate()
+: Removes duplicate keys (i.e. when there are
+multiple keys on the same point in time) by retaining the last key of
+those duplicates based on their index in the
+fcurve.keyframe_points
+array. -
+sort()
+: Ensure the keys are chronologically sorted. -
+handles_recalc()
+: Recalculate the handles, to update 'auto'-type
+handles.
+Calling
+fcurve.update()
+actually performs
+sort()
+and then
+handles_recalc()
+, and now those two steps are exposed as individual
+functions as well.
+Note that in Blender 4.0
+fcurve.update()
+will also be calling the
+deduplicate()
+function.
+
+'''''
+
+
+2. Core¶
+
+Core
+¶
+Library Overrides
+¶
+Major improvements to the resyncing process:
+When resyncing liboverrides, a missing root of the liboverride
+  hierarchy (i.e. if the hierarchy root linked reference ID is
+  missing) will prevent any attempt to resync any data in that
+  liboverride hierarchy. This is done to prevent resync code breaking
+  existing overrides upon missing linked data
+  (
+5f67b25c28
+### Commit Summary: LibOverride: Do not attempt to resync a hierarchy when the root goes missing. · 5f67b25c28 - blender - Blender Projects
+### Commit Details:
+This addresses an issue here at the Blender studio, where a root
+collection of a set was removed by mistake from the set library .blend file.
+
+Since all the other linked data (sub collections, actual objects etc.)
+of the set were still available, the liboverride resync code went crazy
+trying to resync all these scattered pieces of a set, finding new valid
+root IDs for the hierarchies, and so on.
+
+So from now on, do not attempt to resync anything that is part of a
+liboverride hierarchy which root ID linked reference has gone missing.
+-------
+).
+Fixed several issues with liboverride partial resync process which
+  could lead to some needed resync to be skipped
+  (
+9ea2170cce
+### Commit Summary: LibOverride: Resync: Fix some issues with partial resync. · 9ea2170cce - blender - Blender Projects
+### Commit Details:
+In some cases, some partial resync roots would be missed during the
+partial resync process, leading to incomplete resync of all the needed
+data.
+
+This was caused by tagging some liboverrides for resync _after_ they had
+already be evaluated as part of parenting hierarchy of other
+liboverrides. Fix is simply to split both steps apart, such that all IDs
+that need it are tagged to resync first, and then hierarchies are
+evaluated to find the required partial resync roots whithin a hierarchy.
+-------
+,
+ba9ca7afb6
+### Commit Summary: LibOverride: Resync: Delete non-user-edited 'isolated from root' liboverrides. · ba9ca7afb6 - blender - Blender Projects
+### Commit Details:
+These should not be needed anymore. Follow-up to previous commit.
+-------
+,
+5574a1bfc1
+### Commit Summary: LibOverride: Fix/Improve resync behavior in some complex cases. · 5574a1bfc1 - blender - Blender Projects
+### Commit Details:
+This commit mainly addresses issues when a part of an override hierarchy
+does not match anymore the linked reference data, and gets isolated form
+the hierarchy root (there is no parenting chain to the root anymore).
+
+The typical case being an object or sub-collection being moved to
+another subcollection in the linked data.
+
+Case identified while working on some Pets production files.
+
+Note that in some cases this isolated chunk of the hierarchy will be
+linked back into the appropriate place, in others it should be fully
+removed (instead of staying as unused data). The later will be handled
+in a another future commit.
+
+This commit mainly detect and use a new tag for such cases, and correct
+the checks to take it into account.
+
+It also does a bit of cleanup, and replaces some asserts by `CLOG_ERROR`
+reports.
+-------
+,
+b724015840
+### Commit Summary: LibOverride: Fix wrong assert in some cases in RNA tracks handling. · b724015840 - blender - Blender Projects
+### Commit Details:
+Due to index-only referencing in insertion of new NLA tracks in
+liboverride data, it may happen that the source of an inserted track
+cannot be found.
+
+This index-only based handling of NLA tracks in liboverrides is very
+weak, in the future this will be solved by ensure uniqueness of their
+names, then name-based reference can be used instead, as already done with
+modifiers, constraints, etc.
+-------
+,
+370a2bb416
+### Commit Summary: LibOverride: Resync: Do not ignore embedded IDs in hierarchy processing. · 370a2bb416 - blender - Blender Projects
+### Commit Details:
+While in practice this was probably not a big issue (since usually e.g.
+objects used by a nodetree would also be used by other objects or
+collections in the liboverride hierarchy), in some corner cases it could
+have caused missing 'tag for resync' and improper partial resync roots
+detection.
+-------
+).
+Refactored parts of the liboverride partial resync process to
+  address known error reports
+  (
+40d79e3d2b
+### Commit Summary: LibOverride: Fix/Improve partial resync detection code. · 40d79e3d2b - blender - Blender Projects
+### Commit Details:
+This issue tackled here is essentially the same as in
+ac1ac6be9a
+(recursive Purge of unused IDs could delete actually used IDs): handling
+of dependency loops is extremely delicate...
+
+This commit essentially rewrites from scratch the code that ensures that
+all liboverrides and their dependencies that need it are tagged for resync,
+and identifies the partial resync roots.
+
+Dependency loops whitin a hierarchy make this process very complex, as
+they can lead to having to recursively process more than once some IDs.
+Partial resync roots are also a source of complexity, since some IDs may
+be detected a potential roots, and later as dependencies of another
+partial resync hierarchy.
+
+This new code generates waaaaaayyyyy less error messages when resyncing
+nightmare-like production files (i.e. production files which libraries
+have been _heavily_ modified). There are still a few error reports in
+some cases though, which are the synptoms of another issue that will be
+fixed in the next commit.
+-------
+,
+07dfc6eccc
+### Commit Summary: LibOverride: Further fixes/improvements to partial recursive resync process. · 07dfc6eccc - blender - Blender Projects
+### Commit Details:
+This addresses the 'liboverrides still tagged for resync after resync
+process' error reports.
+
+Turns out, this situation is (unfortunately) normal in some rare cases,
+hwne the hierarchies in the liboverride and the reference data have
+drastically diverged.Since the detection of liboverrides to resync, and
+which one are valid partial resync roots, happens on the 'old' override
+hierarchy, it may not match the actual hierarchy recreated from the
+reference data, leading to some part of it being ignored by the resync
+code.
+
+There is no real way to avoid this situation, the only thing that can be
+done is detect it, and re-process the resync code again when it happens.
+
+From quick limited tests in (extremely dirty/outdated) Pets production files,
+most of the time only one resync process is needed. Worst case so far
+required 5 reprocessing of the same set of data.
+
+There is no error messages from resync anymore in these tests, so at the
+very least resync process should now be significantly more reliable than
+before...
+-------
+).
+Potential local references to virtual linked liboverrides are now
+  restored 'as best as possible' on resync (
+PR#107144
+,
+527b21f0ae
+### Commit Summary: LibOverride: Restore local references to virtual linked liboverrides on resync. · 527b21f0ae - blender - Blender Projects
+### Commit Details:
+When resyncing linked liboverride data, new IDs may be created that do
+not exist in actual library file (since the lib file has not been resynced).
+
+If such 'virtual linked liboverrides' data-blocks are used locally (e.g.
+by adding such object to a local collection), on next file read they will be
+detected as missing.
+
+Now resync code will list such missing linked IDs that were
+liboverrides, and try to re-use them when matching (by root name and
+library) with newly generated virtual liboverrides.
+
+The process may not be 100% perfect, especially a perfect one-to-one
+remapping cannot be ensured if source data keep being changed over and
+over (because of the order in which virtual linked liboverrides
+generated by resync may change over time). However, in practice this
+should fix the vast majority of issues, especially if sane naming
+practices are used on IDs.
+
+---------------
+
+For the record, an attempt was made to write liboverride data together
+with the placeholders for linked IDs in .blendfile. In theory, this
+should ensure a perfect and fully valid re-usage of such IDs.
+
+However, for this to work, not only the liboverride data of linked IDs need
+to be written on disk, but also all ID references in this data has to be
+considered as directly linked, to ensure that such liboverride data can
+be re-read properly.
+
+Otherwise, these placeholders would get a liboverride data with NULL ID
+pointers, which is useless.
+
+Such change feels way to intrusive for the very limited benefit, so for
+now would consider current solution as the best option.
+
+#107144
+-------
+).
+  Note that in general user should avoid such referencing to linked
+  data generated from the recursive process, as it is by definition
+  very 'unstable' and does not actually exist in any file storage.
+Geometry
+¶
+Data arrays are now shared between copies, resulting in an overall
+  memory usage reduction of at least 25% with large geometries
+  (
+7eee378ecc
+### Commit Summary: Custom Data: support implicit sharing for custom data layers · 7eee378ecc - blender - Blender Projects
+### Commit Details:
+This integrates the new implicit-sharing system (from
+fbcddfcd68
+)
+with `CustomData`. Now the potentially long arrays referenced by custom
+data layers can be shared between different systems but most importantly
+between different geometries. This makes e.g. copying a mesh much cheaper
+because none of the attributes has to be copied. Only when an attribute
+is modified does it have to be copied.
+
+Also see the original design task:
+#95845
+.
+
+This reduces memory and improves performance by avoiding unnecessary
+data copies. For example, the used memory after loading a highly
+subdivided mesh is reduced from 2.4GB to 1.79GB. This is about 25%
+less which is the expected amount because in `main` there are 4 copies
+of the data:
+1. The original data which is allocated when the file is loaded.
+2. The copy for the depsgraph allocated during depsgraph evaluation.
+3. The copy for the undo system allocated when the first undo step is
+  created right after loading the file.
+4. GPU buffers allocated for drawing.
+
+This patch only gets rid of copy number 2 for the depsgraph. In theory
+the other copies can be removed as part of follow up PRs as well though.
+
+-----
+
+The patch has three main components:
+* Slightly modified `CustomData` API to make it work better with implicit
+  sharing:
+  * `CD_REFERENCE` and `CD_DUPLICATE` have been removed because they are
+    meaningless when implicit-sharing is used.
+  * `CD_ASSIGN` has been removed as well because it's not an allocation
+    type anyway. The functionality of using existing arrays as custom
+    data layers has not been removed though.
+  * This can still be done with `CustomData_add_layer_with_data` which
+    also has a new argument that allows passing in information about
+    whether the array is shared.
+  * `CD_FLAG_NOFREE` has been removed because it's no longer necessary. It
+    only existed because of `CD_REFERENCE`.
+  * `CustomData_copy` and `CustomData_merge` have been split up into a
+    functions that do copy the actual attribute values and those that do
+    not. The latter functions now have the `_layout` suffix
+    (e.g. `CustomData_copy_layout`).
+* Changes in `customdata.cc` to make it actually use implicit-sharing.
+* Changes in various other files to adapt to the changes in `BKE_customdata.h`.
+
+#106228
+-------
+,
+dcb3b1c1f9
+### Commit Summary: Geometry: Use implicit sharing for curve and mesh offsets · dcb3b1c1f9 - blender - Blender Projects
+### Commit Details:
+Similar to
+7eee378ecc
+, this change decreases memory usage and
+improves performance when copying curves and meshes without changing
+their topology. The same change used for custom data layers is applied
+to face and curve offset indices, which aren't stored as a custom data
+layer.
+
+The implicit sharing info for the offsets is stored in the mesh and
+curve runtime structs, since it doesn't need to be written to files
+directly. When changing the offsets pointer directly, the sharing info
+must be updated accordingly. To make that easier, a few utility
+functions take care of common operations like making an array mutable,
+resizing an array, and creating sharing info for allocated data.
+
+This commit also clarifies the intention to not allocate the offsets
+at all when there are no curves/faces. That slightly complicates some
+of the logic, but there's no reason for the single `0` integer to be
+allocated.
+
+#106907
+-------
+).
+Collections
+¶
+A hash is now used for Collection object lookup, speeding up object
+  linking & unlinking
+  (
+ea97bb1641
+### Commit Summary: Use hash for Collection.gobject lookup, speedup object linking · ea97bb1641 - blender - Blender Projects
+### Commit Details:
+Add a hash for faster look-ups on collection->gobject,
+This avoids a full list lookup for every object added via Python's
+CollectionObject.link as well as linking via BKE_collection_object_add_*
+functions.
+
+While the speedup is non-linear, linking & unlinking 100k objects from
+Python is about 50x faster. Although unlinking all objects in order
+(a best-case for linked lists) is approximately the same speed.
+
+Ref
+!104553
+.
+-------
+).
+Custom Properties
+¶
+Float custom properties can now have sub-types (e.g., distance, angle
+  etc.)
+  (
+6e2721da30
+### Commit Summary: Core: Add sub-types for float-type custom properties · 6e2721da30 - blender - Blender Projects
+### Commit Details:
+This adds the ability for users to assign sub-types to `Float` type custom properties (e.g., distance, angle, time, power etc.)
+
+#106700
+-------
+)
+
+'''''
+
+
+3. EEVEE & Viewport¶
+
+EEVEE & Viewport
+¶
+Transparent Render Pass
+¶
+The new
+Transparent
+pass contain alpha blended surfaces, so they can
+be adjusted in the compositor and later mixed with opaque passes that do
+not contain them.
+This pass only supports monochromatic opacity. Colored opacity will show
+differently than in combined pass.
+From top-left in clock-wise order: Combined Pass, Diffuse Light Pass, Diffuse Color Pass, Transparent Pass
+Viewport Compositor
+¶
+The following nodes are now supported in the Viewport Compositor:
+Convert Color Space
+Plane Track Deform
+Denoise
+Stabilize 2D
+Mask
+Corner Pin
+Texture
+ID Mask
+Map UV
+Fog Glow Glare
+Displace
+Z Combine
+Anti-Aliasing
+Additionally, the following features are now supported:
+Bicubic Interpolation
+Repetition along a single axis
+Multi-layer EXR images
+Finally, the following changes were implemented:
+Viewer nodes now take priority over Composite nodes as the active
+  output if multiple output nodes exist.
+Edit Mesh Overlay
+¶
+New Retopology option replaces the Hidden Wire option in mesh edit mode.
+It allows the edit mesh to be drawn with a custom depth offset.
+dcad51dfc3
+### Commit Summary: DRW: Retopology Overlay · dcad51dfc3 - blender - Blender Projects
+### Commit Details:
+Add overlay option for retopology, which hides the shaded mesh akin to Hidden Wire, and offsets the edit mesh overlay towards the view.
+
+Related Task
+#70267
+Pull Request
+#104599
+-------
+
+'''''
+
+
+4. Grease Pencil¶
+
+Grease Pencil
+¶
+Weight Paint
+¶
+New Blur, Average, and Smear tools have been added to Weight Paint mode.
+(
+397a14deff
+### Commit Summary: GPencil: Several Weight Paint additions · 397a14deff - blender - Blender Projects
+### Commit Details:
+This patch adds several tools and options to the weight paint mode of Grease Pencil.
+
+* Blur tool: smooths out vertex weights, by calculating a gaussian blur of adjacent vertices.
+* Average tool: painting the average weight from all weights under the brush.
+* Smear tool: smudges weights by grabbing the weights under the brush and 'dragging' them.
+
+* With the + and - icons in the toolbar, the user can easily switch between adding and subtracting weight while drawing weights.
+* With shortcut `D` you can toggle between these two.
+
+* The auto-normalize options ensures that all bone-deforming vertex groups add up to 1.0 while weight painting.
+* With `Ctrl-F` a radial control for weight is invoked (in addition to the radial controls for brush size and strength).
+* With `Ctrl-RMB` the user can sample the weight. This sets the brush Weight from the weight under the cursor.
+
+* When painting weights in vertex groups for bones, the user can quickly switch to another vertex group by clicking on a bone with `Ctrl-LMB`.
+For this to work, follow these steps:
+* Select the armature and switch to Pose Mode.
+* Select your Grease Pencil object and switch immediately to Weight Paint Mode.
+* Select a bone in the armature with `Ctrl-LMB`. The corresponding vertex group is automatically activated.
+
+#106663
+-------
+)
+See
+the
+documentation
+### Commit Summary: Weight Paint Tools — Blender Manual
+### Commit Details:
+No details found
+-------
+.
+
+'''''
+
+
+5. Modeling¶
+
+Modeling
+¶
+UV Editing
+¶
+UV Packing
+¶
+New
+Concave Packing
+shape
+method
+The UV Packing engine was upgraded, dramatically improving performance
+on large meshes and improving support for non-square materials.
+On many real world cases, efficiency of the layout has also been
+increased.
+In addition, many new features were implemented:
+Added an option to choose the shape of the UV Packing approximation
+  ("Bounding Box", "Exact Shape" and "Convex Hull"), giving layouts
+  which use much more of the available space
+  (
+e0d05da826
+### Commit Summary: UV: Add option to Pack UVs using the xatlas strategy · e0d05da826 - blender - Blender Projects
+### Commit Details:
+Loosely based on the "xatlas" algorithm.
+See
+https://github.com/jpcy/xatlas
+Adds `shape_method` with ED_UVPACK_SHAPE_AABB, ED_UVPACK_SHAPE_CONVEX
+and ED_UVPACK_SHAPE_CONCAVE
+
+Ref
+#68889
+,
+#105680
+#105821
+-------
+).
+Added new UV Packing option "Merge Overlapped", where overlapping
+  islands stick together during UV packing
+  (
+b601ae87d0
+### Commit Summary: UV: add overlapping island support for uv packing · b601ae87d0 - blender - Blender Projects
+### Commit Details:
+From the UV Packing options, choose:
+
+ "Merge Overlapped" / "Overlapping islands stick together"
+-------
+).
+Added new UV Packing option "Pack To > Original Bounding Box", where
+  islands are packed back into the original bounding box of the
+  selection.
+  (
+957ac41237
+### Commit Summary: Fix #78396: Pack UVs to original bounding box · 957ac41237 - blender - Blender Projects
+### Commit Details:
+Adds the ability to pack UVs back into the original bounding box.
+
+Choose UV Editor > Menu > UV > Pack Islands
+
+Then change "Pack To" to "Original bounding box"
+-------
+).
+Improvements
+¶
+Further UV changes include:
+Unwrapping like an orange-peel. Careful seam placement allows an extended unwrap using the new manual seam placement feature in UV Sphere Projection.
+UV Sphere Projection
+and
+UV Cylinder Projection
+now support
+  manual placement of seams
+  (
+6b8cdd5979
+### Commit Summary: Fix #103469: Update UV Sphere Projection with Seam support. · 6b8cdd5979 - blender - Blender Projects
+### Commit Details:
+Note: Applies to both UV Sphere Projection and UV Cylinder Projection.
+
+Adds a new boolean option "Preserve Seams" to UV Sphere Projection.
+
+With "Preserve Seams" active, the Sphere projection will do a
+greedy flood fill over the 3D topology, stopping at 3D boundaries
+and also stopping at edges where "Mark Seam" has been used in the
+3D Viewport.
+
+During the flood fill, each face is mapped using the spherical
+projection and then adjusted along the U axis so the UV map is
+continuous across the shared edge.
+
+With careful seam placement, this allows for the creation of a
+spiral-cut-orange-peel unwrap, where a sphere can be unwrapped
+into a single long continuous strip, wrapping multiple times around
+the object.
+
+Finally, if the flood fill process creates multiple UV Islands,
+they are spaced along the `U` axis to prevent overlaps.
+
+Pull Request
+#104847
+-------
+).
+The
+UV Select Similar
+operator has new options for
+Similar
+  Winding
+and for
+Similar Object
+.
+  (
+2b4bafeac6
+### Commit Summary: UV: add "similar object" and "similar winding" to uv "select similar" · 2b4bafeac6 - blender - Blender Projects
+### Commit Details:
+Adds new options to UV Face selection in the UV Editor, with UV > Select > Select Similar
+
+In multi object edit mode, "Similar Object" selects faces which have the same object.
+
+"Similar Winding" will select faces which have the same winding, i.e. are they
+facing upwards or downwards.
+
+Resolves: T103975
+Differential Revision:
+https://developer.blender.org/D17125
+-------
+).
+Performance
+¶
+Conversion from edit meshes to object mode meshes has been
+  parallelized, leading to better performance when exiting edit mode
+  (
+5669c5a61b
+### Commit Summary: Mesh: Parallelize BMesh to Mesh conversion · 5669c5a61b - blender - Blender Projects
+### Commit Details:
+This is very similar to
+ebe8f8ce71
+, but applies the same
+changes to conversions to non-evaluated meshes meant for original
+data. The function also handles shape keys, UVs, selection history,
+"scan the database" object vertex index remapping, and multires fixes.
+Those operations are handled in parallel with the other conversions now.
+
+Similar to before, the improvement is better the more attributes/data
+contained in the BMesh. This time I observed an improvement of 50%
+(182ms to 123ms) for a large grid mesh with many attributes, and 20%
+for a large grid mesh with less data. Shape keys, selection, hiding, and
+multires data should have less of a detriment to performance now too.
+
+One remaining thing to improve is the recently added UV selection/pin
+handling. This should be moved into the first single-threaded loop over
+faces, or changed further.
+
+#105602
+-------
+).
+The conversion's performance was also improved by around 75% when
+  there are multiple UV maps
+  (
+0fe0db63d7
+### Commit Summary: Mesh: Optimize BMesh to Mesh conversion with UV maps · 0fe0db63d7 - blender - Blender Projects
+### Commit Details:
+The BMesh to Mesh conversion does some checks to the UV helper
+attributes like selection to avoid copying them to the mesh if they
+don't contain any meaningful data. However, it does this by looping
+over all faces for every UV map, not in parallel, so it takes up a large
+portion of the total time in the conversion. This commit moves that
+to the existing similar checks.
+
+On a 1 million face mesh with 3 UV maps, for me this improved the
+conversion runtime by 75%, from 174ms to 99ms. Before the serial
+loops took 88ms out of the total. Combining them with the existing
+loop over faces only increased its runtime from 29 to 40ms.
+-------
+).
+Face corner "split" normal calculation performance is improved by up
+  to 80%, with improvements in memory usage as well
+  (
+9fcfba4aae
+### Commit Summary: Mesh: Reduce memory corner normals memory usage and simplify threading · 9fcfba4aae - blender - Blender Projects
+### Commit Details:
+Instead of storing a 24 byte struct for every face corner we must do
+calculations for, just gather the face corner index in the first single
+threaded loop. And don't fill them in chunks and use the task pool API.
+Instead just fill vectors and use standard "parallel_for" threading.
+The check that avoided threading for tiny meshes becomes redundant this
+way too, which simplifies the code more. Overall this removes over
+100 lines of code.
+
+On a Ryzen 7950x, face corner ("split"/"loop") normal calculation in a
+small armature modifier setup with custom normals went from 4.1 ms to
+2.8 ms. Calculation for a 12 million face mesh generated with curve to
+mesh with end caps went from 776 ms to 568 ms.
+
+Similar commits:
+-
+9e9ebcdd72
+-
+9338ab1d62
+-------
+,
+3c43632651
+### Commit Summary: Mesh: Allocate custom normal spaces in array · 3c43632651 - blender - Blender Projects
+### Commit Details:
+Avoid many small allocations and just allocate all the structs in one
+array, which is 4 times faster. In a test with an armature modifier and
+custom normals, corner normal calculation went from 2.7 to 2.3 ms.
+-------
+,
+9292e094e7
+### Commit Summary: Mesh: Reduce memory usage calculating custom normals · 9292e094e7 - blender - Blender Projects
+### Commit Details:
+Reduces the size of the struct storing normal space from 72 to 64.
+-------
+).
+With custom split normals data, performance has been improved by up
+  to 44% in addition
+  (
+17d161f565
+### Commit Summary: Mesh: Reduce custom normal calculation memory usage · 17d161f565 - blender - Blender Projects
+### Commit Details:
+Avoid storing redundant and unnecessary data in temporary arrays during
+face corner normal calculation with custom normals. Previously we used
+96 bytes per normal space (`MLoopNorSpace` (64), `MLoopNorSpace *` (8),
+`LinkData` (24)), now we use 36 (`CornerNormalSpace` (32), `int` (4)).
+This is achieved with a few changes:
+- Avoid sharing the data storage with the BMesh implementation
+- Use indices to refer to normal fan spaces rather than pointers
+- Only calculate indices of all corners in each fan when necessary
+- Don't duplicate automatic normal in space storage
+- Avoid storing redundant flags in space struct
+
+Reducing memory usage gives a significant performance improvement in
+my test files, which is consistent with findings from previous commits
+(see
+9fcfba4aae
+). In my test, the time used to calculate
+normals for a character model with 196 thousand faces reduced from
+20.2 ms to 14.0 ms, a 44% improvement.
+
+Edit mode isn't affected by this change.
+
+A note about the `reverse_index_array` function added here: this is the
+same as the mesh mapping functions (for example for mapping from
+vertices to face corners). I'm planning on working this area and hoping
+to generalize/reuse the implementation in the near future.
+
+#107592
+-------
+).
+Subdivision surface performance is slightly improved on large meshes
+  with no loose vertices
+  (
+3507431c30
+### Commit Summary: Subdiv: Optimize coarse position extraction with cache · 3507431c30 - blender - Blender Projects
+### Commit Details:
+The coarse positions given to the evaluator are skipped if there are
+vertices not attached to faces. Use the cache from
+8e967cfeaf
+to skip that topology query, or even to tell if there are no such vertices,
+so we can skip a copy completely. I observed a 12x improvement for this
+step, from 7.5 ms to 0.6 ms on a 1 million vertex grid.
+-------
+).
+Extracting UV map data for viewport drawing can be up to 3x faster
+  (
+63a44e29ac
+### Commit Summary: Mesh: Parallelize extraction of UV maps · 63a44e29ac - blender - Blender Projects
+### Commit Details:
+Since UVs are now stored as 2D vectors in meshes, they can be copied
+directly to the vertex buffers. Somewhat surprisingly, multithreading
+the copying into the vertex buffer provides a good speedup-- on a CPU
+with many cores at least.
+
+Here is a test uploading two UV maps created in geometry
+nodes with a 1 million quad mesh, with a Ryzen 7950x:
+|         | Before  | After  | Speedup |
+| ------- | ------- | ------ | ------- |
+| Average | 24.3 ms | 7.5 ms | 3.2x    |
+| Min     | 17.6 ms | 7.0 ms | 2.5x    |
+
+I added the copying utilities to the array utils header, since the
+need for them has come up in a few different places already, and the
+existing function with a selection argument didn't make sense here.
+
+#105793
+-------
+).
+Compatibility
+¶
+When baking normals with custom normals data, behavior may be
+  different if the auto smooth angle is not 180 degrees
+  (
+#107930
+).
+
+'''''
+
+
+6. Nodes & Physics¶
+
+Nodes & Physics
+¶
+Geometry Nodes
+¶
+Simulation Nodes
+¶
+Geometry nodes now has support for simulations
+  (
+0de54b84c6
+### Commit Summary: Geometry Nodes: add simulation support · 0de54b84c6 - blender - Blender Projects
+### Commit Details:
+This adds support for building simulations with geometry nodes. A new
+`Simulation Input` and `Simulation Output` node allow maintaining a
+simulation state across multiple frames. Together these two nodes form
+a `simulation zone` which contains all the nodes that update the simulation
+state from one frame to the next.
+
+A new simulation zone can be added via the menu
+(`Simulation > Simulation Zone`) or with the node add search.
+
+The simulation state contains a geometry by default. However, it is possible
+to add multiple geometry sockets as well as other socket types. Currently,
+field inputs are evaluated and stored for the preceding geometry socket in
+the order that the sockets are shown. Simulation state items can be added
+by linking one of the empty sockets to something else. In the sidebar, there
+is a new panel that allows adding, removing and reordering these sockets.
+
+The simulation nodes behave as follows:
+* On the first frame, the inputs of the `Simulation Input` node are evaluated
+  to initialize the simulation state. In later frames these sockets are not
+  evaluated anymore. The `Delta Time` at the first frame is zero, but the
+  simulation zone is still evaluated.
+* On every next frame, the `Simulation Input` node outputs the simulation
+  state of the previous frame. Nodes in the simulation zone can edit that
+  data in arbitrary ways, also taking into account the `Delta Time`. The new
+  simulation state has to be passed to the `Simulation Output` node where it
+  is cached and forwarded.
+* On a frame that is already cached or baked, the nodes in the simulation
+  zone are not evaluated, because the `Simulation Output` node can return
+  the previously cached data directly.
+
+It is not allowed to connect sockets from inside the simulation zone to the
+outside without going through the `Simulation Output` node. This is a necessary
+restriction to make caching and sub-frame interpolation work. Links can go into
+the simulation zone without problems though.
+
+Anonymous attributes are not propagated by the simulation nodes unless they
+are explicitly stored in the simulation state. This is unfortunate, but
+currently there is no practical and reliable alternative. The core problem
+is detecting which anonymous attributes will be required for the simulation
+and afterwards. While we can detect this for the current evaluation, we can't
+look into the future in time to see what data will be necessary. We intend to
+make it easier to explicitly pass data through a simulation in the future,
+even if the simulation is in a nested node group.
+
+There is a new `Simulation Nodes` panel in the physics tab in the properties
+editor. It allows baking all simulation zones on the selected objects. The
+baking options are intentially kept at a minimum for this MVP. More features
+for simulation baking as well as baking in general can be expected to be added
+separately.
+
+All baked data is stored on disk in a folder next to the .blend file.
+#106937
+describes how baking is implemented in more detail. Volumes can not be baked
+yet and materials are lost during baking for now. Packing the baked data into
+the .blend file is not yet supported.
+
+The timeline indicates which frames are currently cached, baked or cached but
+invalidated by user-changes.
+
+Simulation input and output nodes are internally linked together by their
+`bNode.identifier` which stays the same even if the node name changes. They
+are generally added and removed together. However, there are still cases where
+"dangling" simulation nodes can be created currently. Those generally don't
+cause harm, but would be nice to avoid this in more cases in the future.
+
+Co-authored-by: Hans Goudey
+Co-authored-by: Lukas Tönne
+#104924
+-------
+).
+Simulations are created with the new
+Simulation Input
+and
+Simulation Output
+nodes.
+On the first frame, the inputs of the
+Simulation Input
+node are
+  evaluated. In later frames the inputs aren't evaluated anymore. On
+  later frames, the node outputs the result of the previous frame.
+The
+Simulation Output
+node saves the state for the next frame.
+The simulation's results can be cached or baked to storage, which is
+  controlled with a new panel in the physics tab in the property
+  editor and visualized in the timeline.
+All baked data is stored on disk in a folder next to the .blend
+  file.
+The timeline indicates which frames are currently cached, baked or
+  cached but invalidated by user-changes.
+Simulation Nodes and Index of Nearest demo file
+.
+Index of nearest sample file, CC-BY Sean Christofferson
+General
+¶
+A new
+Index of Nearest
+node gives index of the closest "non-self"
+  element
+  (
+15f9e42c4f
+### Commit Summary: Geometry Nodes: new Index of Nearest node · 15f9e42c4f - blender - Blender Projects
+### Commit Details:
+The node outputs the index of the closest element to itself. See
+#102387
+for the original design.
+
+This is different from the Sample Nearest node in two important ways:
+* It does not have a geometry input, instead the geometry is taken from the
+  field evaluation context.
+* The node can exclude the "current" element from the search.
+* The group id input can be used to build subsets of elements that only
+  consider each other as neighbors and ignore elements with other ids.
+
+#104619
+-------
+,
+d8f4387ac9
+### Commit Summary: Geometry Nodes: Index of Nearest: Use grain size based on tree sizes · d8f4387ac9 - blender - Blender Projects
+### Commit Details:
+Use a grain size for the final tree creation/balancing/lookup that
+depends on the average size of each tree. When the trees are larger,
+fewer trees are processed on each thread and vice versa. I didn't notice
+a difference when there are hundreds of thousands of groups, but
+when there are few (i.e. around the number of cores), I noticed a 6x
+performance improvement, from over 1 second to around 0.2 s.
+
+Note that generally the performance is better with many small groups,
+because the creation and balancing of trees is single threaded.
+-------
+,
+4346314351
+### Commit Summary: Geometry Nodes: Index of Nearest: Use span for non-single ids · 4346314351 - blender - Blender Projects
+### Commit Details:
+If the Group ID input isn't a single value, it's likely to be a span,
+so making sure that's true should generally be free, at least in
+most cases. This brought a test with 1 million points from 37
+to 34 ms, roughtly an 8% improvement.
+-------
+).
+The legacy read-only "normal" attribute has been removed from the
+  spreadsheet
+  (
+300c673a64
+### Commit Summary: Geometry Nodes: Remove "normal" attribute · 300c673a64 - blender - Blender Projects
+### Commit Details:
+The "normal" was added before fields existed because we needed a
+way to expose the data to geometry nodes. It isn't really an attribute,
+because it's read-only and it's derived rather than original data.
+
+No features have relied on the "normal" attribute existing, except
+for the corresponding column in the spreadsheet. However, the
+column in the spreadsheet is also inconsistent, since it isn't an
+attribute but looks just like the other columns. The normal is
+always visible in the spreadsheet.
+
+Pull Request
+#104795
+-------
+).
+Confusing units have been removed on some inputs to the
+String to Curves
+node
+  (
+4f08eeae9c
+### Commit Summary: Nodes: Make spacings unitless in String to Curves node · 4f08eeae9c - blender - Blender Projects
+### Commit Details:
+The String to Curves node allows selecting various metrics for the
+characters. Size is the absolute height between two lines, and is
+correctly marked as a distance. Character, Word and Line Spacing, on
+the other hand, do not represent any distance, but are proportional to
+the base size and should not have distance units.
+
+This commit simply removes the properties' `PROP_DISTANCE` subtype.
+
+#106660
+-------
+).
+Performance
+¶
+Blender and geometry nodes make use of a new system to avoid copying
+  large data chunks, called "implicit sharing"
+  (
+7eee378ecc
+### Commit Summary: Custom Data: support implicit sharing for custom data layers · 7eee378ecc - blender - Blender Projects
+### Commit Details:
+This integrates the new implicit-sharing system (from
+fbcddfcd68
+)
+with `CustomData`. Now the potentially long arrays referenced by custom
+data layers can be shared between different systems but most importantly
+between different geometries. This makes e.g. copying a mesh much cheaper
+because none of the attributes has to be copied. Only when an attribute
+is modified does it have to be copied.
+
+Also see the original design task:
+#95845
+.
+
+This reduces memory and improves performance by avoiding unnecessary
+data copies. For example, the used memory after loading a highly
+subdivided mesh is reduced from 2.4GB to 1.79GB. This is about 25%
+less which is the expected amount because in `main` there are 4 copies
+of the data:
+1. The original data which is allocated when the file is loaded.
+2. The copy for the depsgraph allocated during depsgraph evaluation.
+3. The copy for the undo system allocated when the first undo step is
+  created right after loading the file.
+4. GPU buffers allocated for drawing.
+
+This patch only gets rid of copy number 2 for the depsgraph. In theory
+the other copies can be removed as part of follow up PRs as well though.
+
+-----
+
+The patch has three main components:
+* Slightly modified `CustomData` API to make it work better with implicit
+  sharing:
+  * `CD_REFERENCE` and `CD_DUPLICATE` have been removed because they are
+    meaningless when implicit-sharing is used.
+  * `CD_ASSIGN` has been removed as well because it's not an allocation
+    type anyway. The functionality of using existing arrays as custom
+    data layers has not been removed though.
+  * This can still be done with `CustomData_add_layer_with_data` which
+    also has a new argument that allows passing in information about
+    whether the array is shared.
+  * `CD_FLAG_NOFREE` has been removed because it's no longer necessary. It
+    only existed because of `CD_REFERENCE`.
+  * `CustomData_copy` and `CustomData_merge` have been split up into a
+    functions that do copy the actual attribute values and those that do
+    not. The latter functions now have the `_layout` suffix
+    (e.g. `CustomData_copy_layout`).
+* Changes in `customdata.cc` to make it actually use implicit-sharing.
+* Changes in various other files to adapt to the changes in `BKE_customdata.h`.
+
+#106228
+-------
+,
+dcb3b1c1f9
+### Commit Summary: Geometry: Use implicit sharing for curve and mesh offsets · dcb3b1c1f9 - blender - Blender Projects
+### Commit Details:
+Similar to
+7eee378ecc
+, this change decreases memory usage and
+improves performance when copying curves and meshes without changing
+their topology. The same change used for custom data layers is applied
+to face and curve offset indices, which aren't stored as a custom data
+layer.
+
+The implicit sharing info for the offsets is stored in the mesh and
+curve runtime structs, since it doesn't need to be written to files
+directly. When changing the offsets pointer directly, the sharing info
+must be updated accordingly. To make that easier, a few utility
+functions take care of common operations like making an array mutable,
+resizing an array, and creating sharing info for allocated data.
+
+This commit also clarifies the intention to not allocate the offsets
+at all when there are no curves/faces. That slightly complicates some
+of the logic, but there's no reason for the single `0` integer to be
+allocated.
+
+#106907
+-------
+).
+Generally copying geometry to change part of it is much faster, and
+  overal memory usage can be significantly better as well (at least
+  25% in simple situations).
+Avoiding copies when converting geometry types can make the
+Instance on Points
+,
+Instances to Points
+,
+Points to Vertices
+and
+Mesh to Points
+nodes at least 10x faster
+  (
+e45ed69349
+### Commit Summary: Attributes: Integrate implicit sharing with the attribute API · e45ed69349 - blender - Blender Projects
+### Commit Details:
+Add the ability to retrieve implicit sharing info directly from the
+C++ attribute API, which simplifies memory usage and performance
+optimizations making use of it. This commit uses the additions to
+the API to avoid copies in a few places:
+- The "rest_position" attribute in the mesh modifier stack
+- Instance on Points node
+- Instances to points node
+- Mesh to points node
+- Points to vertices node
+
+Many files are affected because in order to include the new information
+in the API's returned data, I had to switch a bunch of types from
+`VArray` to `AttributeReader`. This generally makes sense anyway, since
+it allows retrieving the domain, which wasn't possible before in some
+cases. I overloaded the `*` deference operator for some syntactic sugar
+to avoid the (very ugly) `.varray` that would be necessary otherwise.
+
+#107059
+-------
+).
+Copies can also be skipped when duplicating attributes with the
+Store Named Attribute
+and
+Capture Attribute
+nodes
+  (
+b54398c16c
+### Commit Summary: Geometry Nodes: Use implicit sharing in store/capture attribute nodes · b54398c16c - blender - Blender Projects
+### Commit Details:
+Some fields reference attributes directly. When the referenced attribute
+has the requested type and domain, the captured/stored attribute can
+share its array, avoiding the cost of duplication and reducing memory
+usage, at least temporarily until either attribute is modified.
+
+This only works when the attribute doesn't need validation and when
+the selection input isn't used, since those potentially need to change
+values in the arrays.
+
+I saw this save 200MB and 11 ms of copying for a simple grid with
+16 million points (creating the grid takes about 60ms).
+
+#107357
+-------
+).
+Blender now caches loose edges and loose vertices for meshes, making
+  drawing large meshes in the viewport and other operations faster after
+  some node setups.
+The
+Subdivision Surface
+node tags meshes with no loose
+  edges/vertices
+  (
+54072154c5
+### Commit Summary: Subdiv: Tag result mesh with no loose edges/verts · 54072154c5 - blender - Blender Projects
+### Commit Details:
+Avoid possible calculations of loose edges later on if the coarse mesh
+doesn't have loose edges or vertices. We expect these counts to be
+cached already since `BKE_subdiv_converter_init_for_mesh` calls
+`verts_no_face()` and `loose_edges()` already.
+
+Related commits:
+-
+63689e4756
+-
+8e967cfeaf
+-------
+).
+Primitive nodes, the
+Realize Instances
+node, and the
+Curve to
+  Mesh
+node now use precomputed this data too, saving hundreds of
+  milliseconds for large setups
+  (
+8e967cfeaf
+### Commit Summary: Mesh: Cache loose vertices · 8e967cfeaf - blender - Blender Projects
+### Commit Details:
+Similar to the cache of loose edges added in
+1ea169d90e
+,
+cache the number of loose vertices and which are loose in a bit map.
+This can save significant time when drawing large meshes in the
+viewport, because recalculations can be avoided when the data doesn't
+change, and because many geometry nodes set the loose geometry
+caches eagerly when the meshes contain no loose elements.
+
+There are two types of loose vertices:
+1. Vertices not used by any edges or faces
+   `Mesh.loose_verts()`
+2. Vertices not used by any faces (may be used by loose edges)
+   `Mesh.verts_no_face()`
+
+Because both are used by Blender in various places, because the cost
+is only a bit per vertex (or constant at best) and for design consistency,
+we cache both types of loose elements. The bit maps will only be
+allocated when they're actually used, but they are already accessed
+in a few important places:
+- Attribute domain interpolation
+- Subdivision surface modifier
+- Viewport drawing
+
+Just skipping viewport drawing calculation after certain geometry
+nodes setups can have a large impact. Here is the time taken by
+viewport loose geometry extraction before and after the change:
+- 4 million vertex grid node: 28 ms to 0 ms
+- Large molecular nodes setup (curve to mesh node): 104 ms to 0 ms
+- Realize instances with 1 million cubes: 131 ms to 0 ms
+
+#105567
+-------
+,
+00bb30c0e9
+### Commit Summary: Geometry Nodes: Copy cached no loose edge status in realize instances · 00bb30c0e9 - blender - Blender Projects
+### Commit Details:
+When all of the input meshes have no loose edges, the output won't have
+any either, but finding that out for the output is much more expensive.
+Copy this tag to the output mesh to save processing time when drawing.
+In my test creating 1 million instances of a 16 face mesh, this changed
+the time for the draw cache loose geometry extraction from 220 ms to
+131 ms.
+
+For now, only do this when the loose edges of the inputs are already
+cached (primitive nodes, for example). This avoids paying the cost of
+calculation when we don't know it will be necessary.
+-------
+,
+63689e4756
+### Commit Summary: Geometry Nodes: Tag no loose edges after curve to mesh node · 63689e4756 - blender - Blender Projects
+### Commit Details:
+It doesn't take much time to know whether all of the curves have more
+than a single point, and if that's the case, we know for sure there are
+no loose edges in the mesh. This can save time when creating the mesh
+draw cache. The time for finding loose geometry goes from 180 ms to
+104 ms for a large molecular nodes test file.
+-------
+).
+The mesh bounding box is pre-calculated for primitive nodes, saving
+  time calculating it later
+  (
+a1f52a02a8
+### Commit Summary: Mesh: Set bounds eagerly for spherical and cylindrical primitive nodes · a1f52a02a8 - blender - Blender Projects
+### Commit Details:
+Eager bounds calculation for cylindrical and spherical primitive nodes,
+implemented in constant time rather than as a loop over all positions.
+Takes into account the segments count of the circle from which they
+are constructed. Solution of the task
+#105551
+.
+
+#105743
+-------
+).
+Recomputing bounds can be skipped after translating a mesh
+  (
+59c0e19db2
+### Commit Summary: Geometry: Skip recomputing bounds after translation · 59c0e19db2 - blender - Blender Projects
+### Commit Details:
+Now that mesh primitive nodes calculate their bounds in constant time,
+it's worth updating the bounds eagerly when translating a geometry
+since doing so should be very cheap and might save a more significant
+amount of time if they're needed later.
+
+Also slightly unify the translation functions for the different types.
+
+#106159
+-------
+)
+Drawing curves selection data in edit mode is up to 3.8x faster
+  (
+70d854538b
+### Commit Summary: Curves: Optimize edit mode selection draw extraction · 70d854538b - blender - Blender Projects
+### Commit Details:
+Use the attribute API for domain and type interpolation instead of doing
+it manually. I observed a 3.8x improvement in curve selection mode and
+an 18x improvement in point selection mode.
+-------
+).
+Improvements to the
+Mesh to Curve
+node improved FPS in a test by 10%
+  (
+98ccee78fe
+### Commit Summary: Geometry Nodes: Slightly optimize mesh to curve node · 98ccee78fe - blender - Blender Projects
+### Commit Details:
+Avoid copying the selected edges if all edges are selected, and
+parallelize gathering the selection otherwise. Also use `int2` instead
+of `std::pair`.
+
+In simple test file I observed an approximate 10% FPS improvement,
+though in real world cases the impact is probably much smaller.
+-------
+).
+The
+Curve to Mesh
+node is a few milliseconds faster in a test with 1
+  million curves
+  (
+52eced3eef
+### Commit Summary: Geometry Nodes: Slightly improve curve to mesh performance · 52eced3eef - blender - Blender Projects
+### Commit Details:
+For the single-threaded part of the curve to mesh conversion, avoid
+writing to two logically separate arrays in the same loop. Instead
+run the calculation on two separate threads if the output is large.
+
+Timing for `calculate_result_offsets` when processing 1 million curves:
+Before: Average: 10.4 ms, Min: 9.4 ms
+After: Average: 9.2 ms, Min: 7.7 ms
+-------
+).
+Node Editor
+¶
+A shortcut to the Online Manual is now included in the node context
+  menu
+  (
+e95ba8a70e
+### Commit Summary: Nodes: Add 'Online Manual' to context menu · e95ba8a70e - blender - Blender Projects
+### Commit Details:
+Finding the documentation for nodes can be time consuming.
+By adding the online manual to the right click context menu in the node
+editor the user gets easier access to the documentation.
+
+Can also be used by custom nodes add-ons by registering a manual-map.
+
+Pull Request
+#104833
+-------
+).
+A new dropdown allows select group socket subtypes
+  (
+e7f395dd20
+### Commit Summary: Nodes: Add dropdown to select group socket subtype · e7f395dd20 - blender - Blender Projects
+### Commit Details:
+Previously the only way to control the subtype was to remove the group
+input or output and create it again. This commit adds a dropdown to
+change an existing socket, for supported socket types.
+
+Based on a patch by Angus Stanton:
+https://developer.blender.org/D15715
+It was necessary to fix the UI code slightly; the layout's context
+wasn't being used in calls to an operator's enum items callback.
+
+#105614
+-------
+).
+Link drag search can now move data-block default values when creating
+  group inputs and the
+Image
+node
+  (
+9726e4a0ad
+### Commit Summary: Nodes: Move data-block default values with link drag search · 9726e4a0ad - blender - Blender Projects
+### Commit Details:
+When creating nodes by dragging a link, it can be convenient to
+transfer values from input socket. For reference values, like images,
+this may be necessary to avoid unnecessary data-block users. This
+patch starts adding such a system. At this moment this only makes sense
+for one node (Image Input), but this can be extended to work with other
+reference types, different non-reference types and support auto-casting
+(if a float is transferred to the Integer Input node).
+
+See task:
+#102854
+Original patch:
+https://archive.blender.org/developer/D16735
+#105972
+-------
+).
+Link drag search can copy values of basic socket types like vectors as
+  well
+  (
+71e4f48180
+### Commit Summary: Nodes: Improve link drag search value moving · 71e4f48180 - blender - Blender Projects
+### Commit Details:
+Now, when link drag search is used to create new input value nodes, it
+also moves socket values into node storage. This means, by design, that
+result of evaluation on node tree will not be changed. For data blocks,
+the original value is set to null, thus avoiding the existence of
+unused pointers.
+
+Right now a few nodes (in shader in many cases) are implemented without
+node storage, but by storing value in socket itself. Float value input
+node is unsupported in this way too.
+
+#107470
+-------
+).
+
+'''''
+
+
+7. Pipeline, Assets & I/O¶
+
+Pipeline, Assets & I/O
+¶
+Assets
+¶
+It is now possible to use relative path when importing assets.
+The option exists in the Preferences per asset library
+  (
+5d0595fded
+### Commit Summary: Suport relative path option per-asset library · 5d0595fded - blender - Blender Projects
+### Commit Details:
+This option is true by default, but it can be changed for
+any asset library (that may be using Link as import method).
+
+This also fix "Reset to Default Value" for the Import Method
+since this was originally not using the defaults.
+
+#107345
+-------
+).
+Stanford PLY
+¶
+New C++ based PLY importer and exporter
+  (
+43e9c900
+### Commit Summary: IO: New C++ PLY importer/exporter · 43e9c90061 - blender - Blender Projects
+### Commit Details:
+New (experimental) Stanford PLY importer and exporter written in C++.
+
+Handles: vertices, faces, edges, vertex colors, normals, UVs. Both
+binary and ASCII formats are supported.
+
+Usually 10-20x faster than the existing Python based PLY
+importer/exporter.
+
+Additional notes compared to the previous Python addon:
+- Importing point clouds with vertex colors now works
+- Importing PLY files with non standard line endings
+- Exporting multiple objects (previous exporter didn't take the vertex
+  indices into account)
+- The importer has the option to merge vertices
+- The exporter supports exporting loose edges and vertices along with
+  UV map data
+
+This is squashed commit of PR
+#104404
+Reviewed By: Hans Goudey, Aras Pranckevicius
+
+Co-authored-by: Arjan van Diest
+Co-authored-by: Lilith Houtjes
+Co-authored-by: Bas Hendriks
+Co-authored-by: Thomas Feijen
+Co-authored-by: Yoran Huzen
+-------
+,
+6c6edaf5
+### Commit Summary: PLY: Improve robustness and performance of the new PLY importer · 6c6edaf513 - blender - Blender Projects
+### Commit Details:
+Fixes:
+
+* General:
+- Was assuming that positions/normals/UVs are always `float`, and colors
+  are always `uchar`. But e.g. positions are sometimes doubles, or colors
+  are floats etc.
+- Was assuming that `face` element is always just a single vertex indices
+  property. But some files have more arbitrary properties per-face.
+
+* ASCII importer:
+- Was assuming that file elements are always in this order: `vertex`,
+  `face`, `edge`. That is not necessarily the case.
+- Was only handling space character as separator, but not other
+  whitespace e.g. tab.
+- Was not checking for partially present properties (e.g. if just `nx` is
+  present but not `ny` and `nz`, it was still assuming whole normal is there).
+
+* Binary importer:
+- Was assuming that faces are always 1-byte list size and 4-byte indices.
+- Was assuming that edge vertex indices are always 4-byte.
+
+For the assumptions above, it often lead to either crashes, garbage data
+or not detecting presence of a vertex component. E.g. binary importer was
+just always reading 4 bytes for vertex indices, but if a file has 2 byte
+indices then that would read too much, and then later on would start reading
+garbage. ASCII importer was doing out-of-bounds reads into properties array
+if some assumptions were not correct, etc.
+
+Improvements:
+- Some ply files use different property type names, e.g. `float32`,
+  `uint16` or `int8` instead of `float`, `ushort`, `char`; now that is
+  supported too.
+- Handles `tristrips` element. Some files out there do not have `face` but
+  rather has a triangle strip, internally using -1 indices for strip restarts.
+
+Performance:
+
+While doing the above fixes/improvements, in order to fix some things it was
+more convenient to also make them more performant :) Now it avoids splitting
+each ASCII line into a vector of `std::string` objects, for example, or
+reading a binary file in tiny chunks.
+
+Generally this is now 2x-4x faster than the previous state of C++ importer.
+
+The code has changed quite a bit to achieve both the fixes and performance:
+- Instead of separate files for ASCII and Binary reading, they are now both
+  in `ply_import_data.cc/hh`. Reason is that all of the "find correct property
+  indices" logic is the same between both (and that bit was mostly missing
+  previously).
+- Instead of using raw C++ `fstream` object and reading line by line (which
+  in turn reads one byte at a time) or reading field by field, now there's a
+  `ply_import_buffer.cc/hh` that reads in 64KB chunks and does any needed
+  logic for the ASCII/header part to properly split into lines. This avoids
+  all the mutex locking, locale lookups, C++ abstraction layers overhead
+  that C++ iostreams have when doing a ton of tiny reads.
+
+Tests:
+
+Extended test coverage with new files (comitted in svn revision 63274).
+11 new "situations", in both ascii and binary forms. Additionally, now also
+has a Big Endian binary file to test; BE codepath was completely untested
+before.
+
+Overall reworked the tests so that they don't do the whole "load dummy
+blend file, import ply file on top, go over meshes, check them", but rather
+do a simpler "run ply importer logic that fills in PlyData structure, check
+that". The followup conversion to blender meshes is fairly trivial and the
+tests were not really covering that in a useful way.
+
+#105842
+-------
+,
+48496f14
+### Commit Summary: PLY: optimize new exporter (2x faster) · 48496f1473 - blender - Blender Projects
+### Commit Details:
+1) There was a logic error in FileBuffer where when it was trying to
+   add a new 64kb chunk to hold output, it was adding an empty chunk,
+   but making sure we have space capacity to hold 64 thousand chunks.
+   So that was a bit of pointless juggling to get nothing good.
+2) In UV_vertex_key, instead of trying to combine three members into
+   a hash value, badly, by doing some ad-hoc shifts and xors, use
+   get_default_hash_3 instead, which combines them way more properly.
+   Also avoid copying the whole hash map object.
+
+On my windows box (Ryzen 5950X, VS2022), exporting Stanford Lucy 3D
+scan:
+- Binary: 13.4 -> 5.4 sec
+- ASCII: 29.3 -> 14.6 sec
+
+So basically 2x faster for two tiny changes.
+-------
+).
+  About 4x-20x faster export, 8x-30x faster import compared to the
+  Python addon. It also fixes and improves some things:
+Importing point clouds with vertex colors now works
+Importing PLY files with non standard line endings
+Exporting multiple objects (previous exporter didn't take the vertex
+  indices into account)
+The importer has the option to merge vertices
+The exporter supports exporting loose edges and vertices along with
+  UV map data
+Vertex colors can be treated as either sRGB or Linear color space.
+Importer supports models that use "tristrips" element instead of
+  "face".
+USD
+¶
+Path Mask
+import option now supports multiple primitive paths
+  (
+239af1705d
+### Commit Summary: Fix #102594: USD Import: mask multiple prim paths. · 239af1705d - blender - Blender Projects
+### Commit Details:
+These changes enhance the prim_path_mask USD import option to allow masking on multiple paths.
+
+Changed the prim_path_mask import property to a string of arbitrary size.
+
+Multiple paths may be specified in a list delimited by commas or semicolons.
+
+Reviewed by Bastien and Matt McLin.
+
+#106974
+-------
+).
+Author
+opacityThreshold
+USD Preview Surface
+material attribute
+  when exporting USD
+  (
+3c74575dac
+### Commit Summary: Fix #107062: support opacityThreshold when exporting USD · 3c74575dac - blender - Blender Projects
+### Commit Details:
+This PR addresses issue “USD export does not respect opacity threshold for clip alpha blend mode #107062”
+
+This commit extends the USD Preview Surface material support to author the opacityThreshold attribute of materials on export, when the Alpha Clip blend mode is selected.
+
+When authoring alpha cutouts in Blender, one sets the Blend Mode to "Alpha Clip", and the Clip Threshold to some value greater than zero.
+When this case is detected on export, we now author the opacityThreshold attribute to match the specified clip threshold.
+
+Note that opacityThreshold is already handled correctly on import, so this change allows the feature to be fully round-tripped.
+
+Co-authored-by: Matt McLin
+#107149
+-------
+).
+Fixed incorrect texture alpha mapping when exporting
+USD Preview Surface
+materials
+  (
+109c1b92cd
+### Commit Summary: Fix #105621: USD export: incorrect texture alpha mapping · 109c1b92cd - blender - Blender Projects
+### Commit Details:
+Fixed bug where texture alpha was incorrectly remapped to red when exporting material shaders.
+
+Now connecting the UsdPreviewSurface 'opacity' input to the UsdUVTexture 'a' output if the Blender texture image node source socket identifier is 'Alpha'.
+
+Changes include the following:
+
+The InputSpec::source_name struct member was removed, as the connection source name is now determined at runtime based on the Blender node input socket identifier.
+
+The traverse_channel() utility function now returns a bNodeLink*, so that the source socket identifier can be queried from the link.
+
+In create_usd_preview_surface_materia(), the code for creating and connecting a UsdUVTexture shader was reorganized to group it within one conditional block, to make it easier to follow.  Also replaced a call to a deprecated version of UsdShadeInput::ConnectToSource().
+
+#107022
+-------
+).
+New
+Prim Path
+USD export option to add a root transform primitive
+  to the stage
+  (
+42342124f8
+### Commit Summary: USD export:  option to add a root prim. · 42342124f8 - blender - Blender Projects
+### Commit Details:
+This  pull request adds a 'root_prim_path' USD export string parameter.  If this option is set to a well-formed prim path (e.g., '/World'), a transform primitive with the given path will be added to the stage as the parent of all exported primitives. This will allow transforming the scene by this root node in other applications and is also required for loading the exported scene as a reference in other USDs.
+
+As part of this change, the '_materials' node, which contains all exported materials, is also created under the root prim.   This is required so that materials are imported correctly when the USD is referenced in another stage.
+
+Finally, added an export_params_valid() function to verify that the 'root_prim_path' is valid before starting the export job.  This function can be extended in the future to perform additional validation of other export parameters.
+
+This update combines work in pull request
+#104506
+and an implementation in the 'universal-scene-description' branch.
+
+Co-authored-by: Ashley Ruglys
+#107855
+-------
+).
+Set
+emissiveColor
+USD Preview Surface
+material input when
+  exporting USD
+  (
+ce83b26a33
+### Commit Summary: Fix #107903: USD export: output emissiveColor in UsdPreviewSurface · ce83b26a33 - blender - Blender Projects
+### Commit Details:
+Added support for emissiveColor in UsdPreviewSurface export, mapping the
+PrincipledShader's Emission input to it.
+
+Co-authored-by: pwflocal
+#107947
+A similar solution was also proposed and discussed in pull request
+#104490
+by Ashley Ruglys
+.
+-------
+).
+Fixed bug creating duplicate shader nodes when importing USD
+  (
+74b5e62d2a
+### Commit Summary: Fix #107633: USD import: duplicate shader nodes · 74b5e62d2a - blender - Blender Projects
+### Commit Details:
+This pull request addresses bug
+#107633
+Added logic to avoid creating duplicate Blender shader nodes when
+converting USD Preview Surface shaders that are connected to more
+than one input.
+
+This change adds a `NodePlacementContext::node_cache` map to record
+Blender nodes converted for given USD shaders.  The node creation
+logic has been updated to query this cache to check if a node was
+previously created for a given USD shader, before creating a
+new node.
+
+#107945
+-------
+).
+New Curves/Hair Export Support
+  (
+1164976dd8
+### Commit Summary: USD Export: New Curves/Hair Support · 1164976dd8 - blender - Blender Projects
+### Commit Details:
+Previous patch location:
+https://archive.blender.org/developer/D16545
+This patch addresses
+#102376
+A new writer is added, the usd_writer_curves.cc to handle transforming the new curves system into USD.
+
+The goal was to enable export of the new curves type, but
+@HooglyBoogly
+mentioned there is a `curve_legacy_to_curves` utility function that could also handle converting legacy curves to the new Curves type. This very trivially enables the legacy curves for export too so I have included that change in this patch.
+
+Co-authored-by: DESKTOP-ON14TH5\Sonny Campbell
+#105375
+-------
+).
+FBX
+¶
+Geometry export performance was made faster by using Python's numpy
+  (
+994c4d91
+,
+6054d1be
+,
+aa7d1d71
+,
+4269b4ad
+,
+d1556507
+,
+3e783620
+,
+58740ec8
+,
+2a0791a4
+).
+  E.g. exporting Snow (without any animation) is about twice as fast as
+  before.
+Geometry import performance was made faster by using Python's numpy
+  (
+47da0ad56b
+,
+5da3d41c27
+,
+66390ced12
+,
+9859e253b5
+,
+2438ae5c27
+).
+It is now possible to export the active color layer in first position,
+  in case other software only import one of these
+  (
+4c397ede
+).
+glTF 2.0
+¶
+Import
+¶
+Fix zero sum weights for skinning
+  (
+83357ab3b9
+)
+Fix empty shapekey names
+  (
+6ac724926a
+)
+Fix custom attribute import when vertices are merged or shared
+  accessors
+  (
+2403f4c6b9
+,
+45bfb99ffe
+)
+Export
+¶
+Big animation refactoring
+  (
+8dfe73800d
+)
+Export right materials when changed by modifiers
+  (
+8b57a74629
+)
+Fix normal normalization
+  (
+0920b3e329
+)
+Reset sk values when switching sk action
+  (
+0086ce9d67
+)
+Add hook to change primitive attribute order
+  (
+874240f275
+)
+Fix uri encoded, only for uri, not filename
+  (
+8c77651799
+)
+Convert light option was not saved
+  (
+17f1e4d848
+)
+Avoid crash when sequence image (not managed by glTF)
+  (
+789a200cd7
+)
+Fix exporting children of instance collections
+  (
+932ea1d719
+)
+Avoid crash when collision name in attributes
+  (
+e2b556cbe8
+)
+Initialize filter when user saved export preferences
+  (
+776b4a3a3f
+)
+Add a hook for node name
+  (
+f12999046e
+)
+
+'''''
+
+
+8. Python API & Text Editor¶
+
+Python API & Text Editor
+¶
+Custom Script Directories
+¶
+Multiple script directory paths can now be configured in the Preferences
+(
+File Paths
+section). Each of these directories supports the regular
+script directory layout with a startup file (or files?), add-ons,
+modules and presets.
+(
+ba25023d22
+### Commit Summary: Python: Support multiple custom script directories in Preferences · ba25023d22 - blender - Blender Projects
+### Commit Details:
+Makes it possible to select multiple custom script directories in Preferences >
+File Paths, replacing the single Scripts path option. Each of these directories
+supports the regular script directory layout with a startup file (or files?),
+add-ons, modules and presets.
+When installing an add-on, the script directory can be chosen.
+
+NOTE: Deprecates the `bpy.types.PreferencesFilePaths.script_directory`
+property, and replaces `bpy.utils.script_path_pref` with
+`bpy.utils.script_paths_pref`.
+
+#104876
+-------
+)
+Compatibility notes:
+bpy.types.PreferencesFilePaths.script_directory
+is deprecated. The
+  directories are exposed in
+bpy.types.script_directories
+now.
+bpy.utils.script_path_pref
+is removed, use
+bpy.utils.script_paths_pref
+instead.
+Blender Handlers
+¶
+Added
+bpy.app.handlers
+(
+save_post_fail
+,
+load_post_fail
+),
+  so the
+*_pre
+handles will always call a
+*_post
+handler,
+  even on failure
+  (
+46be42f6b1
+### Commit Summary: PyAPI: extend save/load handlers, optionally take a filepath argument · 46be42f6b1 - blender - Blender Projects
+### Commit Details:
+Add a filepath argument to load/save pre/post.
+Also add save_post_failed and load_post_failed handlers so it's always
+possible to for the pre handlers to run a matching post action.
+
+This makes it possible to know the filepath of the blend file mean
+loaded/saved as well as supporting running an action when load/save
+operations fail.
+
+When loading and saving the startup-file, the path argument is set to
+an empty string.
+
+Details:
+
+New RNA types were added to support storing primitive values in
+PointerRNA. Primitive{String/Int/Float/Boolean}RNA. These will likely
+only be used in some limited cases, in the case of BKE_callback_exec it
+allows strings to be included as part of the PointerRNA **pointers
+argument.
+
+Ref
+!104769
+.
+-------
+).
+File load handlers (
+save_{pre/post/post_fail}
+,
+load_{pre/post/post_fail}
+) now accept a filepath argument so the
+  file being loaded or saved is known
+  (
+46be42f6b1
+### Commit Summary: PyAPI: extend save/load handlers, optionally take a filepath argument · 46be42f6b1 - blender - Blender Projects
+### Commit Details:
+Add a filepath argument to load/save pre/post.
+Also add save_post_failed and load_post_failed handlers so it's always
+possible to for the pre handlers to run a matching post action.
+
+This makes it possible to know the filepath of the blend file mean
+loaded/saved as well as supporting running an action when load/save
+operations fail.
+
+When loading and saving the startup-file, the path argument is set to
+an empty string.
+
+Details:
+
+New RNA types were added to support storing primitive values in
+PointerRNA. Primitive{String/Int/Float/Boolean}RNA. These will likely
+only be used in some limited cases, in the case of BKE_callback_exec it
+allows strings to be included as part of the PointerRNA **pointers
+argument.
+
+Ref
+!104769
+.
+-------
+)
+Internal Mesh Format
+¶
+The mesh data structure refactoring from earlier releases has continued
+in 3.6. See the similar sections in the
+3.4
+and
+3.5
+release notes.
+The vertex and edge indices stored for mesh face corners
+  (
+MeshLoop
+/
+MLoop
+) are now stored as separate attributes, named
+.corner_vert
+and
+.corner_edge
+(
+16fbadde36
+### Commit Summary: Mesh: Replace MLoop struct with generic attributes · 16fbadde36 - blender - Blender Projects
+### Commit Details:
+Implements
+#102359
+.
+
+Split the `MLoop` struct into two separate integer arrays called
+`corner_verts` and `corner_edges`, referring to the vertex each corner
+is attached to and the next edge around the face at each corner. These
+arrays can be sliced to give access to the edges or vertices in a face.
+Then they are often referred to as "poly_verts" or "poly_edges".
+
+The main benefits are halving the necessary memory bandwidth when only
+one array is used and simplifications from using regular integer indices
+instead of a special-purpose struct.
+
+The commit also starts a renaming from "loop" to "corner" in mesh code.
+
+Like the other mesh struct of array refactors, forward compatibility is
+kept by writing files with the older format. This will be done until 4.0
+to ease the transition process.
+
+Looking at a small portion of the patch should give a good impression
+for the rest of the changes. I tried to make the changes as small as
+possible so it's easy to tell the correctness from the diff. Though I
+found Blender developers have been very inventive over the last decade
+when finding different ways to loop over the corners in a face.
+
+For performance, nearly every piece of code that deals with `Mesh` is
+slightly impacted. Any algorithm that is memory bottle-necked should
+see an improvement. For example, here is a comparison of interpolating
+a vertex float attribute to face corners (Ryzen 3700x):
+
+**Before** (Average: 3.7 ms, Min: 3.4 ms)
+```
+threading::parallel_for(loops.index_range(), 4096, [&](IndexRange range) {
+  for (const int64_t i : range) {
+    dst[i] = src[loops[i].v];
+  }
+});
+```
+
+**After** (Average: 2.9 ms, Min: 2.6 ms)
+```
+array_utils::gather(src, corner_verts, dst);
+```
+
+That's an improvement of 28% to the average timings, and it's also a
+simplification, since an index-based routine can be used instead.
+For more examples using the new arrays, see the design task.
+
+#104424
+-------
+).
+Mesh faces (polygons) are now stored with a single integer internally,
+  rather than the
+MPoly
+type.
+This means that the order of faces is always consistent with the
+  order of face corners (loops).
+The
+MeshPolygon.loop_total
+property is no longer editable.
+  Instead the size of each face should be changed with the next face's
+loop_start
+property.
+Mesh edges are now stored in a generic attribute named
+.edge_verts
+(
+2a4323c2f5
+### Commit Summary: Mesh: Move edges to a generic attribute · 2a4323c2f5 - blender - Blender Projects
+### Commit Details:
+Implements
+#95966
+, as the final step of
+#95965
+.
+
+This commit changes the storage of mesh edge vertex indices from the
+`MEdge` type to the generic `int2` attribute type. This follows the
+general design for geometry and the attribute system, where the data
+storage type and the usage semantics are separated.
+
+The main benefit of the change is reduced memory usage-- the
+requirements of storing mesh edges is reduced by 1/3. For example,
+this saves 8MB on a 1 million vertex grid. This also gives performance
+benefits to any memory-bound mesh processing algorithm that uses edges.
+
+Another benefit is that all of the edge's vertex indices are
+contiguous. In a few cases, it's helpful to process all of them as
+`Span
+` rather than `Span
+`. Similarly, the type is more
+likely to match a generic format used by a library, or code that
+shouldn't know about specific Blender `Mesh` types.
+
+Various Notes:
+- The `.edge_verts` name is used to reflect a mapping between domains,
+  similar to `.corner_verts`, etc. The period means that it the data
+  shouldn't change arbitrarily by the user or procedural operations.
+- `edge[0]` is now used instead of `edge.v1`
+- Signed integers are used instead of unsigned to reduce the mixing
+  of signed-ness, which can be error prone.
+- All of the previously used core mesh data types (`MVert`, `MEdge`,
+  `MLoop`, `MPoly` are now deprecated. Only generic types are used).
+- The `vec2i` DNA type is used in the few C files where necessary.
+
+#106638
+-------
+).
+A new 2D integer vector attribute type is added to store edge data
+  (
+988f23cec3
+### Commit Summary: Attributes: Add 2D integer vector attribute type · 988f23cec3 - blender - Blender Projects
+### Commit Details:
+This type will be used to store mesh edges in
+#106638
+, but it could
+be used for anything else too. This commit adds support for:
+- The new type in the Python API
+- Editing the type in the edit mode "Attribute Set" operator
+- Rendering the type in EEVEE and Cycles for all geometry types
+- Geometry nodes attribute interpolation and mixing
+- Viewing the type in the spreadsheet and using row filters
+
+The attribute uses the `blender::int2` type in most code, and
+the `vec2i` DNA type in C code when necessary. The enum names
+are based on `INT32_2D` for consistency with `INT8` and `INT32`.
+
+#106677
+-------
+).
+UV seams are now stored as a generic attribute, accessible with the
+.uv_seam
+name on the edge domain
+  (
+cccf91ff83
+### Commit Summary: Mesh: Move edge UV seams to a generic attribute · cccf91ff83 - blender - Blender Projects
+### Commit Details:
+As part of
+#95966
+, move the `ME_SEAM` flag on mesh edges
+to a generic boolean attribute, called `.uv_seam`. This is the
+last bit of extra information stored in mesh edges. After this
+is committed we can switch to a different type for them and
+have a 1/3 improvement in memory consumption.
+
+It is also now possible to see that a mesh has no UV seams in
+constant time, and like other similar refactors, interacting with
+only the UV seams can be done with less memory.
+
+The attribute name starts with a `.` to signify that the attribute,
+like face sets, isn't meant to be used in arbitrary procedural
+situations (with geometry nodes for example). That gives us more
+freedom to change things in the future.
+
+Pull Request
+#104728
+-------
+).
+The smooth/sharp status for faces is now stored as a generic attribute
+  with the
+sharp_face
+name
+  (
+5876573e14
+### Commit Summary: Mesh: Move face shade smooth flag to a generic attribute · 5876573e14 - blender - Blender Projects
+### Commit Details:
+Currently the shade smooth status for mesh faces is stored as part of
+`MPoly::flag`. As described in
+#95967
+, this moves that information
+to a separate boolean attribute. It also flips its status, so the
+attribute is now called `sharp_face`, which mirrors the existing
+`sharp_edge` attribute. The attribute doesn't need to be allocated
+when all faces are smooth. Forward compatibility is kept until
+4.0 like the other mesh refactors.
+
+This will reduce memory bandwidth requirements for some operations,
+since the array of booleans uses 12 times less memory than `MPoly`.
+It also allows faces to be stored more efficiently in the future, since
+the flag is now unused. It's also possible to use generic functions to
+process the values. For example, finding whether there is a sharp face
+is just `sharp_faces.contains(true)`.
+
+The `shade_smooth` attribute is no longer accessible with geometry nodes.
+Since there were dedicated accessor nodes for that data, that shouldn't
+be a problem. That's difficult to version automatically since the named
+attribute nodes could be used in arbitrary combinations.
+
+**Implementation notes:**
+- The attribute and array variables in the code use the `sharp_faces`
+  term, to be consistent with the user-facing "sharp faces" wording,
+  and to avoid requiring many renames when
+#101689
+is implemented.
+- Cycles now accesses smooth face status with the generic attribute,
+  to avoid overhead.
+- Changing the zero-value from "smooth" to "flat" takes some care to
+  make sure defaults are the same.
+  - Versioning for the edge mode extrude node is particularly complex.
+    New nodes are added by versioning to propagate the attribute in its
+    old inverted state.
+- A lot of access is still done through the `CustomData` API rather
+  than the attribute API because of a few functions. That can be
+  cleaned up easily in the future.
+- In the future we would benefit from a way to store attributes as a
+  single value for when all faces are sharp.
+
+#104422
+-------
+).
+In some cases, meshes are now
+smooth by default
+(when created
+  from scratch, without
+from_pydata
+).
+To simplify getting the previous behavior, new API functions
+Mesh.shade_flat()
+and
+Mesh.shade_smooth()
+have been added
+  (
+ee352c968f
+### Commit Summary: Fix #109070: Creating mesh from Python skips setting faces sharp · ee352c968f - blender - Blender Projects
+### Commit Details:
+The default value of the "sharp_face" attribute is False like other
+boolean attributes. That mistakenly changed behavior in addons
+that created meshes with `Mesh.from_pydata`. To fix, add an
+argument with a default value that maintains the behavior
+from before, and add convenience, `shade_smooth` and
+`shade_flat` methods.
+-------
+).
+Other Changes
+¶
+New
+bpy_extras.node_utils.connect_sockets()
+function to allow
+  creating links between virtual sockets (grayed out sockets in Group
+  Input and Group Output nodes)
+  (
+81815681d0
+### Commit Summary: Python API: Add function to create links to virtual sockets · 81815681d0 - blender - Blender Projects
+### Commit Details:
+Links created through the normal Python API are invalid since
+7026096099
+. Before then, one could create links to or from virtual
+sockets from Python (grayed out sockets in Group Input and Group
+Output nodes), as is still possible in the GUI.
+
+This is documented as an API change, and it broke at least Node
+Wrangler, see
+blender/blender-addons#104470
+. Instead of just fixing
+that, let's introduce an API to make this operation simpler.
+
+#105975
+-------
+).
+New
+action_tweak_storage
+property in
+AnimData
+, which exposes
+  the temporary storage used to stash the main action when tweaking an
+  NLA clip
+  (
+997ad50b49
+### Commit Summary: Fix #106801: loading file with overriden NLA in tweak mode loses action · 997ad50b49 - blender - Blender Projects
+### Commit Details:
+The root issue was that the `tmpact` field of an object's animation
+data wasn't exposed to RNA, and thus wasn't getting overridden.
+
+#108548
+-------
+).
+
+'''''
+
+
+9. Cycles¶
+
+Cycles
+¶
+GPU Rendering
+¶
+AMD
+¶
+Experimental support for AMD hardware ray-tracing acceleration on
+Windows, using
+HIP RT
+.
+(
+557a245
+### Commit Summary: Cycles: add HIP RT device, for AMD hardware ray tracing on Windows · 557a245dd5 - blender - Blender Projects
+### Commit Details:
+HIP RT enables AMD hardware ray tracing on RDNA2 and above, and falls back to a
+to shader implementation for older graphics cards. It offers an average 25%
+sample rendering rate improvement in Cycles benchmarks, on a W6800 card.
+
+The ray tracing feature functions are accessed through HIP RT SDK, available on
+GPUOpen. HIP RT traversal functionality is pre-compiled in bitcode format and
+shipped with the SDK.
+
+This is not yet enabled as there are issues to be resolved, but landing the
+code now makes testing and further changes easier.
+
+Known limitations:
+* Not working yet with current public AMD drivers.
+* Visual artifact in motion blur.
+* One of the buffers allocated for traversal has a static size. Allocating it
+  dynamically would reduce memory usage.
+* This is for Windows only currently, no Linux support.
+
+Co-authored-by: Brecht Van Lommel
+Ref
+#105538
+-------
+)
+This improves performance on GPUs with ray tracing acceleration - RX
+  6000 and RX 7000 series, as well as W6000 and W7000 series workstation
+  GPUs.
+Driver version
+22.40.51.06 for Blender 3.6 Beta
+needs to be installed, along with enabling HIP RT in Preferences >
+  System.
+Known limitations:
+No Linux support, as HIP RT is Windows only still.
+Degenerate triangles may causes crashes or poor performance.
+Shadows in hair are not rendering accurately.
+AMD GPUs now also support light trees.
+(
+d5757a0
+### Commit Summary: Cycles: re-enable AMD GPU binaries on Windows · d5757a0a10 - blender - Blender Projects
+### Commit Details:
+Using the new HIP SDK 5.5 that includes a fix for the compiler bug.
+
+This also enables the light tree.
+
+For Linux the binaries are still disabled. ROCm 5.5 is planned to
+include the same fix but not released yet. When that happens we
+should be able to enable Linux as well.
+
+Ref
+#104786
+Fix
+#104085
+#107098
+-------
+)
+Intel
+¶
+Hardware ray-tracing acceleration for Intel® Arc™ and Data Center GPUs,
+using
+Embree 4
+.
+(
+3f8c995109
+### Commit Summary: Cycles: add hardware raytracing support to oneAPI device · 3f8c995109 - blender - Blender Projects
+### Commit Details:
+Updated Embree 4 library with GPU support is required for it to be
+compiled - compatiblity with Embree 3 and Embree 4 without GPU support
+is maintained.
+Enabling hardware raytracing is an opt-in user setting for now.
+
+#106266
+-------
+)
+Render time per sample on an Intel® Arc™ A770 GPU
+Scene
+With HW RT
+Without HW RT
+barbershop_interior
+0.192991
+0.223141
+bmw27
+0.013019
+0.015585
+classroom
+0.112879
+0.139789
+fishy_cat
+0.014602
+0.024707
+junkshop
+0.101691
+0.119027
+monster
+0.057748
+0.067487
+pabellon
+0.045524
+0.066214
+sponza
+0.023778
+0.031841
+During their first use with oneAPI device, Ambient Occlusion and
+  Bevel nodes will trigger a GPU binaries recompilation that will use
+  around 9GB of memory and take several minutes. Improvements on this
+  may come from future GPU drivers.
+On Windows, when using drivers \< 101.4644, embree on GPU may crash
+  when rendering duration goes beyond 3 minutes.
+Apple
+¶
+Apple Silicon GPUs now support NanoVDB for Metal, reducing memory usage
+of volumes.
+(
+02c2970983
+### Commit Summary: Cycles: add NanoVDB support for Metal on Apple Silicon · 02c2970983 - blender - Blender Projects
+### Commit Details:
+Contributed by Yulia Kuznetcova at Apple.
+
+NanoVDB is patched to give add address spaces required by Metal. We hope that
+in the future Metal will support the generic address space.
+
+For AMD and Intel this is currently not available since it causes a performance
+regression also on scenes without volumes.
+
+Pull Request
+#104837
+-------
+)
+Performance
+¶
+Light trees now use less memory and are faster to build, through
+  instancing and multi-threading.
+  (
+bfd1836861
+### Commit Summary: Cycles: add instancing support in light tree · bfd1836861 - blender - Blender Projects
+### Commit Details:
+Build a subtree for each unique mesh light.
+
+#106683
+-------
+,
+23c5e06932
+### Commit Summary: Cycles: build Light Tree in parallel · 23c5e06932 - blender - Blender Projects
+### Commit Details:
+Push a task to `TaskPool` when more than `MIN_PRIMS_PER_THREAD` primitives are to be processed. The nodes are rearranged in a depth-first order when copied to the device.
+Tested with the scene in
+#105550
+on an Apple M1 Ultra (20 cores), about 11x speedup.
+
+#105862
+-------
+)
+Loading large geometries into Cycles is much faster, meaning rendering
+  can start more quickly after geometry changes or switching to rendered
+  view.
+Loading large meshes 4-6x faster, and mesh attributes are copied up
+  to 10x faster (or even 60x faster for an extreme example with UV
+  maps)
+  (
+4bcd59d644
+### Commit Summary: Cycles: Avoid overhead from RNA when extracting mesh data · 4bcd59d644 - blender - Blender Projects
+### Commit Details:
+Use raw Blender structs and mesh data rather than using the RNA API.
+There isn't any benefit from using the RNA when Cycles is compiled
+with Blender anyway, and a profile showed that the majority of time
+was spent in Blender RNA API functions.
+
+This gives a significant improvement in performance when ingesting
+meshes. Here are some tests of the runtime of the `create_mesh`
+function (in seconds):
+
+|                           | Before | After |
+| ------------------------- | ------ | ----- |
+| Grid                      | 0.66   | 0.11  |
+| Many realized cubes       | 2.60   | 0.48  |
+| Large curve to mesh setup | 4.18   | 1.14  |
+
+Also change to resizing the arrays and filling them by index rather
+than appending. This makes the parallel aspect of the logic clearer,
+and makes the loops easier to parallelize in the future, and makes
+it easier to have a performance benefit when an attribute like
+`sharp_face` doesn't exist.
+
+#106275
+-------
+,
+8d0920ec6d
+### Commit Summary: Cycles: Optimize extraction of Blender attributes · 8d0920ec6d - blender - Blender Projects
+### Commit Details:
+Similar to
+4bcd59d644
+. This probably got worse recently with
+the generic attribute refactors for `Mesh`, but the final performance is
+probably much better than older versions too.
+
+Timings extracting attributes from a 16 million vertex grid (seconds):
+- Corner float attribute: 0.72 -> 0.19
+- Face float attribute: 0.60 -> 0.07
+- UV map: 3.18 -> 0.05
+-------
+).
+Loading point clouds can be 9x faster
+  (
+aef0e72e5a
+### Commit Summary: Cycles: Optimize Blender point cloud attribute extraction · aef0e72e5a - blender - Blender Projects
+### Commit Details:
+Similar to
+8d0920ec6d
+.
+
+In a test case with 8 million points and 3 attributes, I observed
+around a 9x performance improvement, from 1.8s to 0.2s to copy
+the data from Blender to Cycles. For some attribute types, using
+implicit sharing could remove the need to copy entirely, but removing
+the overhead from the RNA API makes sense anyway.
+-------
+).
+Loading curves can be 10x faster
+  (
+ae017b3ab7
+### Commit Summary: Cycles: Optimize Blender curves attribute extraction · ae017b3ab7 - blender - Blender Projects
+### Commit Details:
+Similar to
+8d0920ec6d
+and
+aef0e72e5a
+.
+
+In a test case with 2 million curves and 15 million points
+I observed a 10x performance improvement, from 2.2s to 0.2s
+to copy the data from Blender to Cycles.
+-------
+).
+Other Improvements
+¶
+Open Shading Language: support for new standard microfacet closures from MaterialX
+  (
+dielectric_bsdf
+,
+conductor_bsdf
+,
+generalized_schlick_bsdf
+).
+Byte color attributes are now supported for point clouds and curves
+  (
+5a86c4cc88
+### Commit Summary: Fix: Cycles ignores point cloud and curves byte color attributes · 5a86c4cc88 - blender - Blender Projects
+### Commit Details:
+Support was never added for byte color attributes, since for a while
+it wasn't obvious that they were also considered "generic attributes."
+-------
+).
+Improved Fresnel handling of the Glass BSDF for better energy
+  preservation and accuracy of results at high roughness.
+  (
+D17149
+)
+Bump mapping for diffuse surfaces was improved. (
+PR#105776
+)
+
+'''''
+
+
+10. Sculpt, Paint, Texture¶
+
+Sculpt, Paint, Texture
+¶
+Features
+¶
+Add support for "Adjust Last Operation" panel to mesh & color filters
+  (
+c352eeb213
+### Commit Summary: Sculpt: Add support for last operator panel to mesh filter operator · c352eeb213 - blender - Blender Projects
+### Commit Details:
+* Repeat last operator now works for mesh filters.
+* Added an iteration_count property to repeat the filter.
+  This is especially useful when compounded with the repeat
+  last operator tool.
+* The mouse event history is stored for mesh filters
+  with more advanced user input (mostly Smooth and Relax
+  filters).
+-------
+)
+  (
+b4ee936627
+### Commit Summary: Sculpt: Add support for last operator panel to color filter operator · b4ee936627 - blender - Blender Projects
+### Commit Details:
+* Refactored the color filter op to have an ->exec callback.
+* Added nullptr checks to the filter cache API to support
+  running outside of a view3d context.
+* Redo panel displays the active filter type's name in the
+  header.
+-------
+)
+Transform, Trim, Project, Fairing and Filter operations are now also
+  available in the header menu
+  (
+da65b21e2e
+### Commit Summary: Sculpt: Add Transform, Trim, and Mesh Filter operators to Sculpt menu · da65b21e2e - blender - Blender Projects
+### Commit Details:
+Hello, this is a small PR to check that my understanding of
+#102427
+is correct before moving on to the rest of the issue.
+This PR contains the updated UI of the `Sculpt` menu only. Other menus will be submitted for review later.
+
+Currently exposed operators:
+* Move
+* Rotate
+* Scale
+* Box Trim (Trim Mode ="Difference")
+* Lasso Trim (Trim Mode ="Difference")
+* Box Add (Trim Mode ="Join")
+* Lasso Add (Trim Mode ="Join")
+* Line Project
+* Smooth
+* Surface Smooth
+* ~~Scale (Could be left out?)~~
+* Inflate
+* Random
+* Relax Topology
+* Relax Face Set Boundaries
+* Sharpen
+* Enhance Details
+* Erase Displacement
+
+The original issue specifies `Relax Face Set Boundaries` and `Erase Displacement`. I'm not quite sure if this is done in the UI code or somewhere else.
+
+Reviewed By: Joseph Eagar & Julian Kaspar
+#104718
+-------
+)
+This makes it possible to easily assign these operation a shortcut or
+add them to the Quick Favorites menu for faster access.
+Repeated use is possible with Repeat Last (
+Shift+R
+).
+Added trim orientation to Box Trim UI. Previously only available in
+  the Lasso Trim tool
+  (
+a843a9c9bb
+### Commit Summary: Sculpt: Add trim orientation to sculpt box trim UI · a843a9c9bb - blender - Blender Projects
+### Commit Details:
+No details found
+-------
+)
+
+'''''
+
+
+11. User Interface¶
+
+User Interface
+¶
+Tabs in the Properties editor show the name of the tab in a tooltip,
+  quicker than the usual tooltips.
+  (
+1b94e60fb0
+### Commit Summary: UI: Quick tooltip showing tab name for Properties editor tabs · 1b94e60fb0 - blender - Blender Projects
+### Commit Details:
+Adds "quick tooltips" to quickly see the name of a tab in the Properties
+editor. (See patch for visuals.)
+
+From own experience users are often confused about the name of the different
+tabs, and I always found the delay to see it in the tooltip annoying. These
+quick tooltips have been introduced for the toolshelf and solve this issue
+nicely here. There is still a delay so that simple mouse movements won't
+trigger the tooltips, but they show up a lot faster than normal tooltips now.
+
+This may have the side-effect that icon only enum-item buttons will show the
+enum name when there is no RNA property description. Previously we wouldn't
+show this, even if available.
+
+#106906
+-------
+).
+Drag & drop inside Blender now supports
+Esc
+or
+RMB
+to cancel dragging.
+  (
+d58e422ac3
+### Commit Summary: UI: Properly cancel dragging on escape or right-click · d58e422ac3 - blender - Blender Projects
+### Commit Details:
+This is refering to drag & drop within Blender which is using the
+drop-box system.
+
+Previously Escape would cancel the dragging, but still pass on the event
+to other event handlers, which could trigger other behavior. For example
+cancelling dragging a file in a file browser dialog would also cancel
+the file browser operation and close the window. Right-click didn't
+cancel anything even though we usually use both Escape and right-click
+as a way to cancel the operation.
+
+Now both escape and right-click both cancel the dragging and the event
+is not passed on further.
+
+#104838
+-------
+).
+Hover highlighting of UIList rows.
+  (
+7216eb8879
+### Commit Summary: UI: UIList Hover Highlighting · 7216eb8879 - blender - Blender Projects
+### Commit Details:
+Add mouse hover highlighting for items in UILists, in both list mode
+and preview tile mode.
+
+See 104677 for more details
+
+Differential Revision:
+#104677
+Reviewed by Brecht Van Lommel
+-------
+).
+Some search boxes are widened if needed, for example if there is a
+  linked scene.
+  (
+cfb112edcb
+### Commit Summary: UI: Widen Search Boxes When Necessary · cfb112edcb - blender - Blender Projects
+### Commit Details:
+Make floating search boxes wider when there is a linked scene or are
+otherwise showing more information than a simple list.
+
+Pull Request
+#104603
+-------
+).
+Outliner now allows the filtering of Grease Pencil objects.
+  (
+b558fff5b8
+### Commit Summary: Outliner: New Grease Pencil filter · b558fff5b8 - blender - Blender Projects
+### Commit Details:
+Actually is impossible to filter the Grease Pencil object type in the Outliner because only Meshes, Cameras and Lights are supported. This patch adds the Grease Pencil filter that allows artists to select only this type of objects. This filter is very handy for storyboarding.
+
+Pull Request
+#104473
+-------
+).
+Resetting to defaults, eyedropper, and other operations working
+  correctly in popovers.
+  (
+c402b3f52f
+### Commit Summary: Fix #63890: Allow Eyedropper and Other Operations in Popovers · c402b3f52f - blender - Blender Projects
+### Commit Details:
+Allow some operations on contents of popovers, like resetting to
+defaults and use of the eyedropper.
+
+#105387
+-------
+).
+The "Open Recent" menu list default size increased to 20 items.
+  (
+19ca2e905e
+### Commit Summary: UI: Increase the size of the "Open Recent" list · 19ca2e905e - blender - Blender Projects
+### Commit Details:
+Increase the default value for the maximum number of recently-opened
+files from 10 to 20. Also change the user's preference on version bump
+to this new value if their current value is exactly the old default.
+
+#105703
+-------
+).
+Fallback font "Noto Emoji" updated with new Unicode 15.0 emojis.
+  (
+2215ee9358
+### Commit Summary: UI: Noto Emoji Font with Unicode 15.0 Updates · 2215ee9358 - blender - Blender Projects
+### Commit Details:
+Updated version of our monochrome Noto Emoji (variable) font with 31
+new emojis that were released as part of Unicode 15.0
+
+#106142
+-------
+).
+Color Picker can now adjust position to better fit within available
+  space.
+  (
+fa13058fa6
+### Commit Summary: UI: Color Picker Positioning · fa13058fa6 - blender - Blender Projects
+### Commit Details:
+If there is not enough space for the Color Picker either above or below
+the launching button, adjust the position to fit instead of clipping.
+
+#106122
+-------
+).
+Searching for nodes with a slash character in their names works
+  correctly now.
+  (
+2b565c6bd0
+### Commit Summary: UI: Add slash character support to fuzzy search initials mode · 2b565c6bd0 - blender - Blender Projects
+### Commit Details:
+Nodes with names separated by a slash / can
+not be searched by their initials.
+
+This commit adds the slash character to
+the list of separators for this type of
+fuzzy search.
+
+#106838
+-------
+).
+Alt-click support to edit string properties for multiple objects.
+  (
+43eb3fe21a
+### Commit Summary: UI: enable string properties for alt-click buttons for multiple objects · 43eb3fe21a - blender - Blender Projects
+### Commit Details:
+This came up in
+#106591
+which reported that changing a Light Group would
+not work when alt-clicking the property field (which is the usual method
+to edit a property for multiple objects at once).
+
+This is because string properties were not supported in
+`ui_selectcontext_apply` which is now done.
+
+Similar to
+1318660b04
+[which added support for pointer properties].
+
+Adding general support for string properties means this method can now
+be used for many more things:
+- changing all sorts of ID names (objects, meshes, ...)
+- many settings in modifiers (e.g. vertexgroups)
+- geometry nodes modifier properties (e.g. attribute names)
+- ...
+Fixes
+#106591
+#106599
+-------
+).
+Better positioning of text with Measure/Ruler tools.
+  (
+b367a2b5f9
+### Commit Summary: UI: Measure/Ruler Text Position · b367a2b5f9 - blender - Blender Projects
+### Commit Details:
+Small improvements to the placement of text with Ruler tool.
+
+#107350
+-------
+).
+Clicking the NLA/Graph Editor search box no longer scrolls the items
+  below it.
+  (
+d1219b727c
+### Commit Summary: Fix #97530: Overlapping Content Causing Region Scrolling · d1219b727c - blender - Blender Projects
+### Commit Details:
+Selecting filter in NLA/Graph Editor causes scrolling in the region
+below it. This PR makes `UI_but_ensure_in_view` not occur if the block
+has UI_BLOCK_CLIP_EVENTS.
+
+#107404
+-------
+).
+Node Editor supports Smooth View.
+  (
+2f0b166dce
+### Commit Summary: Fix #107294 : Node Editor "Frame All/Selected" ignore Smooth View · 2f0b166dce - blender - Blender Projects
+### Commit Details:
+Caused by
+3a1cf838ca
+.
+
+Smooth view transitions only work when an operator is **invoked** (wont
+work from **exec**, see `WM_operator_smooth_viewtx_get`).
+
+Now
+3a1cf838ca
+changed the `operator_context` for some other operators
+in the menu to 'EXEC_REGION_WIN' (for good reason). But setting
+`operator_context` on a `uiLayout` will set context on the **root**
+layout (not the actual sublayout alone), so all following operators
+"inherited" the [changed] context.
+
+Now make sure following operators get properly invoked again by giving
+the right context.
+
+#107296
+-------
+).
+Support operator enums in Quick Favorites.
+  (
+04d50f4b23
+### Commit Summary: UI: support operator enums in Quick Favorites · 04d50f4b23 - blender - Blender Projects
+### Commit Details:
+Part of
+#59244
+This was heavily requested since there are a lot of usages of
+`operator_menu_enum` around in our UI [and these menus all cannot be
+added to Quick Favorites atm.].
+
+The following are just a small sample from the 3D viewport menus (object
+mode), but there are many more.
+
+- Object
+-- Set Origin
+-- Relations >> Make Local...
+-- Convert To
+- Add
+-- Grease Pencil
+-- Empty
+-- Force Field
+-- Collection Instance
+- Select
+-- Select All by Type
+-- Select Grouped
+-- Select Linked
+- ...
+
+So in order to make this work, `USER_MENU_TYPE_OPERATOR` /
+`bUserMenuItem_Op` is reused (but extended with a string to the property
+in question). (Alternatively, a new type could be introduced -- but
+would share most of the code with the type that is reused in this
+patch).
+
+Depending on being used with an enum or not [detected by the usage of
+that new string] we then either call `uiItemFullO_ptr` or
+`uiItemMenuEnumFullO_ptr` in `screen_user_menu_draw`.
+
+NOTE: support for other enums (property enums such as pivot point or
+transform orientations) will follow in a separate commit (building upon
+6a13b6324b
+, trying to solve the way these draw as menus)
+
+NOTE: opening User Preferences with such "new" Quick Favorites even
+works (just not drawn with a menu)
+
+#107616
+-------
+).
+More Context Menus open with last-used option.
+  (
+eac3d37ab1
+### Commit Summary: Fix #107422: Mesh context menus do not open with the last used option · eac3d37ab1 - blender - Blender Projects
+### Commit Details:
+Caused by
+99e5024e97
+Above commit changed behavior in that it only flagged the `uiBlock` with
+`UI_BLOCK_POPUP_MEMORY` in case a Menu's title was provided to
+`ui_popup_menu_create_block`. Now when is the title provided? This
+depends on the `bl_label` set in the menu class. But this is not always
+the case, there are some menus that have a blank `bl_label` (as seen
+with `VIEW3D_MT_edit_mesh_context_menu` for example -- this specifies its
+own label inside the draw function depending on vertex/edge/face mode).
+Thus the provided title is not really reliable as source information to
+do the flagging (also see for example
+a38b98478a
+), flagging should **always** be
+done [and only check a title for actually inserting in the puphash].
+
+Choosing an entry in a menu will still handle puphash later (see
+`button_activate_exit`) though multiple menus without a label might fight for the
+same storage of the menu memory. Using idname instead (or in combination with
+the label) for the hash could be looked at to solve this.
+
+#107427
+-------
+).
+Many Operator confirmations can be now be disabled with the "Confirm"
+  checkbox (on by default) in the keymap.
+  (
+6ae44c4770
+### Commit Summary: UI: Allow Configuration of Some Operator Confirmations · 6ae44c4770 - blender - Blender Projects
+### Commit Details:
+Allow users to disable/enable 14 operator confirmations in the Keymap
+Editor.
+
+#107765
+-------
+).
+Asset Browser
+¶
+Assets now shows tooltips with the full name and description.
+  (
+0ee0e8c0d4
+### Commit Summary: UI: Tooltips for Assets · 0ee0e8c0d4 - blender - Blender Projects
+### Commit Details:
+Show tooltips for Asset Browser items.
+
+#106189
+-------
+).
+Meta-data fields in the sidebar are not shown if blank and read-only.
+  (
+199c7da06d
+### Commit Summary: Assets: Do Not Show Blank Read-Only Metadata · 199c7da06d - blender - Blender Projects
+### Commit Details:
+Do not show asset metadata "description", "license", "copyright", or
+"author" if they are empty AND read-only, since they can't be edited
+and contain no useful information to show.
+
+#105812
+-------
+).
+Clear Asset
+now works for all selected assets
+  (
+20f54a5698
+### Commit Summary: Asset Browser: Let "Clear Asset" act on entire selection · 20f54a5698 - blender - Blender Projects
+### Commit Details:
+Users were confused that "Clear Asset" would only act on the clicked on
+asset, not the entire selection. They would have to clear them one by
+one, which can be quite annoying. The previous commit prepared the asset
+clearing operator for this, so all this commit has to do is expose the
+selected IDs to context.
+-------
+).
+File Browser
+¶
+File Browser list mode items can now be dragged by the full name, not
+  just by the icon.
+  (
+c3dfe1e204
+### Commit Summary: File Browser: Make full file name label draggable · c3dfe1e204 - blender - Blender Projects
+### Commit Details:
+Previously only the icon of a file could be dragged in the list display
+modes, the name label would invoke box select. This made dragging quite
+finicky. I've seen this cause quite some frustration, especially when
+the file browser is used as a regular editor to drag data from into
+other editors.
+
+Instead follow the Outliner (and some other file browsers like the macOS
+one): Dragging on empty space invokes box select, dragging on the name
+or icon invokes drag & drop of the item.
+
+The hitbox for the dragging is the width of the string, and the full row
+height. So there's no space between rows to do box-select from, it
+always triggers dragging. This is based on feedback during testing.
+
+Note that
+1e9564864c
+and
+6da512f0bc
+were needed to prepare this change.
+
+#104830
+-------
+).
+File Browser items now have "External" menu for opening and other
+  operations outside of Blender.
+  (
+694f792ee1
+### Commit Summary: UI: OS File Operations Within File Browser · 694f792ee1 - blender - Blender Projects
+### Commit Details:
+Adds a submenu to the File Browser selected item context menu that
+allows opening the item or viewing the location in an OS browsing
+window. On Win32 also allows other actions like editing, searching,
+opening command prompt, etc.
+
+#104531
+-------
+).
+Platform-Specific Changes
+¶
+MacOS: recently opened/saved files will now show in Dock context menu
+  and in App Expose.
+  (
+f04a7a07e3
+### Commit Summary: macOS: Add open files to system recent files · f04a7a07e3 - blender - Blender Projects
+### Commit Details:
+Completes the TODO in GHOST_SystemPathsCocoa::addToSystemRecentFiles
+Also renames the filename parameter to the more appropriate filepath.
+
+The recently opened/saved file will now also show up in:
+- Blender Dock icon > Right click.
+- Three finger swipe down in Open Blender i.e., App Expose
+
+Based on a earlier contribution by
+@jenkm
+.
+
+#107174
+-------
+).
+MacOS: double-clicking a blend file will now always load even if
+  Blender loses focus while launching.
+  (
+ed4374f089
+### Commit Summary: Fix #66722: file doesn't open if app not focused · ed4374f089 - blender - Blender Projects
+### Commit Details:
+After double clicking a file, user can click on a different app and
+Blender will lose focus. Then it stays on splash screen. So fetch any
+window instead of relying on active one to open the file.
+
+pull request
+#106769
+-------
+).
+Windows: autofocus child windows on hover.
+  (
+defd95afcd
+### Commit Summary: Win32: Auto-Raise and -Focus Windows on Hover · defd95afcd - blender - Blender Projects
+### Commit Details:
+On the Windows platform, raise windows and give them focus as the mouse
+hovers over them. This allows keyboard shortcuts for the area under the
+mouse without having to click the window caption to make them active.
+
+Pull Request
+#104681
+-------
+).
+Windows: Image Editor can now copy/paste images with other
+  applications.
+  (
+39bcf6bdc9
+### Commit Summary: UI: Allow Clipboard Copy/Paste Images · 39bcf6bdc9 - blender - Blender Projects
+### Commit Details:
+Adds operators to copy and paste to and from the OS clipboard, but only
+implemented for Windows.
+
+#105833
+-------
+).
+3D Text Objects
+¶
+Text selection by mouse dragging. Word selection by double-click.
+  (
+68f8253c71
+### Commit Summary: VFONT: Text Selection Operator · 68f8253c71 - blender - Blender Projects
+### Commit Details:
+An operator to allow interactive text selection for 3D Text Objects.
+This is from the code of Yash Dabhade (yashdabhade) for GSoC 2022
+with corrections and simplifications. Also includes double-click for
+word selection.
+
+#106915
+-------
+).
+Nicer control and feedback for text styles.
+  (
+f7ba61d3a6
+### Commit Summary: Fix #107009: Setting Text Object Styles · f7ba61d3a6 - blender - Blender Projects
+### Commit Details:
+This allows toggling of text styles of selected text and at the current
+mouse cursor position if nothing is selected.
+
+#107048
+-------
+).
+"To Uppercase" and "To Lowercase" now supports most languages.
+  (
+e369bf4a6d
+### Commit Summary: UI: Text Object International Case Change · e369bf4a6d - blender - Blender Projects
+### Commit Details:
+Allow Text Object operator FONT_OT_case_set to correctly transform the case
+of strings written in almost all scripts that differentiate letter case.
+
+#106581
+-------
+).
+Operators to move the cursor to the top and bottom.
+  (
+6d2351d26b
+### Commit Summary: Text object: operators to move cursor to the top or bottom · 6d2351d26b - blender - Blender Projects
+### Commit Details:
+This adds new movement types TEXT_BEGIN and TEXT_END to allow
+FONT_OT_move and FONT_OT_move_select operators move the text
+cursor (caret) to the top and bottom of the text.
+
+#106196
+-------
+).
+Transform Settings
+¶
+Proportional Size can now be set in the Proportional Editing popover
+  (
+6b5b777ca3
+### Commit Summary: UI: add Proportional Size to Proportional Edit popover · 6b5b777ca3 - blender - Blender Projects
+### Commit Details:
+Rather than forcing the user to initiate a transform operation to edit the `Proportional Size`, allow editing of the `Proportional Size` through the UI.
+
+The affected headers are:
+- View 3D
+- Dop Sheet
+- Image Editor
+- Graph Editor
+- Mask Editor
+
+#107507
+-------
+).
+
+'''''
+
+
+12. Add-ons¶
+
+Add-ons
+¶
+Storypencil
+¶
+It is now possible to create many scene strips at once.
+27970e4b8b
+Support to render meta strip as one video. Previously, a video was
+  generated per scene in the meta strip.
+New: VDM Brush Baker
+¶
+A new add-on to easily create VDM brushes has been added. Previously
+available as part of
+a demo
+file
+.
+New: 3DS I/O
+¶
+Support for importing and exporting the legacy
+3ds
+format is back
+since it is still used by many applications and was missed by many
+Blender users. (
+PR#104493
+)
+Animations and almost all 3ds definitions can be imported and exported.
+(
+2dc2c1c3e4
+,
+6525a57a32
+,
+febc4b4433
+,
+859a2c1b9a
+)
+All backporting changes are listed in the
+commit details
+.
+Collection Manager
+¶
+Ported the QCD Move Widget to solely use the
+gpu
+API for drawing,
+replacing the deprecated
+bgl
+API.
+(
+be6cbe0222
+)
+Bug Fixes
+¶
+Fixed the QCD Move Widget not dragging.
+  (
+14595effe5
+)
+Fixed an error when toggling off the only QCD slot that contains the
+  active object.
+  (
+bee6a356c6
+)
+Fixed an error when restoring disabled objects.
+  (
+06328e8aea
+)
+
+'''''
+
+
+13. Asset Bundles¶
+
+Asset Bundles
+¶
+Human Base Meshes
+¶
+Download the bundle
+here
+.
+These are various human base meshes that are provided by the Blender
+community and the Blender Studio. They can be used as a base for various
+tasks (sculpting, modeling, texturing, rigging, simulation, etc) and
+include:
+Quad topology for subdividing
+Closed volumes for voxel remeshing
+Face sets
+UV maps (including UDIMs)
+Multi-resoluton details for realistic assets
+Creased edges and Subdiv modifiers for planar assets
+
+'''''
+

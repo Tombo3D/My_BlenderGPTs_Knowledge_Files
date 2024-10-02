@@ -1,0 +1,4400 @@
+This work is licensed under the GNU General Public License v3.0 or later (GPL).
+For more information, see https://www.gnu.org/licenses/gpl-3.0.html.
+
+
+What's new in Blender 3.3
+
+'''''
+
+Blender 3.3 Table Of Contents
+
+Section 1. Animation & Rigging¶
+Section 2. Core¶
+Section 3. Grease Pencil¶
+Section 4. Modeling¶
+Section 5. Hair System¶
+Section 6. Pipeline, Assets & I/O¶
+Section 7. Python API & Text Editor¶
+Section 8. Render & Cycles¶
+Section 9. Sculpt, Paint, Texture¶
+Section 10. User Interface¶
+Section 11. VFX & Video¶
+Section 12. Add-ons¶
+Section 13. More Features¶
+
+'''''
+
+1. Animation & Rigging¶
+
+Animation & Rigging
+¶
+Dopesheet & Timeline: Grease Pencil in main modes
+¶
+The Timeline and Dopesheet editors now show Grease Pencil keyframes,
+without having to switch to Grease Pencil mode
+(
+92d7f9ac56
+### Commit Summary: Animation: Add GP layers in regular Dopesheet · 92d7f9ac56 - blender - Blender Projects
+### Commit Details:
+Grease Pencil animation channels are now also shown in the Dopesheet
+mode of the Dopesheet editor and in the Timeline.
+
+Grease pencil related events are now listened not only by container
+`SACTCONT_GPENCIL` (Grease Pencil Dopesheet), but also
+`SACTCONT_DOPESHEET` (main Dopesheet), and `SACTCONT_TIMELINE`
+(timeline).
+
+A new Animation Filter flag was added: `ANIMFILTER_FCURVESONLY`. For now
+this only filters out Grease Pencil Layer channels.
+
+**Implemented:**
+
+- Preview range set: now only considers selected Grease Pencil keyframes
+  when `onlySel` parameter is true. Not only this allows the operator to
+  work with grease pencil keyframes in main dopesheet, but it also fixes
+  the operator in the Grease Pencil dopesheet.
+- Translation: allocation (and freeing) of specific memory for
+  translation of Grease Pencil keyframes.
+- Copy/Paste: call to both Fcurve and GPencil operators, to allow for
+  mixed selection. Errors are only reported when both the FCurve and
+  GPencil functions fail to paste anything.
+- Keyframe Type change and Insert Keyframe: removed some code here to
+  unify Grease Pencil dopesheet and main dopesheet code.
+
+- Jump, Snap, Mirror, Select all/box/lasso/circle, Select left/right,
+  Clickselect: account for Grease Pencil channels within the channels
+  loop, no need for `ANIMFILTER_FCURVESONLY` there.
+
+**Not Implemented:**
+
+- Graph-related operators. The filter `ANIMFILTER_FCURVESONLY` is
+  naively added to all graph-related operators, meaning more-or-less all
+  operators that used `ANIMFILTER_CURVE_VISIBLE`.
+- Select linked: is for F-curves channel only
+- Select more/less: not yet implemented for grease pencil layers.
+- Clean Keys, Sample, Extrapolation, Interpolation, Easing, and Handle
+  type change: work on Fcurve-channels only, so the
+  `ANIMFILTER_FCURVESONLY` filter is activated
+
+Graying out these operators (when no fcurve keyframe is selected) can be
+done with custom poll functions BUT may affect performance. This is NOT
+done in this patch.
+
+**Dopesheet Summary Selection:**
+
+The main summary of the dopesheet now also takes into account Grease
+Pencil keyframes, using some nasty copy/pasting of code, as explained
+[on devtalk](
+https://devtalk.blender.org/t/gpencil-layers-integration-in-main-dopesheet-selection-issue/24527
+).
+It works, but may be improved, providing some deeper changes.
+
+Reviewed By: mendio, pepeland, sybren
+
+Maniphest Tasks: T97477
+
+Differential Revision:
+https://developer.blender.org/D15003
+-------
+).
+Dopesheet Editor: Custom Properties for Actions
+¶
+The Action mode of the Dopesheet now shows the active Action's custom
+properties
+(
+57816a6435
+### Commit Summary: Dopesheet: Add Custom Properties panel · 57816a6435 - blender - Blender Projects
+### Commit Details:
+Adds a custom property panel for the active `Action` to the Dopesheet
+editor. There was previously no way to edit these properties outside of
+the Python API.
+
+This panel will show up when
+`context.active_object.animation_data.action` is set.
+
+Reviewed By: sybren
+
+Differential Revision:
+https://developer.blender.org/D14646
+-------
+).
+Before, these were only accessible via Python.
+NLA: Frame Start / End sliders
+¶
+The NLA's Strip Frame Start / End sliders now behave more predictable
+(
+bd00324c26
+### Commit Summary: NLA: change behavior of 'Frame Start' / 'End' sliders · bd00324c26 - blender - Blender Projects
+### Commit Details:
+Change the behavior of the "Frame start" and [Frame] "End" fields of an
+NLA Strip in the NLA editor.
+
+Frame Start now behaves like translating with {key G} and moving the
+mouse. It also updates the Frame End to ensure the strip remains the
+same length.
+
+Frame End changes the length of the strip, based on the Repeat property.
+If there are no repeats (i.e. number of repeats = 1) the underlying
+Action will change length, such that more or less of its keyframes will
+be part of the NLA strip. If there are repeats (i.e. number of repeats
+smaller or larger than 1), the number of repeats will change. Either
+way, the effective end frame off the strip will be the one set in the
+Frame End slider.
+
+The old behavior of stretching time has been removed. It is still
+possible to stretch time of a strip, but this no longer automatically
+happens when manipulating the Frame Start and Frame End sliders.
+
+**Technical details:** new RNA properties `frame_start_ui` and
+`frame_end_ui` have been added. Changing those values (for example via
+the sliders, but also via Python) trigger the above behavior. The
+behavior of the already-existing `frame_start` and `frame_end`
+properties has been simplified, such that these can be set from Python
+without many side-effects, simplifying import of data into the NLA.
+
+Reviewed By: sybren, RiggingDojo
+
+Differential Revision:
+https://developer.blender.org/D14658
+-------
+).
+Manipulating the Frame Start slider will just slide the entire strip
+(instead of changing its playback speed to make it longer/shorter). The
+Frame End slider behavior depends on the Repeat setting:
+1 Repeat: the underlying Action is made longer/shorter.
+Less or more than 1 repeat: the number of repeats is adjusted.
+The Frame Start / End sliders no longer stretch the timing of the strip.
+This can be done explicitly, as before, with the Animate Time settings.
+Python API
+¶
+action.fcurves.clear()
+can now be used to remove all FCurves from
+  the given Action
+  (
+091100bfd7
+### Commit Summary: Animation: Add function to remove all FCurves from an Action · 091100bfd7 - blender - Blender Projects
+### Commit Details:
+Add a `BKE_action_fcurves_clear(action)` function, which removes all the
+Action's FCurves, and expose it as `ActionFCurves.clear()` in RNA.
+
+This is more ergonomic than calling `remove` on f-curves until the list
+is empty.
+
+Reviewed By: sybren
+
+Differential Revision:
+https://developer.blender.org/D14660
+-------
+).
+fcurve.keyframe_points.clear()
+can be used to delete all keyframe
+  points of an FCurve
+  (
+4812eda3c5
+### Commit Summary: Animation RNA: Add `clear()` method to FCurveKeyframePoints · 4812eda3c5 - blender - Blender Projects
+### Commit Details:
+Add `FCurveKeyframePoints.clear()` method to delete all keyframe points
+from an FCurve.
+
+Reviewed By: sybren
+
+Differential Revision:
+https://developer.blender.org/D15283
+-------
+).
+NLAStrip
+has two new properties:
+frame_start_ui
+and
+frame_end_ui
+(
+bd00324c26
+### Commit Summary: NLA: change behavior of 'Frame Start' / 'End' sliders · bd00324c26 - blender - Blender Projects
+### Commit Details:
+Change the behavior of the "Frame start" and [Frame] "End" fields of an
+NLA Strip in the NLA editor.
+
+Frame Start now behaves like translating with {key G} and moving the
+mouse. It also updates the Frame End to ensure the strip remains the
+same length.
+
+Frame End changes the length of the strip, based on the Repeat property.
+If there are no repeats (i.e. number of repeats = 1) the underlying
+Action will change length, such that more or less of its keyframes will
+be part of the NLA strip. If there are repeats (i.e. number of repeats
+smaller or larger than 1), the number of repeats will change. Either
+way, the effective end frame off the strip will be the one set in the
+Frame End slider.
+
+The old behavior of stretching time has been removed. It is still
+possible to stretch time of a strip, but this no longer automatically
+happens when manipulating the Frame Start and Frame End sliders.
+
+**Technical details:** new RNA properties `frame_start_ui` and
+`frame_end_ui` have been added. Changing those values (for example via
+the sliders, but also via Python) trigger the above behavior. The
+behavior of the already-existing `frame_start` and `frame_end`
+properties has been simplified, such that these can be set from Python
+without many side-effects, simplifying import of data into the NLA.
+
+Reviewed By: sybren, RiggingDojo
+
+Differential Revision:
+https://developer.blender.org/D14658
+-------
+).
+  These behave like described above. The already-existing properties
+frame_start
+and
+frame_end
+have been simplified, and just
+  ensure data consistency now (i.e. no overlapping NLA strips).
+
+'''''
+
+
+2. Core¶
+
+Core
+¶
+Library Overrides
+¶
+The main focus for this release is to improve the usability of Library
+Overrides, in particular the UI/UX.
+This includes fixes and refinements on the Outliner views introduced in
+Blender 3.2 (the
+Properties
+and
+Hierarchy
+ones), and major
+simplification of the menus.
+Library Override menu in the Outliner, Blender 3.2 vs. 3.3
+Library overrides now have their own sub-menu, with only three main
+operations (make, reset and clear). This is exposed consistently in all
+three places where the user can control library overrides (the Outliner,
+the 3D Viewport for objects, and the ID selection widget in e.g. the
+Properties editor).
+Detailed Changes
+¶
+Added full support for camera's background images
+  (
+3437cf155e
+### Commit Summary: LibOverride: Add full support for camera's background images. · 3437cf155e - blender - Blender Projects
+### Commit Details:
+Add support for adding (inserting) new background images into an
+override of a linked Camera ID.
+
+Request from the Blender studio.
+
+This ended up being more involved than expected as it uncovered some
+latent issues with existing background images code. Noticiably, a new
+`BKE_camera_background_image_copy` had to be added to handle copying
+of background images in a proper, generic ID-management way.
+-------
+).
+When creating partial override hierarchies, dependencies are
+  considered in both directions, so e.g. if one overrides an armature,
+  the meshes that depend on it will also be overridden now
+  (
+f0b4aa5d59
+### Commit Summary: LibOverride: Handle dependencies in both directions in partial override cases. · f0b4aa5d59 - blender - Blender Projects
+### Commit Details:
+When creating etc. a liboverride based on a partial hierarchy
+pre-selection (e.g: override hierarchy on the rig object of a
+character), now all linked data also using that rig (e.g. all meshes
+deformed by that armature) will also automatically be overridden.
+
+This si achieved by following dependencies in the reversed order (from
+used IDs to using IDs) when we find one tagged for override.
+-------
+).
+Added 'editable/clear' toggle to ID template, using
+⇧
+  Shift
+LMB
+,
+  to allow user to easily toggle between editable override, and
+  non-editable, cleared override statuses
+  (
+e4dd644d6b
+### Commit Summary: LibOverride: Add 'editable/clear' toggle to ID template. · e4dd644d6b - blender - Blender Projects
+### Commit Details:
+Now when an ID template is set to an override ID, `Shift-Click` on the
+right button toggles between making it user-editable (if it's a system
+override), or clearing any user edit and setting it back to system override.
+-------
+).
+Added/reworked View3D menu into its own sub-menu, with same three main
+  operations as in the Outliner (Make, Reset and Clear, see below for
+  details)
+  (
+a42896a8a1
+### Commit Summary: LibOverride: Refactor of menu entries in the View3D. · a42896a8a1 - blender - Blender Projects
+### Commit Details:
+Move override creation into their own menu, add entries for reset and
+clear operations.
+-------
+).
+LibOverride: Add Make/Reset/Clear entries to IDTemplate contextual
+  menu, see below for details
+  (
+fec2543648
+### Commit Summary: LibOverride: Add Make/Reset/Clear entries to IDTemplate contextual menu. · fec2543648 - blender - Blender Projects
+### Commit Details:
+Matches main operations exposed in View3D and the Outliner.
+-------
+).
+Rework Outliner Contextual Menu
+¶
+Follow-up to design discussions here at the studio, add library override
+operations into their own sub-menu, with three main entries:
+Make: Create, or enable for user editing, override hierarchies.
+Reset: Keep overrides data, but reset all local changes to the
+  reference linked data values.
+Clear: like reset, but also turn editable overrides back to system
+  overrides (aka non user editable).
+Those three options can all operate either on the selected items, their
+content only, or both.
+Advanced operations are moved into a "Troubleshoot" sub-menu, where one
+can resync, resync enforced, and fully delete library overrides. Those
+operations always affect a whole override hierarchy, regardless of which
+items are selected or not.
+Ref.
+c73cc15e07
+### Commit Summary: LibOverride: Rework Outliner contextual menu. · c73cc15e07 - blender - Blender Projects
+### Commit Details:
+Follow-up to design discussions here at the studio, add liboverride
+operations into their own sub-menu, with three main entries:
+- Create: Create, or enable for user editing, override hierarchies.
+- Reset: Keep overrides data, but reset all local changes to the
+  reference linked data values.
+- Clear: like reset, but also turn editable overrides back to system
+  overrides (aka non user editable).
+
+Those three options can all operate either on the selected items, their
+content only, or both.
+
+Advanced operations are moved into a "Troubleshoot Hierarchy" sub-menu,
+where one can resync, resync enforced, and fully delete library
+overrides. Those operations always affect a whole override hierarchy,
+regardless of which items are selected or not.
+-------
+,
+a93f6a5429
+### Commit Summary: LibOverride: Tweaks to new menus in Outliner. · a93f6a5429 - blender - Blender Projects
+### Commit Details:
+Also add new outliner liboverride operators mapping to the manual,
+though this is useless currently as this feature is not working in many
+part of the UI, including the Outliner contextual menu.
+-------
+.
+Data Management
+¶
+Isolated dependency islands of data-blocks (e.g. an Object using a
+  Material, which has a driver using this same Object) are now properly
+  detected and deleted by the recursive purging operation
+  (
+#T98029
+,
+97dd107070
+### Commit Summary: Fix T98029: Support isolated islands of IDs when purging unused ones. · 97dd107070 - blender - Blender Projects
+### Commit Details:
+Cases were e.g. an object would use a material, and this material would
+use this object (e.g. through a driver), even if both those data-blocks
+are technically unused, they would remain forever since they were not
+detected as such.
+
+Now this is properly detected and purged as part of the 'recursive
+purge' operation.
+-------
+).
+The ‘Purge’ button of the Orphaned view of the Outliner now uses
+  recursive purge (instead of the ‘one-level’ one only deleting
+  data-blocks with no users)
+  (
+a27024e36d
+### Commit Summary: ID Management: Purge: Make outliner button use recursive purge. · a27024e36d - blender - Blender Projects
+### Commit Details:
+This change the 'Purge' button of the Outliner 'Orphaned' view to use
+recursive purge, i.e. it wil not only delete immediately unused IDs (as
+listed in the view) anymore, but also all their unused dependencies.
+-------
+).
+The way Blender ensures that all data blocks have unique names has
+  been rewritten, and scales much better to high object counts
+  (
+7f8d05131a
+### Commit Summary: IDManagement: Speedup ID unique name assignment by tracking used names/basenames/suffixes · 7f8d05131a - blender - Blender Projects
+### Commit Details:
+An implementation of T73412, roughly as outlined there:
+
+Track the names that are in use, as well as base names (before
+numeric suffix) plus a bit map for each base name, indicating which
+numeric suffixes are already used. This is done per-Main/Library,
+per-object-type.
+
+Timings (Windows, VS2022 Release build, AMD Ryzen 5950X):
+
+- Scene with 10k cubes, Shift+D to duplicate them all: 8.7s -> 1.9s.
+  Name map memory usage for resulting 20k objects: 4.3MB.
+- Importing a 2.5GB .obj file of exported Blender 3.0 splash scene
+  (24k objects), using the new C++ importer: 34.2s-> 22.0s. Name map
+  memory usage for resulting scene: 8.6MB.
+- Importing Disney Moana USD scene (almost half a million objects):
+  56min -> 10min. Name map usage: ~100MB. Blender crashes later on
+  when trying to render it, in the same place in both cases, but
+  that's for another day.
+
+Reviewed By: Bastien Montagne
+Differential Revision:
+https://developer.blender.org/D14162
+-------
+).
+  This speeds up many operations, e.g. importing large scenes,
+  duplicating many objects, etc.
+Others
+¶
+JPEG preview thumbnails created faster and with less RAM.
+  (
+8960c6e060
+### Commit Summary: IMBUF: Faster JPEG Thumbnails · 8960c6e060 - blender - Blender Projects
+### Commit Details:
+Make preview thumbnails of JPEG files in less time and with less RAM.
+
+See D14727 for more details.
+
+Differential Revision:
+https://developer.blender.org/D14727
+Reviewed by Brecht Van Lommel
+-------
+)
+EXR preview thumbnails created for all types and with less RAM.
+  (
+f600a2aa6d
+### Commit Summary: IMBUF: Thumbnails of all EXR files using less RAM · f600a2aa6d - blender - Blender Projects
+### Commit Details:
+Specialized thumbnailing function to create previews of all EXR image
+files, regardless of type, size, or dimensions. Uses less RAM by only
+loading a single row of pixels at a time.
+
+See D14663 for more details and examples.
+
+Differential Revision:
+https://developer.blender.org/D14663
+Reviewed by Brecht Van Lommel
+-------
+)
+Improved report about invalid relation in the dependency graph.
+  (
+2da7977e3e
+### Commit Summary: Depsgraph: Implement backtrace functionality · 2da7977e3e - blender - Blender Projects
+### Commit Details:
+The goal is to make it easier to track down sources of errors during
+the dependency graph builder.
+
+With this change whenever a relation can not be added a trace to the
+entity which requested the relation will be printed. For example:
+
+```
+Failed to add relation "Copy Location"
+Could not find op_from: OperationKey(type: BONE, component name: 'MissingBone', operation code: BONE_DONE)
+
+Trace:
+
+Depth    Type                     Name
+-----    ----                     ----
+1        Object                   Armature.001
+2        Pose Channel             Bone
+3        Constraint               Copy Location
+```
+
+On an implementation detail traced places where `checkIsBuiltAndTag`
+is called, with some additional places to help tracking pose channels,
+constraints, and modifiers.
+
+Further improvements in granularity are possible, but that could happen
+as a followup development once the core part is proven to work.
+
+An example of such improvement would be to have entries in the trace
+which will indicate NLA and drivers building. Currently it might be
+a bit confusing to see IDs in the trace referenced from driver.
+
+Even with such limitation the current state of the patch brings a
+very valuable information (some information is much better than no
+information at all).
+
+Differential Revision:
+https://developer.blender.org/D15017
+-------
+)
+Font fallback support. No noticeable changes until we approve a stack
+  of fonts.
+  (
+524a9e3db8
+### Commit Summary: BLF: Fallback Font Stack · 524a9e3db8 - blender - Blender Projects
+### Commit Details:
+Allow use of multiple fonts acting together like a fallback stack,
+where if a glyph is not found in one it can be retrieved from another.
+
+See D12622 for much more detail
+
+Differential Revision:
+https://developer.blender.org/D12622
+Reviewed by Brecht Van Lommel
+-------
+)
+Variable / Multiple Master Font support. No user-facing changes yet.
+  (
+b9c0eed206
+### Commit Summary: BLF: Add Support for Variable Fonts · b9c0eed206 - blender - Blender Projects
+### Commit Details:
+Add support for Variable/Multiple Master font features. These are fonts
+that contain a range of design variations along multiple axes. This
+contains no client-facing options.
+
+See D12977 for details and examples
+
+Differential Revision:
+https://developer.blender.org/D12977
+Reviewed by Brecht Van Lommel
+-------
+)
+Duplicating many objects is faster now
+  (
+2d041fc468
+### Commit Summary: Object: Speed up duplication of large selections by doing fewer collection syncs · 2d041fc468 - blender - Blender Projects
+### Commit Details:
+Previous code was doing N collection syncs when duplicating N objects.
+New code avoids all the intermediate syncs by using
+BKE_layer_collection_resync_forbid and
+BKE_layer_collection_resync_allow, and then does one
+BKE_main_collection_sync + BKE_main_collection_sync_remap for the
+whole operation. There is some complexity involved where the Base
+things of newly duplicated objects can't be found yet, without the
+sync, so some work on them (marking them selected, active, ...) has
+to be deferred until after the sync.
+
+Timings: scene with 10k cubes, each with unique mesh (Windows, VS2022
+Release build, AMD Ryzen 5950X):
+
+- Shift+D duplicate: 13.6s -> 9.2s
+- Alt+D duplicate: 4.76s -> 1.53s
+
+Reviewed By: Bastien Montagne
+Differential Revision:
+https://developer.blender.org/D14150
+-------
+,
+7f8d05131a
+### Commit Summary: IDManagement: Speedup ID unique name assignment by tracking used names/basenames/suffixes · 7f8d05131a - blender - Blender Projects
+### Commit Details:
+An implementation of T73412, roughly as outlined there:
+
+Track the names that are in use, as well as base names (before
+numeric suffix) plus a bit map for each base name, indicating which
+numeric suffixes are already used. This is done per-Main/Library,
+per-object-type.
+
+Timings (Windows, VS2022 Release build, AMD Ryzen 5950X):
+
+- Scene with 10k cubes, Shift+D to duplicate them all: 8.7s -> 1.9s.
+  Name map memory usage for resulting 20k objects: 4.3MB.
+- Importing a 2.5GB .obj file of exported Blender 3.0 splash scene
+  (24k objects), using the new C++ importer: 34.2s-> 22.0s. Name map
+  memory usage for resulting scene: 8.6MB.
+- Importing Disney Moana USD scene (almost half a million objects):
+  56min -> 10min. Name map usage: ~100MB. Blender crashes later on
+  when trying to render it, in the same place in both cases, but
+  that's for another day.
+
+Reviewed By: Bastien Montagne
+Differential Revision:
+https://developer.blender.org/D14162
+-------
+).
+  Shift+D duplicating 10 thousand cubes went from 14 seconds down to 2
+  seconds.
+
+'''''
+
+
+3. Grease Pencil¶
+
+Grease Pencil
+¶
+Line Art
+¶
+Current performance for LineArt:
+New object loading code significantly increased object loading speed
+   (approx. 4~8 times faster).
+   (
+03aba8046e
+### Commit Summary: LineArt: Object loading optimization · 03aba8046e - blender - Blender Projects
+### Commit Details:
+This patch replaces BMesh conversion into index-based triangle adjacent
+lookup method, and use multithread in many steps to speed up object
+loading for line art.
+
+Differential Revision:
+https://developer.blender.org/D14627
+Reviewed By: Sebastian Parborg (zeddb)
+-------
+)
+Removed "Remove Doubles" option from Geometry Processing panel,
+    this is the result of using new object load code path, we do not
+    add "remove doubles" as this will take a lot of time to process.
+    The user is responsible for ensuring good mesh quality.
+New multithread quad-tree building method makes triangle insertion
+   and intersection calculation much faster
+   (
+432c4c74eb
+### Commit Summary: LineArt: Speedup construction of quad trees. · 432c4c74eb - blender - Blender Projects
+### Commit Details:
+Using multithread for `add_triangles` to speed up quad tree building.
+Each thread would lock its respective tile to work on triangle insertion,
+intersection calculation, tile splitting and triangle array extension.
+
+Reviewed By: Sebastian Parborg (zeddb), Sergey Sharybin (sergey)
+
+Ref D14953
+-------
+).
+   Overall performance figure can be seen in the picture above.
+There's initially another acceleration method that uses
+Atomic Compare and Swap
+algorithm
+    (
+14a5a91e0e
+### Commit Summary: LineArt: Use CAS for add_triangles. · 14a5a91e0e - blender - Blender Projects
+### Commit Details:
+Using the atomic "compare and swap" method in add_triangles stage
+dramatically speeds up the add_triangles call and significantly reduced
+the overall calculation time. This is currently the fastest method we
+have experimented with so far.
+
+Reviewed By: Sebastian Parborg (zeddb)
+
+Differential Revision:
+https://developer.blender.org/D14953
+-------
+),
+    however we have since found that algorithm is not preferred in
+    terms of OS thread scheduling, so we used the more traditional
+    locking method instead.
+New Shadow and Light Contour calculation. Now LineArt is able to
+  calculate accurate cast shadow and light/shadow separation line given
+  a light source reference object.
+  (
+6dd8ceef2a
+### Commit Summary: LineArt: Shadow and related functionalities. · 6dd8ceef2a - blender - Blender Projects
+### Commit Details:
+This patch includes the full shadow functionality for LineArt:
+
+- Light contour and cast shadow lines.
+- Lit/shaded region selection.
+- Enclosed light/shadow shape calculation.
+- Silhouette/anti-silhouette selection.
+- Intersection priority based on shadow edge identifier.
+
+Reviewed By: Sebastian Parborg (zeddb)
+
+Differential Revision:
+https://developer.blender.org/D15109
+-------
+)
+Filtering feature lines from lit/shaded regions. This images shows the
+  example of selecting marked edges from only lit regions.
+  (
+6dd8ceef2a
+### Commit Summary: LineArt: Shadow and related functionalities. · 6dd8ceef2a - blender - Blender Projects
+### Commit Details:
+This patch includes the full shadow functionality for LineArt:
+
+- Light contour and cast shadow lines.
+- Lit/shaded region selection.
+- Enclosed light/shadow shape calculation.
+- Silhouette/anti-silhouette selection.
+- Intersection priority based on shadow edge identifier.
+
+Reviewed By: Sebastian Parborg (zeddb)
+
+Differential Revision:
+https://developer.blender.org/D15109
+-------
+)
+Enclosed Shape option with lit/shaded region selection, able to give
+  accurate 2d shape around light/shadow areas. The second image
+  demonstrates this effect.
+  (
+6dd8ceef2a
+### Commit Summary: LineArt: Shadow and related functionalities. · 6dd8ceef2a - blender - Blender Projects
+### Commit Details:
+This patch includes the full shadow functionality for LineArt:
+
+- Light contour and cast shadow lines.
+- Lit/shaded region selection.
+- Enclosed light/shadow shape calculation.
+- Silhouette/anti-silhouette selection.
+- Intersection priority based on shadow edge identifier.
+
+Reviewed By: Sebastian Parborg (zeddb)
+
+Differential Revision:
+https://developer.blender.org/D15109
+-------
+)
+New Silhouette functionality. Draw silhouette around selected
+  collection, or around individual objects in that collection. LineArt
+  is also able to identify intersecting and overlapping silhouette
+  geometries.
+  (
+6dd8ceef2a
+### Commit Summary: LineArt: Shadow and related functionalities. · 6dd8ceef2a - blender - Blender Projects
+### Commit Details:
+This patch includes the full shadow functionality for LineArt:
+
+- Light contour and cast shadow lines.
+- Lit/shaded region selection.
+- Enclosed light/shadow shape calculation.
+- Silhouette/anti-silhouette selection.
+- Intersection priority based on shadow edge identifier.
+
+Reviewed By: Sebastian Parborg (zeddb)
+
+Differential Revision:
+https://developer.blender.org/D15109
+-------
+)
+Intersection priority functionality. Specify different intersection
+  priority levels for different objects, then intersection lines would
+  be automatically selected with the object who has the higher
+  intersection priority. This saves the effort of manually assigning
+  intersection flags for a lot of simple cases. In the image, the blue
+  sphere has higher intersection priority, and the intersection line is
+  selected together with the blue sphere to style with it.
+  (
+6dd8ceef2a
+### Commit Summary: LineArt: Shadow and related functionalities. · 6dd8ceef2a - blender - Blender Projects
+### Commit Details:
+This patch includes the full shadow functionality for LineArt:
+
+- Light contour and cast shadow lines.
+- Lit/shaded region selection.
+- Enclosed light/shadow shape calculation.
+- Silhouette/anti-silhouette selection.
+- Intersection priority based on shadow edge identifier.
+
+Reviewed By: Sebastian Parborg (zeddb)
+
+Differential Revision:
+https://developer.blender.org/D15109
+-------
+)
+Operators
+¶
+New Sculpt Auto masking options at 3 levels: Stroke, Layer and
+  Material.
+  (
+ab5d52a6db
+### Commit Summary: GPencil: New Sculpt Auto masking options · ab5d52a6db - blender - Blender Projects
+### Commit Details:
+Now it's possible to use auto masking at 3 levels:
+
+* Stroke
+* Layer
+* Material
+
+The masking options can be combined and allows to limit the effect of the sculpt brush.
+
+Diff Revision:
+https://developer.blender.org/D14589
+-------
+)
+UI
+¶
+Added Material selection menu using key
+U
+in Sculpt mode.
+  (
+ab5d52a6db
+### Commit Summary: GPencil: New Sculpt Auto masking options · ab5d52a6db - blender - Blender Projects
+### Commit Details:
+Now it's possible to use auto masking at 3 levels:
+
+* Stroke
+* Layer
+* Material
+
+The masking options can be combined and allows to limit the effect of the sculpt brush.
+
+Diff Revision:
+https://developer.blender.org/D14589
+-------
+)
+Now
+Move to New Layer
+allows to enter the name of new layer.
+  (
+129ea355c8
+### Commit Summary: GPencil: Add support to name new layer when moving to layer · 129ea355c8 - blender - Blender Projects
+### Commit Details:
+To make it consistent with collections, now it's possible to name the new layer created using the `Move to Layer` option.
+
+Differential Revision:
+https://developer.blender.org/D15092
+-------
+)
+Modifiers and VFX
+¶
+New Noise modifier parameter to define when the randomize noise
+  pattern change. Now it's possible to change the noise only in
+  keyframes.
+  (
+0d9e22d43c
+### Commit Summary: GPencil: New Noise modifier random in Keyframes only · 0d9e22d43c - blender - Blender Projects
+### Commit Details:
+This is for some animation styles that usually copy and paste keyframes and they want avoid that both frames look equal, but they don't want noise randomness changes in the inbetween frames.
+
+The patch adds a new random `Mode` option to select when the noise change.
+
+Reviewed By: pepeland
+
+Maniphest Tasks: T97099
+
+Differential Revision:
+https://developer.blender.org/D14566
+-------
+)
+New Ping Pong mode for Time Offset modifier.
+  (
+82d7234ed9
+### Commit Summary: GPencil:  A Ping Pong effect to Time modifier · 82d7234ed9 - blender - Blender Projects
+### Commit Details:
+This patch adds 4th option to Time offset modifier Modes.
+
+It loops from start frame to end frame and then back to start in reverse direction.
+In other words it is a combination of Normal and Reverse mode.
+
+Especially with offset control it adds the ability to create easy looping animations such as cheering crowds, flowers opening and closing at different offsets.
+
+Reviewed By: #grease_pencil, antoniov, pepeland, mendio
+
+Differential Revision:
+https://developer.blender.org/D14965
+-------
+)
+
+'''''
+
+
+4. Modeling¶
+
+Modeling
+¶
+General
+¶
+New property in the
+Shade Smooth
+operator to enable
+Auto Smooth
+.
+  Exposed as
+Shade Auto Smooth
+in the 3D Viewport's
+Object
+menu
+  and
+Object Context Menu
+.
+  (
+eef98e66
+### Commit Summary: Mesh: Add Auto Smooth option to Shade Smooth operator · eef98e66cf - blender - Blender Projects
+### Commit Details:
+Add a property to the **Shade Smooth** operator to quickly enable the Mesh `use_auto_smooth` option.
+
+The `Angle` property is exposed in the **Adjust Last Operation** panel to make it easy to tweak on multiple objects without having to go to the Properties editor.
+
+The operator is exposed in the `Object` menu and `Object Context Menu`.
+
+=== Demo ===
+
+{F13066173, size=full}
+
+Regarding the implementation, there are multiple ways to go about this (like making a whole new operator altogether), but I think a property is the cleanest/simplest.
+
+I imagine there are simpler ways to achieve this without duplicating the `use_auto_smooth` property in the operator itself (getting it from the Mesh props?), but I couldn't find other operators doing something similar.
+
+Reviewed By: #modeling, mont29
+
+Differential Revision:
+https://developer.blender.org/D14894
+-------
+)
+New snapping method that snaps transformed geometry to
+Nearest Face
+.
+  Expanded snapping options to give more control over possible snapping
+  targets.
+  (
+011327224e
+### Commit Summary: Transform Snap: nearest face snap mode, snapping options, refactoring. · 011327224e - blender - Blender Projects
+### Commit Details:
+This commit adds a new face nearest snapping mode, adds new snapping
+options, and (lightly) refactors code around snapping.
+
+The new face nearest snapping mode will snap transformed geometry to the
+nearest surface in world space. In contrast, the original face snapping
+mode uses projection (raycasting) to snap source to target geometry.
+Face snapping therefore only works with what is visible, while nearest
+face snapping can snap geometry to occluded parts of the scene. This new
+mode is critical for retopology work, where some of the target mesh
+might be occluded (ex: sliding an edge loop that wraps around the
+backside of target mesh).
+
+The nearest face snapping mode has two options: "Snap to Same Target"
+and "Face Nearest Steps". When the Snap to Same Object option is
+enabled, the selected source geometry will stay near the target that it
+is nearest before editing started, which prevents the source geometry
+from snapping to other targets. The Face Nearest Steps divides the
+overall transformation for each vertex into n smaller transformations,
+then applies those n transformations with surface snapping interlacing
+each step. This steps option handles transformations that cross U-shaped
+targets better.
+
+The new snapping options allow the artist to better control which target
+objects (objects to which the edited geometry is snapped) are considered
+when snapping. In particular, the only option for filtering target
+objects was a "Project onto Self", which allowed the currently edited
+mesh to be considered as a target. Now, the artist can choose any
+combination of the following to be considered as a target: the active
+object, any edited object that isn't active (see note below), any non-
+edited object. Additionally, the artist has another snapping option to
+exclude objects that are not selectable as potential targets.
+
+The Snapping Options dropdown has been lightly reorganized to allow for
+the additional options.
+
+Included in this patch:
+
+- Snap target selection is more controllable for artist with additional
+  snapping options.
+- Renamed a few of the snap-related functions to better reflect what
+  they actually do now. For example, `applySnapping` implies that this
+  handles the snapping, while `applyProject` implies something entirely
+  different is done there. However, better names would be
+  `applySnappingAsGroup` and `applySnappingIndividual`, respectively,
+  where `applySnappingIndividual` previously only does Face snapping.
+- Added an initial coordinate parameter to snapping functions so that
+  the nearest target before transforming can be determined(for "Snap to
+  Same Object"), and so the transformation can be broken into smaller
+  steps (for "Face Nearest Steps").
+- Separated the BVH Tree getter code from mesh/edit mesh to its own
+  function to reduce code duplication.
+- Added icon for nearest face snapping.
+- The original "Project onto Self" was actually not correct! This option
+  should be called "Project onto Active" instead, but that only matters
+  when editing multiple meshes at the same time. This patch makes this
+  change in the UI.
+
+Reviewed By: Campbell Barton, Germano Cavalcante
+
+Differential Revision:
+https://developer.blender.org/D14591
+-------
+)
+Modifiers
+¶
+Surface deform modifier can be used when target mesh increases number
+  of vertices.
+  (
+5f8f436dca
+### Commit Summary: Allow surface deform when target mesh increases number of vertices · 5f8f436dca - blender - Blender Projects
+### Commit Details:
+A studio request actually.
+
+The goal is to cover rather typical situation: when the mesh was
+bound to target when the target was on subdivision level 0 but
+uses a higher subdivision level for rendering. Example of such
+setup is a facial hair bound to the face.
+
+The idea of this change is to use first N vertices from the target
+where N is the number of vertices on target during binding process.
+While this sounds a bit arbitrary it covers typical modifier setup
+used for rigging. Arguably, it is not more arbitrary than using a
+number of polygons (which is how the modifier was checking for
+changes on target before this change).
+
+Quite straightforward change. A bit tricky part was to not break
+the behavior since before this change we did not track number of
+vertices sued when binding. The naming I'm also not super happy
+with and just followed the existing one. Ideally the variables in
+DNA will be prefixed with `target_` but doing it for an existing
+field would mean compatibility change, and only using prefix for
+the new field will introduce weird semantic where the polygons
+count will be even more easily confused with a count on the
+deforming mesh.
+
+Differential Revision:
+https://developer.blender.org/D14830
+-------
+)
+UV
+¶
+Note the flipped and overlapping UVs around the nose, and the shear and non-uniform scale for the ears and eyes.
+After minimize stretch, the flipped faces are smoothed away. After Average Island Scale with Shear and Scale UV, the ears and eyes now have a nice even balance between the U coordinate and V coordinate.
+Four changes help with workflow and improve final UV quality.
+When using UV Unwrap in the UV editor, only the selected UVs will be
+  unwrapped.
+  (
+c0e4532331
+### Commit Summary: Fix T78394: In UV Editor, UV Unwrap respects selection · c0e4532331 - blender - Blender Projects
+### Commit Details:
+Differential Revision: D14945
+-------
+)
+Minimize Stretch will now unflip faces.
+  (
+135e530356
+### Commit Summary: Fix T99781: uv minimize stretch now unflips flipped faces · 135e530356 - blender - Blender Projects
+### Commit Details:
+Add a small gradient to flipped faces proportional to length of edges.
+
+Differential Revision:
+https://developer.blender.org/D15475
+-------
+)
+Upgrade Average Island Scale with new options, Scale UV and Shear.
+  (
+931779197a
+### Commit Summary: Fix T99684: Upgrade Averages Island Scale with options Scale UV and Shear · 931779197a - blender - Blender Projects
+### Commit Details:
+Differential Revision:
+https://developer.blender.org/D15421
+-------
+)
+Add new operator, "UV Select Similar".
+  (
+1154b45526
+### Commit Summary: UV: Add "Select Similar" operator in UV editor · 1154b45526 - blender - Blender Projects
+### Commit Details:
+Resolves T47437.
+
+Differential Revision:
+https://developer.blender.org/D15164
+-------
+)
+In addition, many smaller bugs have been fixed or resolved including:
+Snapping to UV vertices is now done if the cursor reaches a minimum
+  distance.
+  (
+d2271cf939
+### Commit Summary: Transform: use a threshold for UV snapping · d2271cf939 - blender - Blender Projects
+### Commit Details:
+Unlike 3Dview snapping, UV snapping is always done to the UV closest to
+the mouse cursor, no matter the distance.
+
+From the user's point of view, this appears to be an inconsistency (See
+{T93538}).
+
+Therefore, set a minimum distance for snapping and, as in 3D View and
+highlight the snap with a drawing of a circle.
+
+Release Note:
+https://wiki.blender.org/wiki/Reference/Release_Notes/3.3/Modeling
+Reviewed By: #uv_editing, campbellbarton
+
+Maniphest Tasks: T93538
+
+Differential Revision:
+https://developer.blender.org/D13873
+-------
+)
+Improved constrain-to-image-bounds when scaling UVs.
+  (
+bc256a4507
+### Commit Summary: Fix T50398: Constrain to Image Bounds failed with 2D cursor pivot · bc256a4507 - blender - Blender Projects
+### Commit Details:
+Use more robust logic for "Constrain to Image Bounds" when scaling UVs.
+
+Reviewed By: campbellbarton
+
+Ref D14882
+-------
+,
+4d7c990180
+### Commit Summary: Fix T98061: uv resize with individual origins could break constrain to bounds · 4d7c990180 - blender - Blender Projects
+### Commit Details:
+Fix unreported: Resize with Constrain To Bounds will now limit one shared scale
+value for both U and V instead of calculating separate scale values for each.
+
+To fix T98061, the individual origins (transdata->center) is now used when
+that mode is active.
+
+See also:
+0e9367fc29
+Differential Revision:
+https://developer.blender.org/D15420
+-------
+)
+Use per-face aspect correction when applying Cube Projection,
+  Spherical Projection, Cylinder Projection and Project From View.
+  (
+1c1e842879
+### Commit Summary: Fix T86358: Use per face aspect correction for primitive UV projections · 1c1e842879 - blender - Blender Projects
+### Commit Details:
+During UV unwrapping, Cube Projection, Sphere Projection, Cylinder
+Projection and Project From View (in the 3D Viewport), when "Correct
+Aspect" toggle is active, it now uses a query cache to perform a
+per-face aspect ratio ("per_face_aspect") correction for the active
+image of each face.
+
+Reviewed By: campbellbarton
+
+Ref D14852
+-------
+)
+Update size of hitbox for UV axis gizmo so it matches hitbox size in
+  the 3D viewport.
+  (
+65e7d49939
+### Commit Summary: Fix T89726: Fix hitbox of axis gizmo in UV Editor · 65e7d49939 - blender - Blender Projects
+### Commit Details:
+Use the scale from the wmGizmo.matrix_final as a reference for the
+arrow head-size.
+
+Reviewed By: campbellbarton
+
+Ref D15056
+-------
+)
+During UV unwrap, pinned vertices will not be merged.
+  (
+e6e9f1ac5a
+### Commit Summary: Fix T98239: During UV Unwrap, create unique indices for each pinned UV · e6e9f1ac5a - blender - Blender Projects
+### Commit Details:
+Originally reported in T75007.
+
+Differential Revision:
+https://developer.blender.org/D15199
+-------
+)
+Improved UDIM support.
+
+'''''
+
+
+5. Hair System¶
+
+Hair System
+¶
+A new hair workflow is possible with the new curves object
+The Future of Hair
+  Grooming
+User Manual: Hair
+  Primitive
+### Commit Summary: Primitives — Blender Manual
+### Commit Details:
+No details found
+-------
+User Manual: Curves
+  Sculpting
+### Commit Summary: Introduction — Blender Manual
+### Commit Details:
+No details found
+-------
+Sculpt Mode
+¶
+The new curves object type has a sculpt mode meant mostly for hair
+grooming
+Sculpting can be done on top of curves deformed with geometry nodes
+  (
+1f94b56d77
+### Commit Summary: Curves: support sculpting on deformed curves · 1f94b56d77 - blender - Blender Projects
+### Commit Details:
+Previously, curves sculpt tools only worked on original data. This was
+very limiting, because one could effectively only sculpt the curves when
+all procedural effects were turned off. This patch adds support for curves
+sculpting while looking the result of procedural effects (like deformation
+based on the surface mesh). This functionality is also known as "crazy space"
+support in Blender.
+
+For more details see D15407.
+
+Differential Revision:
+https://developer.blender.org/D15407
+-------
+).
+Curves sculpt mode supports selecting control points or curves to
+  limit the effect of actions
+  (
+a1830859fa
+### Commit Summary: Curves: Add soft selection in sculpt mode · a1830859fa - blender - Blender Projects
+### Commit Details:
+This commit adds a float selection to curve control points or curves,
+a sculpt tool to paint the selection, and uses the selection influence
+in the existing sculpt brushes.
+
+The selection is the inverse of the "mask" from mesh sculpt mode
+currently. That change is described in more detail here: T97903
+
+Since some sculpt tools are really "per curve" tools, they use the
+average point selection of all of their points. The delete brush
+considers a curve selected if any of its points have a non-zero
+selection.
+
+There is a new option to choose the selection domain, which affects how
+painting the selection works. You can also turn the selection off by
+clicking on the active domain.
+
+Sculpt brushes can be faster when the selection is small, because
+finding selected curves or points is generally faster than the
+existing brush intersection and distance checks.
+
+The main limitation currently is that we can't see the selection in the
+viewport by default. For now, to see the selection one has to add a
+simple material to the curves object as shown in the differential
+revision. And one has to switch to Material Preview in the 3d view.
+
+Differential Revision:
+https://developer.blender.org/D14934
+-------
+).
+An overlay dims any deselected curves or points
+  (
+e3ef56ef91
+### Commit Summary: Curves: Add sculpt selection overlay · e3ef56ef91 - blender - Blender Projects
+### Commit Details:
+This commit adds visualization to the selection in curves sculpt mode.
+Previously it was only possible to see the selection when it was
+connected to a material.
+
+In order to obstruct the users vision as little as possible, the
+selected areas of the curve are left as is, but a dark overlay
+is drawn over unselected areas.
+
+To make it work, the overlay requests the selection attribute and then
+ensures that the evaluation is complete for curves. Then it retrieves
+the evaluated selection GPU texture and passes that to the shader.
+This reuses the existing generic attribute extraction system because
+there currently wouldn't be any benefits to dealing with selection
+separately, and because it avoids duplication of the logic that
+extracts attributes from curves and evaluates them if necessary.
+
+Differential Revision:
+https://developer.blender.org/D15219
+-------
+).
+A few new selection operators adjust the soft selection in sculpt
+  mode:
+Select Random
+,
+Select Endpoints
+, and
+Grow/Shrink
+(
+e3ef56ef91
+### Commit Summary: Curves: Add sculpt selection overlay · e3ef56ef91 - blender - Blender Projects
+### Commit Details:
+This commit adds visualization to the selection in curves sculpt mode.
+Previously it was only possible to see the selection when it was
+connected to a material.
+
+In order to obstruct the users vision as little as possible, the
+selected areas of the curve are left as is, but a dark overlay
+is drawn over unselected areas.
+
+To make it work, the overlay requests the selection attribute and then
+ensures that the evaluation is complete for curves. Then it retrieves
+the evaluated selection GPU texture and passes that to the shader.
+This reuses the existing generic attribute extraction system because
+there currently wouldn't be any benefits to dealing with selection
+separately, and because it avoids duplication of the logic that
+extracts attributes from curves and evaluates them if necessary.
+
+Differential Revision:
+https://developer.blender.org/D15219
+-------
+).
+The spreadsheet editor supports filtering by selected curves or
+  points in sculpt mode
+  (
+396b7a6ec8
+### Commit Summary: Spreadsheet: Implement selection filter for curves sculpt mode · 396b7a6ec8 - blender - Blender Projects
+### Commit Details:
+The spreadsheet can retrieve the float selection using the same
+utilities as curves sculpt brushes. Theoretically this can work in
+original, evaluated, and viewer node modes, at least when the
+sculpt selection attributes are able to be propagated.
+
+Differential Revision:
+https://developer.blender.org/D15393
+-------
+).
+Sculpt mode supports symmetry on the X, Y and Z axes
+  (
+7dc94155f6
+### Commit Summary: Curves: support symmetry in curves sculpting brushes · 7dc94155f6 - blender - Blender Projects
+### Commit Details:
+This adds support for X/Y/Z symmetry for all brushes in curves
+sculpt mode. In theory this can be extended to support radial
+symmetry, but that's not part of this patch.
+
+It works by essentially applying a brush stroke multiple with
+different transforms. This is similiar to how symmetry works in
+mesh sculpt mode, but is quite different from how it worked in
+the old hair system (there it tried to find matching hair strands
+on both sides of the surface; if none was found, symmetry did
+not work).
+
+Differential Revision:
+https://developer.blender.org/D14795
+-------
+).
+Several sculpt brushes are available
+The
+Selection
+  Paint
+### Commit Summary: Selection Paint — Blender Manual
+### Commit Details:
+No details found
+-------
+brush edits the selection mask
+  (
+a1830859fa
+### Commit Summary: Curves: Add soft selection in sculpt mode · a1830859fa - blender - Blender Projects
+### Commit Details:
+This commit adds a float selection to curve control points or curves,
+a sculpt tool to paint the selection, and uses the selection influence
+in the existing sculpt brushes.
+
+The selection is the inverse of the "mask" from mesh sculpt mode
+currently. That change is described in more detail here: T97903
+
+Since some sculpt tools are really "per curve" tools, they use the
+average point selection of all of their points. The delete brush
+considers a curve selected if any of its points have a non-zero
+selection.
+
+There is a new option to choose the selection domain, which affects how
+painting the selection works. You can also turn the selection off by
+clicking on the active domain.
+
+Sculpt brushes can be faster when the selection is small, because
+finding selected curves or points is generally faster than the
+existing brush intersection and distance checks.
+
+The main limitation currently is that we can't see the selection in the
+viewport by default. For now, to see the selection one has to add a
+simple material to the curves object as shown in the differential
+revision. And one has to switch to Material Preview in the 3d view.
+
+Differential Revision:
+https://developer.blender.org/D14934
+-------
+).
+The
+Add
+### Commit Summary: Add Curves — Blender Manual
+### Commit Details:
+No details found
+-------
+brush adds new curves, interpolating the length, shape, and point
+  count from neighbors
+  (
+ac45540a34
+### Commit Summary: Curves: add brush to add curves on surface · ac45540a34 - blender - Blender Projects
+### Commit Details:
+This adds a prototype for the first brush that can add new curves by
+painting on a surface. Note that this can only be used when the curves
+object has a surface object set in the properties panel.
+
+The brush can take minimum distance into account. This allows
+distributing curves with a somewhat consistent density.
+
+Differential Revision:
+https://developer.blender.org/D14207
+-------
+,
+8852191b77
+### Commit Summary: Curves: Interpolate point count in add brush · 8852191b77 - blender - Blender Projects
+### Commit Details:
+This commit adds an option to interpolate the number of control points
+in new curves based on the count in neighboring existing curves. The
+idea is to provide a more automatic default than manually controlling
+the number of points in a curve, so users don't have to think about
+the resolution quite as much.
+
+Internally, some utilities for creating new curves are extracted to a
+new header file. These can be used for the various nodes and operators
+that create new curves.
+
+The top-bar UI will be adjusted in a separate patch, probably moving
+all of the settings that affect the size and shape of the new curves
+into a popover.
+
+Differential Revision:
+https://developer.blender.org/D14877
+-------
+,
+dbba5c4df9
+### Commit Summary: Curves: control number of control points in new curves · dbba5c4df9 - blender - Blender Projects
+### Commit Details:
+Previously, the number of control points in a new curve was hardcoded.
+
+Differential Revision:
+https://developer.blender.org/D14857
+-------
+).
+The
+Delete
+### Commit Summary: Delete Curves — Blender Manual
+### Commit Details:
+No details found
+-------
+brush removes curves
+  (
+3f91e7d779
+### Commit Summary: Curves: actually delete curves with Delete brush · 3f91e7d779 - blender - Blender Projects
+### Commit Details:
+Previously, the position was just set to zero as part of the prototype.
+
+Differential Revision:
+https://developer.blender.org/D14291
+-------
+,
+f0f44fd92f
+### Commit Summary: Curves: support spherical delete brush · f0f44fd92f - blender - Blender Projects
+### Commit Details:
+Differential Revision:
+https://developer.blender.org/D14797
+-------
+).
+The
+Density
+### Commit Summary: Density Brush — Blender Manual
+### Commit Details:
+No details found
+-------
+brush adds or removes curves based on a density
+  (
+416aef4e13
+### Commit Summary: Curves: New tools for curves sculpt mode. · 416aef4e13 - blender - Blender Projects
+### Commit Details:
+This commit contains various new features for curves sculpt mode
+that have been developed in parallel.
+
+* Selection:
+  * Operator to select points/curves randomly.
+  * Operator to select endpoints of curves.
+  * Operator to grow/shrink an existing selection.
+* New Brushes:
+  * Pinch: Moves points towards the brush center.
+  * Smooth: Makes individual curves straight without changing the root
+    or tip position.
+  * Puff: Makes curves stand up, aligning them with the surface normal.
+  * Density: Add or remove curves to achieve a certain density defined
+    by a minimum distance value.
+  * Slide: Move root points on the surface.
+
+Differential Revision:
+https://developer.blender.org/D15134
+-------
+).
+The
+Comb
+### Commit Summary: Comb Curves — Blender Manual
+### Commit Details:
+No details found
+-------
+brush moves points, preserving segment lengths
+  (
+10c11bb897
+### Commit Summary: Curves: add initial comb, grow and shrink brush · 10c11bb897 - blender - Blender Projects
+### Commit Details:
+The exact behavior of the brushes is still being iterated on, but it
+helps having a base implementation that we can work upon.
+All of that is still hidden behind an experimental feature flag anyway.
+
+The brushes will get a name in the ui soon.
+
+Differential Revision:
+https://developer.blender.org/D14241
+-------
+).
+The
+Snake
+  Hook
+### Commit Summary: Snake Hook Curves — Blender Manual
+### Commit Details:
+No details found
+-------
+brush grabs points and moves them without preserving length
+  (
+fced604acf
+### Commit Summary: Curves: improve Snake Hook brush · fced604acf - blender - Blender Projects
+### Commit Details:
+This implements the spherical brush and different falloff
+modes for the Snake Hook brush.
+
+Differential Revision:
+https://developer.blender.org/D14408
+-------
+).
+The
+Grow/Shrink
+### Commit Summary: Grow / Shrink Curves — Blender Manual
+### Commit Details:
+No details found
+-------
+brush makes curves longer or shorter
+  (
+190334b47d
+### Commit Summary: Curves: new Grow/Shrink brush · 190334b47d - blender - Blender Projects
+### Commit Details:
+This adds a new Grow/Shrink brush which is similar to the Length
+brush in the old hair system.
+* It's possible to switch between growing and shrinking by hold
+  down ctrl and/or by changing the direction enum.
+* 3d brush is supported.
+* Different brush falloffs are supported.
+* Supports scaling curves uniformly or shrinking/extrapolating
+  them. Extrapolation is linear only in this patch.
+* A minimum length settings helps to avoid creating zero-sized curves.
+
+Differential Revision:
+https://developer.blender.org/D14474
+-------
+).
+The
+Pinch
+### Commit Summary: Pinch Curves — Blender Manual
+### Commit Details:
+No details found
+-------
+brush moves control points closer together
+  (
+416aef4e13
+### Commit Summary: Curves: New tools for curves sculpt mode. · 416aef4e13 - blender - Blender Projects
+### Commit Details:
+This commit contains various new features for curves sculpt mode
+that have been developed in parallel.
+
+* Selection:
+  * Operator to select points/curves randomly.
+  * Operator to select endpoints of curves.
+  * Operator to grow/shrink an existing selection.
+* New Brushes:
+  * Pinch: Moves points towards the brush center.
+  * Smooth: Makes individual curves straight without changing the root
+    or tip position.
+  * Puff: Makes curves stand up, aligning them with the surface normal.
+  * Density: Add or remove curves to achieve a certain density defined
+    by a minimum distance value.
+  * Slide: Move root points on the surface.
+
+Differential Revision:
+https://developer.blender.org/D15134
+-------
+).
+The
+Puff
+### Commit Summary: Puff Curves — Blender Manual
+### Commit Details:
+No details found
+-------
+brush rotates curves to match the surface normal
+  (
+416aef4e13
+### Commit Summary: Curves: New tools for curves sculpt mode. · 416aef4e13 - blender - Blender Projects
+### Commit Details:
+This commit contains various new features for curves sculpt mode
+that have been developed in parallel.
+
+* Selection:
+  * Operator to select points/curves randomly.
+  * Operator to select endpoints of curves.
+  * Operator to grow/shrink an existing selection.
+* New Brushes:
+  * Pinch: Moves points towards the brush center.
+  * Smooth: Makes individual curves straight without changing the root
+    or tip position.
+  * Puff: Makes curves stand up, aligning them with the surface normal.
+  * Density: Add or remove curves to achieve a certain density defined
+    by a minimum distance value.
+  * Slide: Move root points on the surface.
+
+Differential Revision:
+https://developer.blender.org/D15134
+-------
+).
+The
+Smooth
+### Commit Summary: Smooth Curves — Blender Manual
+### Commit Details:
+No details found
+-------
+brush makes curves straighter
+  (
+416aef4e13
+### Commit Summary: Curves: New tools for curves sculpt mode. · 416aef4e13 - blender - Blender Projects
+### Commit Details:
+This commit contains various new features for curves sculpt mode
+that have been developed in parallel.
+
+* Selection:
+  * Operator to select points/curves randomly.
+  * Operator to select endpoints of curves.
+  * Operator to grow/shrink an existing selection.
+* New Brushes:
+  * Pinch: Moves points towards the brush center.
+  * Smooth: Makes individual curves straight without changing the root
+    or tip position.
+  * Puff: Makes curves stand up, aligning them with the surface normal.
+  * Density: Add or remove curves to achieve a certain density defined
+    by a minimum distance value.
+  * Slide: Move root points on the surface.
+
+Differential Revision:
+https://developer.blender.org/D15134
+-------
+).
+The
+Slide
+### Commit Summary: Slide Curves — Blender Manual
+### Commit Details:
+No details found
+-------
+brush moves curves along the surface
+  (
+416aef4e13
+### Commit Summary: Curves: New tools for curves sculpt mode. · 416aef4e13 - blender - Blender Projects
+### Commit Details:
+This commit contains various new features for curves sculpt mode
+that have been developed in parallel.
+
+* Selection:
+  * Operator to select points/curves randomly.
+  * Operator to select endpoints of curves.
+  * Operator to grow/shrink an existing selection.
+* New Brushes:
+  * Pinch: Moves points towards the brush center.
+  * Smooth: Makes individual curves straight without changing the root
+    or tip position.
+  * Puff: Makes curves stand up, aligning them with the surface normal.
+  * Density: Add or remove curves to achieve a certain density defined
+    by a minimum distance value.
+  * Slide: Move root points on the surface.
+
+Differential Revision:
+https://developer.blender.org/D15134
+-------
+,
+1f94b56d77
+### Commit Summary: Curves: support sculpting on deformed curves · 1f94b56d77 - blender - Blender Projects
+### Commit Details:
+Previously, curves sculpt tools only worked on original data. This was
+very limiting, because one could effectively only sculpt the curves when
+all procedural effects were turned off. This patch adds support for curves
+sculpting while looking the result of procedural effects (like deformation
+based on the surface mesh). This functionality is also known as "crazy space"
+support in Blender.
+
+For more details see D15407.
+
+Differential Revision:
+https://developer.blender.org/D15407
+-------
+).
+Surface Attachment
+¶
+Curves can be attached to a mesh surface with UV coordinates and a UV
+  map
+  (
+899ec8b6b8
+### Commit Summary: Curves: use uv coordinates to attach curves to mesh · 899ec8b6b8 - blender - Blender Projects
+### Commit Details:
+This implements the new way to attach curves to a mesh surface using
+a uv map (based on the recent discussion in T95776).
+
+The curves data block now not only stores a reference to the surface object
+but also a name of a uv map on that object. Having a uv map is optional
+for most operations, but it will be required later for animation (when the
+curves are supposed to be deformed based on deformation of the surface).
+
+The "Empty Hair" operator in the Add menu sets the uv map name automatically
+if possible. It's possible to start working without a uv map and to attach the
+curves to a uv map later on. It's also possible to reattach the curves to a new
+uv map using the "Curves > Snap to Nearest Surface" operator in curves sculpt
+mode.
+
+Note, the implementation to do the reverse lookup from uv to a position on the
+surface is trivial and inefficient now. A more efficient data structure will be
+implemented separately soon.
+
+Differential Revision:
+https://developer.blender.org/D15125
+-------
+,
+12722bd354
+### Commit Summary: Curves: Add surface UV map name property · 12722bd354 - blender - Blender Projects
+### Commit Details:
+In the latest discussions about curves/hair mesh attachement
+information (T95776), it was decided to use UV coordinates to
+store where on the mesh each root is. For that, we have to specify
+which of the UV map attributes to use for UV lookups.
+
+This property isn't used yet, but it will be shortly when refactoring
+the attachement information in the add brush and the to particle
+system conversion.
+
+Differential Revision:
+https://developer.blender.org/D15115
+-------
+).
+Operators are available in sculpt mode to snap curves to the nearest
+  or deformed mesh surface
+  (
+50869b408b
+### Commit Summary: Curves: operator to snap curves to surface · 50869b408b - blender - Blender Projects
+### Commit Details:
+This operator snaps the first point of every curve to the corresponding
+surface object. The shape of individual curves or their orientation is
+not changed.
+
+There are two different attachment modes:
+* `Nearest`: Move each curve so that the first point is on the closest
+  point on the surface. This should be used when the topology of the
+  surface mesh changed, but the shape generally stayed the same.
+* `Deform`: Use the existing attachment information that is stored
+  for curves to move curves to their new location when the surface
+  mesh was deformed. This generally does not work when the
+  topology changed.
+
+The purpose of the operator is to help setup the "ground truth"
+for how curves are attached to the surface. When the ground
+truth surface changed, the original curves have to be updated
+as well. Deforming curves based on an animated surface will be
+done with geometry nodes independent of the operator.
+
+In the UI, the operator is currently exposed in curves sculpt mode
+in the `Curves > Snap Curves to Surface` menu.
+
+Differential Revision:
+https://developer.blender.org/D14515
+-------
+).
+Note: Many tools require a UV map to function. The quality of the
+  map does not matter, but it must not have overlapping faces.
+Add Empty Hair
+in the add menu creates curves with the active object
+  as a surface and its active UV map for attachment
+  (
+434521a9e2
+### Commit Summary: Curves: improve Add menu for new curves object · 434521a9e2 - blender - Blender Projects
+### Commit Details:
+The goal is to make the Add menu more convenient for the new curves object.
+The following changes are done:
+* Add `curves` submenu.
+* Add an `Empty Hair` operator that also sets the surface object.
+* Rename the old operator to `Random`. It's mostly for testing at this point.
+
+Differential Revision:
+https://developer.blender.org/D14556
+-------
+,
+2232855b50
+### Commit Summary: Curves: align surface and curves object in Empty Hair operator · 2232855b50 - blender - Blender Projects
+### Commit Details:
+Without this, symmetry does not work by default when the surface
+object was not at the same location as the 3d cursor.
+-------
+).
+Nodes
+¶
+The curves object supports the geometry nodes modifier, which can be
+  applied. All existing curve nodes are supported
+  (
+96bdd65e74
+### Commit Summary: Curves: Support applying geometry nodes modifier · 96bdd65e74 - blender - Blender Projects
+### Commit Details:
+This commit adds support for the curves object to the apply modifier
+operator. A warning is added when the evaluated result of the modifier
+doesn't contain any curves data.
+
+Differential Revision:
+https://developer.blender.org/D14730
+-------
+).
+A new geometry node deforms curves based on the deformation of the
+  surface mesh they are attached to
+  (
+05b38ecc78
+### Commit Summary: Curves: support deforming curves on surface · 05b38ecc78 - blender - Blender Projects
+### Commit Details:
+Curves that are attached to a surface can now follow the surface when
+it is modified using shape keys or modifiers (but not when the original
+surface is deformed in edit or sculpt mode).
+
+The surface is allowed to be changed in any way that keeps uv maps
+intact. So deformation is allowed, but also some topology changes like
+subdivision.
+
+The following features are added:
+* A new `Deform Curves on Surface` node, which deforms curves with
+  attachment information based on the surface object and uv map set
+  in the properties panel.
+* A new `Add Rest Position` checkbox in the shape keys panel. When checked,
+  a new `rest_position` vector attribute is added to the mesh before shape
+  keys and modifiers are applied. This is necessary to support proper
+  deformation of the curves, but can also be used for other purposes.
+* The `Add > Curve > Empty Hair` operator now sets up a simple geometry
+  nodes setup that deforms the hair. It also makes sure that the rest
+  position attribute is added to the surface.
+* A new `Object (Attach Curves to Surface)` operator in the `Set Parent To`
+  (ctrl+P) menu, which attaches existing curves to the surface and sets the
+  surface object as parent.
+
+Limitations:
+* Sculpting the procedurally deformed curves will be implemented separately.
+* The `Deform Curves on Surface` node is not generic and can only be used
+  for one specific purpose currently. We plan to generalize this more in the
+  future by adding support by exposing more inputs and/or by turning it into
+  a node group.
+
+Differential Revision:
+https://developer.blender.org/D14864
+-------
+).
+Note: The node will be generalized in the future by exposing more
+  inputs or turning it into a node group.
+Rendering
+¶
+Curves are rendered like hair particles, with support for Workbench,
+  EEVEE, and Cycles.
+The object mode selection outline works for curves objects
+  (
+a8f7d41d38
+### Commit Summary: Draw: Curve outline drawing in object mode. · a8f7d41d38 - blender - Blender Projects
+### Commit Details:
+This patch adds (selected/active) outline around a curve object in object mode.
+
+{F13270680}
+
+In the past the draw bounds option was enabled for any curve objects. With this
+patch it isn't needed and will be disabled.
+
+In the future the curve outline could also be enabled to improve GPU selection.
+
+Reviewed By: dfelinto, HooglyBoogly, fclem
+
+Maniphest Tasks: T95933
+
+Differential Revision:
+https://developer.blender.org/D15308
+-------
+).
+Curves can be converted to and from a hair particle system, and from
+  the old curve type
+  (
+94a54ab554
+### Commit Summary: Curves: add operator to convert hair particle system to new curves · 94a54ab554 - blender - Blender Projects
+### Commit Details:
+This creates a new curves object with the name of the particle system.
+The generated curves match the current evaluated state of the active hair
+particle system.
+
+Attachment information is not transferred currently.
+
+Differential Revision:
+https://developer.blender.org/D14908
+-------
+,
+3656e66ac2
+### Commit Summary: Curves: support converting curves to legacy hair system · 3656e66ac2 - blender - Blender Projects
+### Commit Details:
+This adds a new operator that converts all selected curves objects
+into hair particle systems on their respective surface objects. Existing
+particle systems with the correct name are updated, otherwise a new
+particle system is added.
+
+The purpose of the operator is the make the new curve sculpting tools
+useful even before all functionality is ported over from the old hair system.
+
+The operator can be found in the `Object > Convert` menu in object mode,
+when a curves object is active.
+
+Differential Revision:
+https://developer.blender.org/D14441
+-------
+,
+edc92f779e
+### Commit Summary: Curves: support converting legacy curves to new curves object · edc92f779e - blender - Blender Projects
+### Commit Details:
+This extends the existing object type conversion operator.
+
+Currently, it is limited to converting to curves when the evaluated
+source mesh actually has curves. This might not be the case when
+it is converted to a mesh by some modifier during evaluation.
+
+Differential Revision:
+https://developer.blender.org/D14872
+-------
+).
+Note: Rendering the new curves object is not fully supported yet. For
+  example, curves are always rendered as Catmull Rom curves. More
+  information can be found
+here
+.
+Geometry Nodes
+¶
+Performance Improvements
+¶
+Curve nodes have been ported to the new curves type, with performance
+  improvements anywhere from 3x to over 10x.
+The
+Set Spline Type
+node can also skip processing when all curves
+  have the correct type already
+  (
+9e393fc2f1
+### Commit Summary: Curves: Port set type node to new data-block · 9e393fc2f1 - blender - Blender Projects
+### Commit Details:
+This commit ports the "Set Spline Type" node to the new curves type.
+Performance should be improved in similar ways to the other refactors
+from the conversion task (T95443). Converting to and from Catmull Rom
+curves is now supported. There are a few cases where a lot of work can
+be skipped: when the number of points doesn't change, and when the
+types already match the goal type.
+
+The refactor has a few other explicit goals as well:
+ - Don't count on initialization of attribute arrays when they are
+   first allocated.
+ - Avoid copying the entire data-block when possible.
+ - Make decisions about which attributes to copy when changing curves
+   more obvious.
+ - Use higher-level methods to copy data between curve points.
+ - Optimize for the common cases of single types and full selections.
+ - Process selected curves of the same types in the same loop.
+
+The Bezier to NURBS conversion is written by Piotr Makal (
+@pmakal
+).
+
+Differential Revision:
+https://developer.blender.org/D14769
+-------
+).
+Fillet Curve
+(
+2551cf9087
+### Commit Summary: Curves: Port fillet node to the new data-block · 2551cf9087 - blender - Blender Projects
+### Commit Details:
+This commit ports the fillet curves node to the new curves data-block,
+and moves the fillet node implementation to the geometry module to help
+separate the implementation from the node.
+
+The changes are similar to the subdivide node or resample node. I've
+resused common utilities where it makes sense, though some things like
+the iteration over attributes can be generalized further. The node
+is now multi-threaded per-curve and inside each curve, and some buffers
+are reused per curve to avoid many allocations.
+
+The code is more explicit now, and though there is more boilerplate to
+pass around many spans, the more complex logic should be more readable.
+
+Differential Revision:
+https://developer.blender.org/D15346
+-------
+).
+The
+Subdivide Curve
+node supports Catmull Rom curves now as well
+  (
+9435ee8c65
+### Commit Summary: Curves: Port subdivide node to the new data-block · 9435ee8c65 - blender - Blender Projects
+### Commit Details:
+This commit moves the subdivide curve node implementation to the
+geometry module, changes it to work on the new curves data-block,
+and adds support for Catmull Rom curves. Internally I also added
+support for a curve domain selection. That isn't used, but it's
+nice to have the option anyway.
+
+Users should notice better performance as well, since we can avoid
+many small allocations, and there is no conversion to and from the
+old curve type.
+
+The code uses a similar structure to the resample node (
+60a6fbf5b5
+)
+and the set type node (
+9e393fc2f1
+). The resample curves node can be
+restructured to be more similar to this soon though.
+
+Differential Revision:
+https://developer.blender.org/D15334
+-------
+).
+The
+Separate XYZ
+and
+Separate Color
+nodes can be over 20% faster
+  when not all outputs are used
+  (
+b8bd304bd4
+### Commit Summary: Geometry Nodes: speedup Separate XYZ node · b8bd304bd4 - blender - Blender Projects
+### Commit Details:
+This speeds up the node ~20% in common cases, e.g. when only the
+X axis is used. The main optimization comes from not writing to memory
+that's not used afterwards anymore anyway.
+
+The "optimal code" for just extracting the x axis in a separate loop was
+not faster for me. That indicates that the node is bottlenecked by
+memory bandwidth, which seems reasonable.
+-------
+,
+0473462241
+### Commit Summary: Geometry Nodes: Speed up Separate color node in RGB mode · 0473462241 - blender - Blender Projects
+### Commit Details:
+This applies the same optimization as
+b8bd304bd4
+to the separate
+color node. I observed about a 50% improvement with 10 million values
+when only extracting one channel-- from about 17ms to 11ms.
+-------
+).
+The
+UV Sphere
+primitive is parallelized, with a 3.6x improvement
+  observed for high resolutions
+  (
+7808ee9bd7
+### Commit Summary: Geometry Nodes: Improve UV Sphere primive performance · 7808ee9bd7 - blender - Blender Projects
+### Commit Details:
+In a test producing 10 million vertices I observed a 3.6x improvement,
+from 470ms to 130ms. The largest improvement comes from calculating
+each mesh array on a separate thread. Besides that, the larger changes
+come from splitting the filling of corner and face arrays, and
+precalculating sines and cosines for each ring.
+
+Using `parallel_invoke` does gives some overhead. On a small 32x16
+input, the time went up from 51us to 74us. It could be disabled
+for small outputs in the future. The reasoning for this parallelization
+method instead of more standard data-size-based parallelism is that the
+latter wouldn't be helpful except for very high resolution.
+-------
+).
+Evaluating the input field in the
+Capture Attribute
+is skipped if
+  the output is not needed
+  (
+c980ed27f0
+### Commit Summary: Geometry Nodes: skip Capture Attribute node if output is not needed · c980ed27f0 - blender - Blender Projects
+### Commit Details:
+This results in a speedup if the capture attribute is only needed
+under specific circumstances (e.g. when a switch further down the
+line is true). Previously, the input field was always evaluated.
+
+Differential Revision:
+https://developer.blender.org/D15018
+-------
+).
+General
+¶
+The
+Interpolate Domain
+node allows evaluating a field on a
+  different domain
+inside
+of another field, avoiding the need for a
+  separate "Capture Attribute" node
+  (
+ba1e97f1c6
+### Commit Summary: Geometry Nodes: Field on Domain Node · ba1e97f1c6 - blender - Blender Projects
+### Commit Details:
+As described in T98943, this commit adds a node that can
+evaluate a field on a separate domain in a larger field context.
+This is potentially useful in many cases, to avoid relying on
+a separate capture attribute node, which can make it easier
+to build reusable fields that don't need geometry inputs.
+
+Internally, the node just evaluates the input field in the larger
+field context and then uses the generic domain interpolation,
+so the code is simple. One future optimization might be using
+the input selection to only evaluate part of the input field, but
+then the selection has to be interpolated as well, and that might
+not always be worth it.
+
+Differential Revision:
+https://developer.blender.org/D15289
+-------
+,
+ea4b1d027d
+### Commit Summary: Geometry Nodes: Rename "Field on Domain" to "Interpolate Domain" · ea4b1d027d - blender - Blender Projects
+### Commit Details:
+This name doesn't require understanding of fields, and
+is phrased as an action which is consistent with other nodes.
+Discussed in the latest geometry nodes sub-module meeting.
+-------
+).
+Meshes
+¶
+The
+UV Unwrap
+and
+Pack UV Islands
+nodes open the possibility
+  of creating and adjusting UV maps directly inside of geometry nodes
+  (
+4593fb52cf
+### Commit Summary: Geometry Nodes: UV Unwrap and Pack Islands Nodes · 4593fb52cf - blender - Blender Projects
+### Commit Details:
+This commit adds new Unwrap and Pack Islands nodes, with equivalent
+functionality to the existing Unwrap and Pack Islands operators. The
+Unwrap node uses generic boolean attributes to determine seams instead
+of looking at the seam flags in the mesh geometry.
+
+Unlike the Unwrap operator, the Unwrap node doesn't perform aspect
+ratio correction, because this is trivial for the user to implement
+with a Vector Math node if it is desired.
+
+The Unwrap node implicitly performs a Pack Islands operation upon
+completion, because the results may not be generally useful otherwise.
+This matches the behaviour of the Unwrap operator.
+
+The nodes use the existing Vector socket type, and do not introduce a
+new 2D Vector type (see T92765).
+
+Differential Revision:
+https://developer.blender.org/D14389
+-------
+).
+The
+Mesh To Volume
+node acts like the existing modifier of the
+  same name
+  (
+1516f7dcde
+### Commit Summary: Geometry Nodes: Add Mesh To Volume Node · 1516f7dcde - blender - Blender Projects
+### Commit Details:
+This adds a Mesh To Volume Node T86838 based on the existing modifier.
+The mesh to volume conversion is implemented in the geometry module,
+and shared between the node and the modifier.
+
+Currently the node outputs a grid with the name "density". This may
+change in the future depending on the decisions made in T91668.
+
+The original patch was by Kris (@Metricity), further implementation
+by Geramy Loveless (@GeramyLoveless), then finished by Erik Abrahamsson
+(@erik85).
+
+Differential Revision:
+https://developer.blender.org/D10895
+-------
+,
+0ea282f746
+### Commit Summary: Geometry Nodes: Only calculate mesh to volume bounds when necessary · 0ea282f746 - blender - Blender Projects
+### Commit Details:
+In "size" voxel resolution mode, calculating the bounds of the mesh to
+volume node's input mesh isn't necessary. For high poly this can take
+a few milliseconds, so this commit skips the calculation unless we need
+it for the "Amount" mode.
+
+Differential Revision:
+https://developer.blender.org/D15324
+-------
+).
+Three new nodes can be used for path-finding across mesh edges.
+The
+Shortest Edge Paths
+node finds the best path along edges
+  from every vertex to a set of end vertices
+  (
+c8ae1fce60
+### Commit Summary: Geometry Nodes: Shortest Paths nodes · c8ae1fce60 - blender - Blender Projects
+### Commit Details:
+This adds three new nodes:
+* `Shortest Edge Paths`: Actually finds the shortest paths.
+* `Edge Paths to Curves`: Converts the paths to separate curves.
+  This may generate a quadratic amount of data, making it slow
+  for large meshes.
+* `Edge Paths to Selection`: Generates an edge selection that
+  contains all edges that are part of a path. This can be used
+  with the Separate Geometry node to only keep the edges that
+  are part of a path. For large meshes, this approach can be
+  much faster than the `Edge Paths to Curves` node, because
+  less data is created.
+
+Differential Revision:
+https://developer.blender.org/D15274
+-------
+).
+The
+Edge Paths to Curves
+node generates a separate curve for
+  every edge path from a set of start vertices. The path information
+  usually generated by the "Shortest Edge Paths" node
+  (
+c8ae1fce60
+### Commit Summary: Geometry Nodes: Shortest Paths nodes · c8ae1fce60 - blender - Blender Projects
+### Commit Details:
+This adds three new nodes:
+* `Shortest Edge Paths`: Actually finds the shortest paths.
+* `Edge Paths to Curves`: Converts the paths to separate curves.
+  This may generate a quadratic amount of data, making it slow
+  for large meshes.
+* `Edge Paths to Selection`: Generates an edge selection that
+  contains all edges that are part of a path. This can be used
+  with the Separate Geometry node to only keep the edges that
+  are part of a path. For large meshes, this approach can be
+  much faster than the `Edge Paths to Curves` node, because
+  less data is created.
+
+Differential Revision:
+https://developer.blender.org/D15274
+-------
+).
+The
+Edge Paths to Selection
+node generates an edge selection
+  that includes every edge that is part of an edge path
+  (
+c8ae1fce60
+### Commit Summary: Geometry Nodes: Shortest Paths nodes · c8ae1fce60 - blender - Blender Projects
+### Commit Details:
+This adds three new nodes:
+* `Shortest Edge Paths`: Actually finds the shortest paths.
+* `Edge Paths to Curves`: Converts the paths to separate curves.
+  This may generate a quadratic amount of data, making it slow
+  for large meshes.
+* `Edge Paths to Selection`: Generates an edge selection that
+  contains all edges that are part of a path. This can be used
+  with the Separate Geometry node to only keep the edges that
+  are part of a path. For large meshes, this approach can be
+  much faster than the `Edge Paths to Curves` node, because
+  less data is created.
+
+Differential Revision:
+https://developer.blender.org/D15274
+-------
+).
+The
+Mesh Boolean
+node now has an output field that gives just the
+  intersecting edges
+  (
+e2975cb701
+### Commit Summary: Geometry Nodes: add 'Intersecting Edges' output for boolean node · e2975cb701 - blender - Blender Projects
+### Commit Details:
+This patch adds a 'Intersecting Edges' output with a boolean selection
+that only gives you the new edges on intersections.
+
+Will work on a couple of examples next, this should make some
+interesting effects possible (including getting us closer to the "bevel-
+after-boolean-usecase")
+
+To achieve this, a Vector is passed to `direct_mesh_boolean` when the
+iMesh is still available (and intersecting edges appended), then from
+those edge indices a selection will be stored as attribute.
+
+Differential Revision:
+https://developer.blender.org/D15151
+-------
+).
+Instances
+¶
+New
+Instance Scale
+and
+Instance Rotation
+nodes provide access
+  to instance transformations
+  (
+3a57f5a9cf
+### Commit Summary: Geometry Nodes: Instance Rotation Node · 3a57f5a9cf - blender - Blender Projects
+### Commit Details:
+A field input node for the rotation of each top-level instance transform.
+The rotation can be set with the "Rotate Instances" node, but previously
+could not be retrieved.
+
+Differential Revision:
+https://developer.blender.org/D15131
+-------
+,
+14fc89f38f
+### Commit Summary: Geometry Nodes: Add Instance Scale Input Node · 14fc89f38f - blender - Blender Projects
+### Commit Details:
+A field input node for the scale of each top-level instance transform.
+The scale can be set with the "Scale Instances" node, but previously
+could not be retrieved.
+
+Differential Revision:
+https://developer.blender.org/D15132
+-------
+).
+Primitive Nodes
+¶
+The
+Volume Cube
+primitive node allows sampling a field in a dense
+  bounding box to create an arbitrary volume grid
+  (
+838c4a97f
+### Commit Summary: Geometry Nodes: new Volume Cube node · 838c4a97f1 - blender - Blender Projects
+### Commit Details:
+This commit adds a Volume Cube primitive node. It outputs a volume that
+contains a single "density" float grid. The density per voxel can be
+controlled with a field that depends on the voxel position (using the
+existing Position node). Other field inputs are not supported.
+
+The density field is evaluated on every voxel.
+
+Possible future improvements are listed in D15198.
+
+Differential Revision:
+https://developer.blender.org/D15198
+-------
+).
+The
+Points
+node creates any number of point cloud points, with
+  position and radius defined by fields
+  (
+9a0a4b0c0d
+### Commit Summary: Geometry Nodes: Add Points Node · 9a0a4b0c0d - blender - Blender Projects
+### Commit Details:
+This node takes a point count,a vector field, and float field and creates
+a pointcloud with n points at the positions indicated in the vector
+field with the radii specified in the float field.The node is placed in
+the "Point" menu.
+
+Differential Revision:
+https://developer.blender.org/D13920
+Maniphest Task:
+https://developer.blender.org/T93044
+-------
+).
+Physics
+¶
+Effector forces on rigid bodies are independent of simulation substeps
+  again
+  (
+f4d8382c86
+### Commit Summary: Rigid body physics: Move effector force update into substep loop. · f4d8382c86 - blender - Blender Projects
+### Commit Details:
+The substep loop for rigid bodies causes unequal effects of force fields depedending on the substep setting, larger
+substep counts cause a diminishing effect of force fields.
+This is because the force to apply on a body is reset in Bullet after each step and needs to be recomputed. Without this
+the body will just coast with constant velocity after the first substep. Since the per-step impulse with larger substep
+counts is smaller, the effect is that more substeps cause a smaller total impulse.
+
+The fix is to move external force calculation into the substep loop and update forces for each substep.
+
+Note that this may be considered a breaking change, because the breaking commit rB1aa54d4921c2 has been in master for
+a long time and after this fix force fields will generally have a much larger effect on rigid bodies (10x for the
+default setting of 10 substeps).
+
+Differential Revision:
+https://developer.blender.org/D15173
+-------
+).
+This has been a regression since 2.91, so the fix may affect user files
+with combinations of effectors and rigid bodies. Forces can be scaled
+down inversely to substeps to maintain the effect. If the scene uses 10
+substeps for rigid body simulation (the default), effector force should
+be scaled by 0.1.
+
+'''''
+
+
+6. Pipeline, Assets & I/O¶
+
+Pipeline, Assets & I/O
+¶
+General
+¶
+Improved performance when importing USD, Alembic, OBJ files with
+  massive amounts of objects
+  (
+230f72347a
+### Commit Summary: IO: speed up large Alembic & USD imports by doing fewer collection syncs · 230f72347a - blender - Blender Projects
+### Commit Details:
+Previous code was doing N collection syncs when importing N objects
+(essentially quadratic complexity in terms of object count). New
+code avoids all the intermediate syncs by using
+BKE_layer_collection_resync_forbid and
+BKE_layer_collection_resync_allow, and then does one
+BKE_main_collection_sync + BKE_main_collection_sync_remap for the
+whole operation. The things done on the importer objects that are
+dependent on the sync happening (marking them selected) are done in a
+separate loop after the sync.
+
+Timings: importing Moana USD scene (480k objects) on Windows, VS2022
+Release build, AMD Ryzen 5950X: 12344sec -> 10979sec (saves 22 minutes).
+
+Reviewed By: Bastien Montagne
+Differential Revision:
+https://developer.blender.org/D15215
+-------
+,
+5b5811c97b
+### Commit Summary: USD: speed up large USD imports by not rebuilding material name map for each object · 5b5811c97b - blender - Blender Projects
+### Commit Details:
+Previous code was rebuilding "name to material" map for each object
+being imported. Which means O(N*M) complexity (N=object count,
+M=material count). There was already a TODO comment suggesting that
+a single map that's maintained for the whole import would be enough.
+This commit does exactly that.
+
+While importing Moana USD scene (260k objects, 18k materials) this
+saves about 6 minutes of import time.
+
+Reviewed By: Bastien Montagne
+Differential Revision:
+https://developer.blender.org/D15222
+-------
+,
+94323bb42
+### Commit Summary: IO: speed up import of large Alembic/USD/OBJ scenes by optimizing material assignment · 94323bb427 - blender - Blender Projects
+### Commit Details:
+The importer parts that were doing assignment of materials to the
+imported objects/meshes were essentially having a quadratic complexity
+in terms of scene object count. For each material assigned to each
+object, they were scanning the whole scene, checking which other
+Objects use the same Mesh data, in order to resize their material
+arrays to match the size.
+
+Performance details (Windows, Ryzen 5950X):
+
+- Import OBJ Blender 3.0 splash scene (24k objects): 43.0s -> 32.9s
+- Import USD Disney Moana scene (260k objects): saves two hours
+  (~7400s). Note that later on this crashes when trying to render the
+  imported result; crashes in the same way/place both in master and
+  this patch.
+
+Implementation details:
+
+The importers were doing "scan the world" basically twice for each
+object, for each material: once when creating a new material slot
+(assigns an empty material), and then again when assigning the
+material.
+
+However, all these importers (USD, Alembic, OBJ) always create one
+Object for one Mesh. So that whole quadratic complexity resulting
+from "scan the world for possible other users of this obdata" is
+completely not needed; it just never finds anything. So add a new
+dedicated function BKE_object_material_assign_single_obdata that skips
+the expensive part, but should only be used when the caller knows that
+the obdata has exactly one user (the passed object).
+
+Reviewed By: Bastien Montagne, Michael Kowalski
+Differential Revision:
+https://developer.blender.org/D15145
+-------
+,
+7f8d05131a
+### Commit Summary: IDManagement: Speedup ID unique name assignment by tracking used names/basenames/suffixes · 7f8d05131a - blender - Blender Projects
+### Commit Details:
+An implementation of T73412, roughly as outlined there:
+
+Track the names that are in use, as well as base names (before
+numeric suffix) plus a bit map for each base name, indicating which
+numeric suffixes are already used. This is done per-Main/Library,
+per-object-type.
+
+Timings (Windows, VS2022 Release build, AMD Ryzen 5950X):
+
+- Scene with 10k cubes, Shift+D to duplicate them all: 8.7s -> 1.9s.
+  Name map memory usage for resulting 20k objects: 4.3MB.
+- Importing a 2.5GB .obj file of exported Blender 3.0 splash scene
+  (24k objects), using the new C++ importer: 34.2s-> 22.0s. Name map
+  memory usage for resulting scene: 8.6MB.
+- Importing Disney Moana USD scene (almost half a million objects):
+  56min -> 10min. Name map usage: ~100MB. Blender crashes later on
+  when trying to render it, in the same place in both cases, but
+  that's for another day.
+
+Reviewed By: Bastien Montagne
+Differential Revision:
+https://developer.blender.org/D14162
+-------
+,
+092732d11
+### Commit Summary: IO: speed up import of large amounts of objects in USD/OBJ by pre-sorting objects by name · 092732d113 - blender - Blender Projects
+### Commit Details:
+Previously, when creating "very large" (tens-hundreds of thousands)
+amounts of objects, the Blender code that was ensuring name
+uniqueness was the bottleneck. That got recently addressed (D14162),
+however now sorting of IDs by their names is the remaining bottleneck.
+
+Name sorting code in Blender is optimized for the pattern where names
+are inserted in already sorted order (i.e. objects expect to get added
+near the end of the list). By doing this pre-sorting of objects
+intended to get created by an importer (USD and OBJ, in this patch),
+this sorting bottleneck can be largely removed, especially with very
+high object counts.
+
+Windows, Ryzen 5950X, import times:
+
+- OBJ, splash screen scene (26k objects): 22.0s -> 20.7s
+- USD, Disney Moana scene (250k objects): 585s -> 82.2s (10 minutes -> 1.5 minutes)
+
+Reviewed By: Michael Kowalski, Howard Trickey
+Differential Revision:
+https://developer.blender.org/D15506
+-------
+).
+  Importing a production USD scene with 260 thousand objects went from
+  3.5 hours down to 1.5 minutes.
+Alembic
+¶
+The export operator can now have presets
+  (
+1d668b6356
+### Commit Summary: Alembic: Enable operator presets when exporting · 1d668b6356 - blender - Blender Projects
+### Commit Details:
+This patch enables operator presets for Alembic exports.
+The export menu has many options, so enabling the feature
+will help users manage their export settings in the same
+way they can with other filetypes.
+
+This also fixes restoring the default operator value for
+setting the frame range.
+
+Differential Revision:
+https://developer.blender.org/D12849
+-------
+)
+OBJ
+¶
+Importer and exporter support .obj vertex colors now
+  (
+1b4f35f6a5
+### Commit Summary: obj: vertex colors support in importer and exporter · 1b4f35f6a5 - blender - Blender Projects
+### Commit Details:
+Adds support for vertex colors to OBJ I/O.
+
+Importer:
+
+- Supports both "xyzrgb" and "MRGB" vertex color formats.
+- Whenever vertex color is present in the file for a model, it is
+  imported and a Color attribute is created (per-vertex, full float
+  color data type). Color coming from the file is assumed to be sRGB,
+  and is converted to linear upon import.
+
+Exporter:
+
+- Option to export the vertex colors. Defaults to "off", since not
+  all 3rd party software supports vertex colors.
+- When the option is "on", if a mesh has a color attribute layer,
+  the active one is exported in "xyzrgb" form. If the mesh has
+  per-face-corner colors, they are averaged on the vertices.
+  Colors are converted from linear to sRGB upon export.
+
+Reviewed By: Howard Trickey
+Differential Revision:
+https://developer.blender.org/D15159
+-------
+).
+  Importer can import both "xyzrgb" and "#MRGB" vertex color formats;
+  exporter optionally writes "xyzrgb" format.
+The Python based OBJ importer/exporter is marked as "legacy" in the
+  menu item now; the new C++ based one got "experimental" label removed.
+  Addons using
+bpy.ops.import_scene.obj
+and
+bpy.ops.export_scene.obj
+APIs are strongly encouraged to switch to
+bpy.ops.wm.obj_import
+and
+bpy.ops.wm.obj_export
+.
+STL
+¶
+New experimental STL (.stl) importer
+  (
+7c511f1b47
+### Commit Summary: STL: Add new C++ based STL importer · 7c511f1b47 - blender - Blender Projects
+### Commit Details:
+A new experimentatl STL importer, written in C++. Roughly 7-9x faster than the
+Python based one.
+
+Reviewed By: Aras Pranckevicius, Hans Goudey.
+Differential Revision:
+https://developer.blender.org/D14941
+-------
+).
+  The new importer is written in C++ and is about 8 times faster than
+  the Python importer.
+USD
+¶
+OpenVDB volumes can now be exported to USD
+  (
+ce3dd12371
+### Commit Summary: USD: add volume/VDB export · ce3dd12371 - blender - Blender Projects
+### Commit Details:
+Add support for volume (OpenVDB) USD export:
+
+- Allows to export both static and animated volumes.
+- Supports volumes that have OpenVDB data from files or are generated in
+  Blender with 'Mesh to Volume' modifier.
+- For volumes that have generated data in Blender it also exports
+  corresponding .vdb files. Those files are saved in a new folder named
+  "volumes".
+- Slightly changes the USD export UI panel. "Relative Texture Paths"
+  becomes "Relative Paths" (and has separate UI box) as the
+  functionality will now apply to both textures and volumes. Disabling
+  of this option due to "Materials" checkbox being turned off has been
+  removed.
+
+Reviewed By: sybren, makowalski
+
+Differential Revision:
+https://developer.blender.org/D14193
+Manifest Task: T95407
+-------
+).
+glTF 2.0
+¶
+glTF I/O is an python addon, change logs can be retrieved on
+Addon
+page
+
+'''''
+
+
+7. Python API & Text Editor¶
+
+Python API & Text Editor
+¶
+Background Jobs
+¶
+New possibilities to get the status of rendering & baking jobs in Python
+(
+f4456a4d3c
+### Commit Summary: Expose background job info to Python · f4456a4d3c - blender - Blender Projects
+### Commit Details:
+Add `bpy.app.is_job_running(job_type)` as high-level indicator. Job
+types currently exposed are `WM_JOB_TYPE_RENDER`,
+`WM_JOB_TYPE_RENDER_PREVIEW`, and `WM_JOB_TYPE_OBJECT_BAKE`, as strings
+with the `WM_JOB_TYPE_` prefix removed. The functions can be polled by
+Python code to determine whether such background work is still ongoing
+or not.
+
+Furthermore, new app handles are added for
+`object_bake_{pre,complete,canceled}`, which are called respectively
+before an object baking job starts, completes sucessfully, and stops due
+to a cancellation.
+
+Motivation: There are various cases where Python can trigger the
+execution of a background job, without getting notification that that
+background job is done. As a result, it's hard to do things like
+cleanups, or auto-quitting Blender after the work is done.
+
+The approach in this commit can easily be extended with other job types,
+when the need arises. The rendering of asset previews is one that's
+likely to be added sooner than later, as there have already been
+requests about this.
+
+Reviewed By: campbellbarton
+
+Differential Revision:
+https://developer.blender.org/D14587
+-------
+):
+New
+bpy.app.is_job_running(job_type)
+function, which takes
+"RENDER"
+,
+"RENDER_PREVIEW"
+, or
+"OBJECT_BAKE"
+as
+job_type
+parameter. It returns a boolean to indicate whether a job
+  of that type is currently running. It is intentional that only a
+  subset of all of Blender's job types are supported here. That way,
+  those "hidden" jobs are kept as they are currently: an internal detail
+  of Blender, rather than a public, reliable part of the API. In the
+  future, the list of supported job types can be expanded on a
+  case-by-case basis, when there is a clear and testable use case.
+New app handlers
+object_bake_pre
+,
+object_bake_complete
+,
+object_bake_canceled
+that signal respecively that an object baking
+  job has started, completed, or was cancelled.
+Other Additions
+¶
+bpy.props.StringProperty
+supports a
+search
+&
+search_options
+arguments to support
+  showing candidates when editing string properties.
+  (
+3f3d82cfe9
+### Commit Summary: UI support for showing candidates for string properties · 3f3d82cfe9 - blender - Blender Projects
+### Commit Details:
+Currently strings are used for cases where a list of identifiers would
+be useful to show.
+
+Add support for string properties to reference a callback to populate
+candidates to show when editing a string. The user isn't prevented from
+typing in text not found in this list, it's just useful as a reference.
+
+Support for expanding the following strings has been added:
+
+- Operator, menu & panel identifiers in the keymap editor.
+- WM operators that reference data-paths expand using the
+  Python-consoles auto-complete functionality.
+- Names of keying sets for insert/delete keyframe operators.
+
+Details:
+
+- `bpy.props.StringProperty` takes an option `search` callback.
+
+- A new string callback has been added, set via
+  `RNA_def_property_string_search_func` or
+  `RNA_def_property_string_search_func_runtime`.
+
+- Addresses usability issue highlighted by T89560,
+  where setting keying set identifiers as strings isn't practical.
+
+- Showing additional right-aligned text in the search results is
+  supported but disabled by default as the text is too cramped in most
+  string search popups where the feature would make sense. It could be
+  enabled as part of other layout tweaks.
+
+Reviewed By: brecht
+
+Ref D14986
+-------
+)
+Virtual Reality: Expose OpenXR user paths in XR event data
+  (
+XrEventData.user_path/user_path_other
+)
+  (
+23be3294ff
+### Commit Summary: XR: Expose the OpenXR user paths in the event data for XR events · 23be3294ff - blender - Blender Projects
+### Commit Details:
+The use-case is to allow an event handler (in C or a plugin) to
+distinguish which hand produced the XR event.
+
+The alternative is to register separate actions for each hand (e.g.
+"trigger_left" and "trigger_right"), and duplicate the device bindings
+(Oculus, HTC Vive, etc) for each action. Other than the problem of code
+duplication, this isn't conceptually efficient since "trigger_left" and
+"trigger_right" both represent the same event "trigger", and the
+identity of the hand that produced that event is just a property of
+that event.
+
+Adds two string fields to the XrEventData called user_path and
+user_path_other. The user_path_other field will be populated if the
+event is a bimanual one (i.e. two-handed). This follows the pattern
+used by the rest of the XrEventData struct for bimanual events (e.g.
+state, state_other).
+
+Reviewed By: muxed-reality
+-------
+).
+ID Management: Add utility functions for getting a list of IDs
+  referenced by a given one.
+  (
+26d375467b
+### Commit Summary: bpy_extras: Add utilities for getting ID references · 26d375467b - blender - Blender Projects
+### Commit Details:
+An alternate to D14839, implemented in Python and
+relying on bpy.data.user_map(). That function
+gives us a mapping of what ID is referenced by
+what set of IDs. The inverse of this would also
+be useful, which is now available from
+bpy_extras.id_map_utils.get_id_reference_map().
+
+From there, we can use get_all_referenced_ids()
+to get a set of all IDs referenced by a given ID
+either directly or indirectly.
+
+To get only the direct references, we can simply
+pass the ID of interest as a key to the dictionary
+returned from get_id_reference_map().
+
+Reviewed By: mont29
+
+Differential Revision:
+https://developer.blender.org/D14843
+-------
+)
+  Here's an example use case:
+from
+bpy_extras.id_map_utils
+import
+get_id_reference_map
+,
+get_all_referenced_ids
+def
+suffix_dependents
+(
+object
+:
+bpy
+.
+types
+.
+Object
+,
+recursive
+=
+True
+,
+suffix
+:
+str
+):
+"""Append suffix the names of datablocks used by an object, including itself."""
+ref_map
+=
+get_id_reference_map
+()
+if
+recursive
+:
+# Get all IDs referenced by a Blender Object: Its Mesh, Shape Key, Materials, Textures, Node Graphs, etc.
+datablocks
+=
+get_all_referenced_ids
+(
+collection
+,
+ref_map
+)
+else
+:
+# Get only directly referenced IDs: Its Mesh and any IDs referenced via Custom Properties.
+datablocks
+=
+ref_map
+[
+object
+]
+datablocks
+.
+add
+(
+object
+)
+# The object itself is not already included.
+for
+db
+in
+datablocks
+:
+db
+.
+name
++=
+suffix
+Add VSE API function to select displayed meta strip.
+  (
+6b35d9e6fb
+### Commit Summary: VSE: Add API function to select displayed meta strip · 6b35d9e6fb - blender - Blender Projects
+### Commit Details:
+Use function `sequence_editor.display_stack(meta_strip)` to set
+displayed timeline content.
+
+To view top-level timeline, that does not belong to any meta strip, pass
+`None` as argument.
+
+Differential Revision:
+https://developer.blender.org/D12048
+-------
+)
+Add
+mathutils.Matrix.is_identity
+read-only attribute to check for
+  an identity matrix.
+  (
+133d398120
+### Commit Summary: PyAPI: add Matrix.is_identity read-only attribute · 133d398120 - blender - Blender Projects
+### Commit Details:
+Add a convenient way of checking if the matrix is an identity matrix.
+-------
+)
+Add
+FCurveKeyframePoints.clear()
+to delete all keyframe points of
+  an FCurve
+  (
+4812eda3c5
+### Commit Summary: Animation RNA: Add `clear()` method to FCurveKeyframePoints · 4812eda3c5 - blender - Blender Projects
+### Commit Details:
+Add `FCurveKeyframePoints.clear()` method to delete all keyframe points
+from an FCurve.
+
+Reviewed By: sybren
+
+Differential Revision:
+https://developer.blender.org/D15283
+-------
+).
+Add Event
+type_prev
+&
+value_prev
+members
+  (
+2580d2bab5
+### Commit Summary: PyAPI: Expose event.type_prev, value_prev · 2580d2bab5 - blender - Blender Projects
+### Commit Details:
+Before [0] mouse-motion events left the 'event.value' un-changed,
+so a mouse-move would be set to PRESS/RELEASE based on previous events.
+
+Support accessing the previous event value directly
+to address feedback from T99102.
+
+Note that the previous cursor location is already exposed.
+
+[0]:
+52af3b20d4
+-------
+).
+Other Changes
+¶
+The
+blend_render_info
+module now supports reading Z-standard
+  compressed blend files.
+  (
+b3101abcce
+### Commit Summary: blend_render_info: Zstd support, skip redundant file reading & cleanup · b3101abcce - blender - Blender Projects
+### Commit Details:
+- Use a context manager to handle file handlers (closing both in the
+  case of compressed files).
+
+- Seek past BHead data instead of continually reading
+  (checking for 'REND').
+
+- Write errors to the stderr (so callers can differentiate it from the
+  stdout).
+
+- Use `surrogateescape` in the unlikely event of encoding errors
+  so the result is always a string (possible with files pre 2.4x).
+
+- Remove '.blend' extension check as it excludes `.blend1` files
+  (we can assume the caller is passing in blend files).
+
+- Define `__all__` to make it clear only one function is intended
+  to be used.
+-------
+).
+The API for adding context menu entries has changed. Instead of
+  manually registering
+WM_MT_button_context
+, draw functions should
+  be appended to
+UI_MT_button_context_menu
+, which is registered by
+  Blender itself. The old API is still available for compatibility, but
+  is deprecated and
+will be removed
+in a future release, therefore
+  addons should update to the new API.
+  (
+8a799b00f8
+### Commit Summary: Fix T100423: Addon's custom context menu entries get overridden by other addons · 8a799b00f8 - blender - Blender Projects
+### Commit Details:
+This introduces a new `UI_MT_button_context_menu` class which is
+registered at startup. Addons can append/prepend draw functions to this
+class, in order to add their custom context menu entries.
+
+The new class replaces the old `WM_MT_button_context` class, thus
+requiring a small change in addons using this feature. This is done
+because addons were previously required to register the class
+themselves, which caused addons to override each other's context menu
+entries.
+
+Now the class registration is handled by Blender, and addons need only
+append their draw functions. The new class name ensures that addons
+using the old method don't override menu entries made using the new
+class.
+
+Menu entries added with the legacy `WM_MT_button_context` class are
+still drawn for backwards compatibility, but this class must not be used
+going forward, as any addon using it still runs the risk of having its
+menu entries overridden, and support for the legacy class is subject to
+removal in a future version.
+
+Reviewed By: campbellbarton
+
+Maniphest Tasks: T100423
+
+Differential Revision:
+https://developer.blender.org/D15702
+-------
+)
+### Old API ###
+class
+WM_MT_button_context
+(
+Menu
+):
+bl_label
+=
+"Unused"
+def
+draw
+(
+self
+,
+context
+):
+layout
+=
+self
+.
+layout
+layout
+.
+separator
+()
+layout
+.
+operator
+(
+"some.operator"
+)
+def
+register
+():
+bpy
+.
+utils
+.
+register_class
+(
+WM_MT_button_context
+)
+def
+unregister
+():
+bpy
+.
+utils
+.
+unregister_class
+(
+WM_MT_button_context
+)
+### New API ###
+# Important! `UI_MT_button_context_menu` *must not* be manually registered.
+def
+draw_menu
+(
+self
+,
+context
+):
+layout
+=
+self
+.
+layout
+layout
+.
+separator
+()
+layout
+.
+operator
+(
+"some.operator"
+)
+def
+register
+():
+bpy
+.
+types
+.
+UI_MT_button_context_menu
+.
+append
+(
+draw_menu
+)
+def
+unregister
+():
+bpy
+.
+types
+.
+UI_MT_button_context_menu
+.
+remove
+(
+draw_menu
+)
+Breaking Changes
+¶
+Strip properties
+frame_start
+,
+frame_offset_start
+and
+frame_offset_end
+are now floating point.
+  (
+302b04a5a3
+### Commit Summary: VSE: Improved Retiming system · 302b04a5a3 - blender - Blender Projects
+### Commit Details:
+Patch implements better way to control playback speed than it is
+possible to do with speed effect. Speed factor property can be set in
+Time panel.
+
+There are 2 layers of control:
+
+Option to retime movie to match scene FPS rate.
+Custom speed factor to control playback rate.
+Since playback rate is strip property, it is now possible to manipulate
+strip as normal one even if it is retimed.
+
+To facilitate manipulation, some functions need to consider speed factor
+and apply necessary corrections to strip offset or strip start. These
+corrections may need to be float numbers, so start and offsets must be
+float as well.
+
+Sound strips now use speed factor instead of pitch. This means, that
+strips will change length to match usable length. In addition, it is
+possible to group movie and sound strip and change speed of meta strip.
+-------
+)
+SoundSequence.pitch
+is replaced with
+speed_factor
+property.
+  This property is available also for other non-effect strips to control
+  their playback speed.
+  (
+302b04a5a3
+### Commit Summary: VSE: Improved Retiming system · 302b04a5a3 - blender - Blender Projects
+### Commit Details:
+Patch implements better way to control playback speed than it is
+possible to do with speed effect. Speed factor property can be set in
+Time panel.
+
+There are 2 layers of control:
+
+Option to retime movie to match scene FPS rate.
+Custom speed factor to control playback rate.
+Since playback rate is strip property, it is now possible to manipulate
+strip as normal one even if it is retimed.
+
+To facilitate manipulation, some functions need to consider speed factor
+and apply necessary corrections to strip offset or strip start. These
+corrections may need to be float numbers, so start and offsets must be
+float as well.
+
+Sound strips now use speed factor instead of pitch. This means, that
+strips will change length to match usable length. In addition, it is
+possible to group movie and sound strip and change speed of meta strip.
+-------
+)
+
+'''''
+
+
+8. Render & Cycles¶
+
+Render & Cycles
+¶
+GPU Rendering
+¶
+Intel
+¶
+Support for rendering on the latest Intel GPUs has been added using
+oneAPI.
+(
+a02992f131
+### Commit Summary: Cycles: Add support for rendering on Intel GPUs using oneAPI · a02992f131 - blender - Blender Projects
+### Commit Details:
+This patch adds a new Cycles device with similar functionality to the
+existing GPU devices.  Kernel compilation and runtime interaction happen
+via oneAPI DPC++ compiler and SYCL API.
+
+This implementation is primarly focusing on Intel® Arc™ GPUs and other
+future Intel GPUs.  The first supported drivers are 101.1660 on Windows
+and 22.10.22597 on Linux.
+
+The necessary tools for compilation are:
+- A SYCL compiler such as oneAPI DPC++ compiler or
+https://github.com/intel/llvm
+- Intel® oneAPI Level Zero which is used for low level device queries:
+https://github.com/oneapi-src/level-zero
+- To optionally generate prebuilt graphics binaries: Intel® Graphics
+  Compiler All are included in Linux precompiled libraries on svn:
+https://svn.blender.org/svnroot/bf-blender/trunk/lib
+The same goes for
+  Windows precompiled binaries but for the graphics compiler, available
+  as "Intel® Graphics Offline Compiler for OpenCL™ Code" from
+https://www.intel.com/content/www/us/en/developer/articles/tool/oneapi-standalone-components.html
+,
+  for which path can be set as OCLOC_INSTALL_DIR.
+
+Being based on the open SYCL standard, this implementation could also be
+extended to run on other compatible non-Intel hardware in the future.
+
+Reviewed By: sergey, brecht
+
+Differential Revision:
+https://developer.blender.org/D15254
+Co-authored-by: Nikita Sirgienko
+Co-authored-by: Stefan Werner
+-------
+)
+This requires an Intel® Arc™ GPU or Intel Data Center GPU. The
+implementation is primarily focused on this architecture and future
+Intel GPUs.
+Supported on
+Windows
+with driver version
+101.3430
+or newer.
+  Some stability issues exists, which will be addressed in future Intel
+  driver updates.
+Supported on
+Linux
+with driver version
+22.26.23904
+or newer.
+It is recommended to use
+Intel Arc
+Beta
+drivers.
+Render time per sample on an Intel® Arc™ A770 GPU
+Going forward we can expect more great things from Intel’s Blender
+community collaborations. Development is underway to add Intel® Embree
+Ray Tracing GPU hardware acceleration support and Intel® Open Image
+Denoise AI GPU acceleration in Cycles for Intel GPUs.
+AMD
+¶
+AMD GPU Rendering for Vega generation graphics cards has been enabled,
+on Windows and Linux. Both discrete GPUs and APUs are supported.
+(
+abfa097
+### Commit Summary: Cycles: enable Vega GPU/APU support · abfa09752f - blender - Blender Projects
+### Commit Details:
+Enables Vega and Vega II GPUs as well as Vega APU, using changes in HIP code
+to support 64-bit waves and a new HIP SDK version.
+
+Tested with Radeon WX9100, Radeon VII GPUs and Ryzen 7 PRO 5850U with Radeon
+Graphics APU.
+
+Ref T96740, T91571
+
+Differential Revision:
+https://developer.blender.org/D15242
+-------
+)
+This includes GPUs such as Radeon VII, Radeon RX Vega Series and Radeon
+Pro WX 9100.
+Apple
+¶
+Metal GPU rendering on Apple Silicon received optimizations for memory
+access locality and intersection kernels.
+(
+4b1d315
+### Commit Summary: Cycles: Improve cache usage on Apple GPUs by chunking active indices · 4b1d315017 - blender - Blender Projects
+### Commit Details:
+This patch partitions the active indices into chunks prior to sorting by material in order to tradeoff some material coherence for better locality. On Apple Silicon GPUs (particularly higher end M1-family GPUs), we observe overall render time speedups of up to 15%. The partitioning is implemented by repeating the range of `shader_sort_key` for each partition, and encoding a "locator" key which distributes the indices into sorted chunks.
+
+Reviewed By: brecht
+
+Differential Revision:
+https://developer.blender.org/D15331
+-------
+,
+da4ef05
+### Commit Summary: Cycles: Apple Silicon optimization to specialize intersection kernels · da4ef05e4d - blender - Blender Projects
+### Commit Details:
+The Metal backend now compiles and caches a second set of kernels which are
+optimized for scene contents, enabled for Apple Silicon.
+
+The implementation supports doing this both for intersection and shading
+kernels. However this is currently only enabled for intersection kernels that
+are quick to compile, and already give a good speedup. Enabling this for
+shading kernels would be faster still, however this also causes a long wait
+times and would need a good user interface to control this.
+
+M1 Max samples per minute (macOS 13.0):
+
+                    PSO_GENERIC  PSO_SPECIALIZED_INTERSECT  PSO_SPECIALIZED_SHADE
+
+barbershop_interior       83.4	            89.5                   93.7
+bmw27                   1486.1	          1671.0                 1825.8
+classroom                175.2	           196.8                  206.3
+fishy_cat                674.2	           704.3                  719.3
+junkshop                 205.4	           212.0                  257.7
+koro                     310.1	           336.1                  342.8
+monster                  376.7	           418.6                  424.1
+pabellon                 273.5	           325.4                  339.8
+sponza                   830.6	           929.6                 1142.4
+victor                    86.7              96.4                   96.3
+wdas_cloud               111.8	           112.7                  183.1
+
+Code contributed by Jason Fielder, Morteza Mostajabodaveh and Michael Jones
+
+Differential Revision:
+https://developer.blender.org/D14645
+-------
+)
+Changes
+¶
+OpenVDB volumes are now rendered with half float instead of full float
+  precision by default. This significantly reduces memory usage. The
+  Volume datablock render settings has a new setting to choose half
+  float, full float or variable precision encoding.
+  (
+a8c81ff
+### Commit Summary: Cycles: Add half precision float support for volumes with NanoVDB · a8c81ffa83 - blender - Blender Projects
+### Commit Details:
+This patch makes it possible to change the precision with which to
+store volume data in the NanoVDB data structure (as float, half, or
+using variable bit quantization) via the previously unused precision
+field in the volume data block.
+It makes it possible to further reduce memory usage during
+rendering, at a slight cost to the visual detail of a volume.
+
+Differential Revision:
+https://developer.blender.org/D10023
+-------
+)
+A new Filmic sRGB colorspace was added for images. This may be used
+  for compositing background plates into a render that uses a Filmic
+  view transform, without changing the look of the background plate.
+  Using Filmic sRGB will convert 0..1 range colors into HDR colors in
+  the scene linear color space.
+  (
+2b80bfe
+### Commit Summary: Color Management: add Filmic sRGB as an image colorspace · 2b80bfe9d0 - blender - Blender Projects
+### Commit Details:
+A typical use case is when you want to render with the Filmic view transform, but
+composite an existing image in the background that should not be affected by the
+view transform.
+
+With this colorspace it's possible to do an inverse Filmic transform, render
+everything in scene linear space, and then apply the Filmic transform again.
+
+This is pretty basic in that this is not going to take into account the full view
+transform including looks, curves and exposure. But it can be helpful anyway.
+
+Ref T68926
+-------
+,
+33f5e8f
+### Commit Summary: Cycles: load 8 bit image textures as half float for some color spaces · 33f5e8f239 - blender - Blender Projects
+### Commit Details:
+For non-raw, non-sRGB color spaces, always use half float even if that uses
+more memory. Otherwise the precision loss from conversion to scene linear or
+sRGB (as natively understood by the texture sampling) can be too much.
+
+This also required a change to do alpha association ourselves instead of OIIO,
+because in OIIO alpha multiplication happens before conversion to half float
+and that gives too much precision loss.
+
+Ref T68926
+-------
+)
+Camera depth of field now supports armature bones as target.
+  (
+2e70d5c
+### Commit Summary: Render: camera depth of field support for armature bone targets · 2e70d5cb98 - blender - Blender Projects
+### Commit Details:
+This is useful when using an armature as a camera rig, to avoid creating and
+targetting an empty object.
+
+Differential Revision:
+https://developer.blender.org/D7012
+-------
+)
+OptiX denoiser update performance when rendering with multiple GPUs
+  was improved.
+  (
+79787bf8e1
+### Commit Summary: Cycles: Improve denoiser update performance when rendering with multiple GPUs · 79787bf8e1 - blender - Blender Projects
+### Commit Details:
+This patch causes the render buffers to be copied to the denoiser
+device only once before denoising and output/display is then fed
+from that single buffer on the denoiser device. That way usually all
+but one copy (from all the render devices to the denoiser device)
+can be eliminated, provided that the denoiser device is also the
+display device (in which case interop is used to update the display).
+As such this patch also adds some logic that tries to ensure the
+chosen denoiser device is the same as the display device.
+
+Differential Revision:
+https://developer.blender.org/D15657
+-------
+)
+
+'''''
+
+
+9. Sculpt, Paint, Texture¶
+
+Sculpt, Paint, Texture
+¶
+UDIM
+¶
+Packing UDIM texture sets into .blend files is now supported.
+(
+578771ae4d
+### Commit Summary: UDIM: Add support for packing inside .blend files · 578771ae4d - blender - Blender Projects
+### Commit Details:
+This completes support for tiled texture packing on the Blender / Cycles
+side of things.
+
+Most of these changes fall into one of three categories:
+- Updating Image handling code to pack/unpack tiled and multi-view images
+- Updating Cycles to handle tiled textures through BlenderImageLoader
+- Updating OSL to properly handle textures with multiple slots
+
+Differential Revision:
+https://developer.blender.org/D14395
+-------
+)
+UI
+¶
+Use constant size for voxel remesh size edit by default
+  (
+5946ea938a
+### Commit Summary: D14975: Voxel Remesh Size Edit - Constant Size by default · 5946ea938a - blender - Blender Projects
+### Commit Details:
+This patch makes constant size a default for size edit operator of voxel remesh.
+In turn, pressing CTRL now enables relative scale, the old default.
+
+Patch also changes workspace status text entry with new additions. Note that it is a simple text and not an array of keymaps (for that further changes are needed)
+
+{F13082567}
+
+Reviewed By: Julien Kaspar & Joseph Eagar
+Differential Revision:
+https://developer.blender.org/D14975
+Ref D14975
+-------
+).
+Add operator to duplicate the active color attribute layer
+  (
+9c28f0eb37
+### Commit Summary: D14823: Adds operator to duplicate the active color attribute layer · 9c28f0eb37 - blender - Blender Projects
+### Commit Details:
+Fixes T97706
+
+Adds operator to duplicate the active color attribute layer.
+Adds `"Color Attribute Specials"` menu to color attribute ui to access the `"geometry.color_attribute_duplicate"` operator.
+Internally adds a function that duplicates a referenced CustomDataLayer
+- `BKE_id_attribute_duplicate` mostly copies the existing `BKE_id_attribute_new`
+- but gets the type and domain from the referenced layer
+- and copies the data from the old layer into the new layer
+
+Reviewed By: Joseph Eagar & Hans Goudey & Julien Kaspar
+Differential Revision:
+https://developer.blender.org/D14823
+Ref D14823
+-------
+)
+There are new icons for the trimming tools
+  (
+17fc8db104
+### Commit Summary: UI: Tweak Sculpting Trim icons · 17fc8db104 - blender - Blender Projects
+### Commit Details:
+Update the trim icons so they don't show a dashed line. Instead they
+have now a continuous red line.
+
+This is important because the sculpting tools are planning to use the
+same icons for selection as the regular tools. And those icons use
+dashed line to represent selection.
+
+Note the icon file has two new icons which are not used at the moment
+(they are in the Unused collection):
+
+* ops.generic.select_paint
+* ops.generic.select_line
+-------
+).
+The old icon was too similar to existing selection tool icons. We
+updated the icon to avoid confusion, especially with planned future
+features.
+New Features
+¶
+Add elastic mode to transform tools
+  (
+e90ba74d3e
+### Commit Summary: D15041: Sculpt: Elastic Transform · e90ba74d3e - blender - Blender Projects
+### Commit Details:
+This implements transform modes for the transform tool and Elastic
+Transform. This mode uses the Kelvinlets from elastic deform to apply
+the transformation to the mesh, using the cursor radius to control the
+elasticity falloff.
+
+{F9269771}
+
+In order for this to work, the transform tool uses incremental mode when
+elastic transform is enabled. This allows to integrate the displacement of
+the Kelvinet in multiple steps.
+
+Review By: Sergey Sharbin & Daniel Bystedt & Julian Kaspar & Campbell
+Barton
+
+Differential Revision:
+https://developer.blender.org/D9653
+Ref D15041
+-------
+).
+Performance
+¶
+Drastically improve drawing performance when sculpting with EEVEE
+  enabled
+  (
+285a68b7bb
+### Commit Summary: Sculpt: PBVH Draw Support for EEVEE · 285a68b7bb - blender - Blender Projects
+### Commit Details:
+This patch adds support for PBVH drawing in EEVEE.
+
+Notes:
+  # PBVH_FACES only.  For Multires we'll need an API to get/cache attributes.  DynTopo support will be merged in later with sculpt-dev's DynTopo implementation.
+  # Supports vertex color and UV attributes only; other types can be added fairly easily though.
+  # Workbench only sends the active vertex color and UV layers to the GPU.
+  # Added a new draw engine API method, DRW_cdlayer_attr_aliases_add.  Please review.
+  # The vertex format object is now stored in the pbvh.
+
+Reviewed By: Clément Foucault & Brecht Van Lommel & Jeroen Bakker
+Differential Revision:
+https://developer.blender.org/D13897
+Ref D13897
+-------
+).
+
+'''''
+
+
+10. User Interface¶
+
+User Interface
+¶
+General
+¶
+Windows: support for precision touchpad gestures. Navigation is now
+  consistent with middle mouse button, and different from the previous
+  default behavior. Panning with two fingers orbits the 3D viewport and
+  pans in 2D viewports. Hold down shift to pan, and control to zoom. The
+  pinch gesture can also be used to zoom in or out.
+  (
+e58b18888c
+### Commit Summary: GHOST: Add support for precision touchpad gestures on Windows · e58b18888c - blender - Blender Projects
+### Commit Details:
+This patch adds support for precision touchpad gestures on Windows 8.1
+and newer using Direct Manipulation API. Gestures work exactly like on
+macOS, with full support for pan/pinch and inertia. This works by
+creating a viewport with a fake scrollable which is reset after every
+gesture and converts any changes to the content's transform into GHOST
+trackpad events (as explained [here](
+https://bugzilla.mozilla.org/show_bug.cgi?id=890878
+)).
+The code is based on the implementation from the [Chromium project](
+https://chromium.googlesource.com/chromium/src/+/refs/heads/master/content/browser/renderer_host/direct_manipulation_helper_win.cc
+).
+
+Tested on Windows 10.
+
+Fixes {T70754}, {T69264}.
+
+Demo:{F8520272}
+
+Reviewed By: nicholas_rishel
+
+Differential Revision:
+https://developer.blender.org/D7660
+-------
+)
+Check if your touchpad supports precision gestures by going to Windows
+  Settings > Devices > Touchpad and looking for the "Your PC has a
+  precision touchpad" label.
+Trackpad input can be customized in the keymap editor, by filtering by
+  Key-Binding "trackpad".
+Windows: title Bar will respect operating system "Dark Mode" setting.
+  (
+ddbac88c08
+### Commit Summary: Win32: Dark Mode Title Bar Color · ddbac88c08 - blender - Blender Projects
+### Commit Details:
+Blender will respect Windows "Dark Mode" setting for title bar color.
+
+See D14847 for details.
+
+Differential Revision:
+https://developer.blender.org/D14847
+Reviewed by Ray Molenkamp
+-------
+)
+Support for text fields to show candidates in more situations
+  including operator, menu & panel identifiers in the key-map editor and
+  context data-paths for operators that use data-paths
+  (
+3f3d82cfe9
+### Commit Summary: UI support for showing candidates for string properties · 3f3d82cfe9 - blender - Blender Projects
+### Commit Details:
+Currently strings are used for cases where a list of identifiers would
+be useful to show.
+
+Add support for string properties to reference a callback to populate
+candidates to show when editing a string. The user isn't prevented from
+typing in text not found in this list, it's just useful as a reference.
+
+Support for expanding the following strings has been added:
+
+- Operator, menu & panel identifiers in the keymap editor.
+- WM operators that reference data-paths expand using the
+  Python-consoles auto-complete functionality.
+- Names of keying sets for insert/delete keyframe operators.
+
+Details:
+
+- `bpy.props.StringProperty` takes an option `search` callback.
+
+- A new string callback has been added, set via
+  `RNA_def_property_string_search_func` or
+  `RNA_def_property_string_search_func_runtime`.
+
+- Addresses usability issue highlighted by T89560,
+  where setting keying set identifiers as strings isn't practical.
+
+- Showing additional right-aligned text in the search results is
+  supported but disabled by default as the text is too cramped in most
+  string search popups where the feature would make sense. It could be
+  enabled as part of other layout tweaks.
+
+Reviewed By: brecht
+
+Ref D14986
+-------
+)
+Scrollbars always visible, but gain prominence as your mouse
+  approaches.
+  (
+6243972319
+### Commit Summary: UI: Scrollbar Behavior Changes · 6243972319 - blender - Blender Projects
+### Commit Details:
+Changes to scrollbars so that they are always visible, but thin and
+dim, and widen and become more visible as your mouse approaches.
+
+See D6505 for details and examples.
+
+Differential Revision:
+https://developer.blender.org/D6505
+Reviewed by Campbell Barton
+-------
+)
+Avoid redundant words in checkbox labels for custom properties:
+Is Library Overridable
+->
+Library Overridable
+,
+Use Soft Limits
+->
+Soft Limits
+(
+18960c08fd
+### Commit Summary: UI: Custom Properties - Rename properties to remove "Use/Is" · 18960c08fd - blender - Blender Projects
+### Commit Details:
+There is no need to have use/is in the final name. This is implicitly
+represented by the checkbox already.
+
+This does not change the Python API, only the names we show in the user
+interface.
+
+* Is Library Overridable -> Library Overridable
+* Use Soft Limits -> Soft Limits
+
+Differential Revision:
+https://developer.blender.org/D15217
+-------
+,
+18960c08fd
+### Commit Summary: UI: Custom Properties - Rename properties to remove "Use/Is" · 18960c08fd - blender - Blender Projects
+### Commit Details:
+There is no need to have use/is in the final name. This is implicitly
+represented by the checkbox already.
+
+This does not change the Python API, only the names we show in the user
+interface.
+
+* Is Library Overridable -> Library Overridable
+* Use Soft Limits -> Soft Limits
+
+Differential Revision:
+https://developer.blender.org/D15217
+-------
+)
+A
+Pin Scene
+option was introduced to workspaces. Workspaces with the
+  scene pinned will remember the last used scene, and restore that when
+  the workspace gets re-enabled
+  (
+e0cc86978c
+### Commit Summary: Workspaces: Option to pin scene to a workspace · e0cc86978c - blender - Blender Projects
+### Commit Details:
+Adds a "Pin Scene" option to the workspace. When activated, the workspace will
+remember the scene that was last activated in it, so that when switching back
+to this workspace, the same scene will be reactivated. This is important for a
+VSE workflow, so that users can switch between different workspaces displaying
+a scene and thus a timeline for a specific task.
+
+The option can be found in the Properties, Workspace tab. D11890 additionally
+adds an icon for this to the scene switcher in the topbar.
+
+The workspace data contains a pointer to the scene which is a UI to scene data
+relation. When appending a workspace, the pointer is cleared.
+
+Differential Revision:
+https://developer.blender.org/D9140
+Reviewed by: Brecht Van Lommel, Bastien Montagne (no final accept, but was fine
+with the general design earlier)
+-------
+).
+  An icon in the scene switcher allows toggling it
+  (
+b8605ee458
+### Commit Summary: UI: Superimposed pin icon for workspace scene pinning in the scene switcher · b8605ee458 - blender - Blender Projects
+### Commit Details:
+Followup to the previous commit, to display a pin icon in the scene switcher.
+This is a good indicator to have and such workspace-wide functionality should
+be available in the topbar, close to what it belongs to (scene switching).
+Downside is that it makes this already crowded region even more crowded. But
+thanks to the use of superimposed icons, it's not too noisy visually.
+
+Differential Revision:
+https://developer.blender.org/D11890
+Reviewed by: Campbell Barton
+-------
+).
+Improved layout of File Browser UI settings in the Preferences:
+Show
+  Recent Locations
+and
+Show System Locations
+now show up as
+Recent
+and
+System
+under a
+Show Locations
+heading.
+  (
+1ef686bd26
+### Commit Summary: UI: Tweak layout of File Browser Preferences · 1ef686bd26 - blender - Blender Projects
+### Commit Details:
+* Don't nest "Show Recent Locations" and "Show System Locations" under a
+  "Defaults" heading. They are not just a default setting but completely
+  hide panels from the UI.
+* Use own "Show Locations" heading instead, and remove redundant words
+  from labels.
+* Move the options to the top of the panel, they are more general since
+  they can't be toggled in a File Browser session, and thus have bigger
+  impact.
+
+We may want to remove these options in a future major release, I don't
+think they are useful.
+
+Agreed on with Pablo Vazquez.
+-------
+)
+Outliner
+¶
+In the Library Overrides view mode for Properties, display overridden
+  properties in hierarchy with proper UI names and icons, instead of as
+  a list of RNA paths to the properties. This is a more user friendly
+  way of visualizing this data.
+Old
+Blender 3.3
+Ability to directly edit library paths in the Outliner has been
+  removed. This could lead to corruptions of advanced library data like
+  overrides. Modern process using relocate operation should be used
+  instead. Direct library file path editing remains possible from direct
+  RNA access (python console or Data API view of the Outliner for
+  example).
+Improved performance of
+View Layer
+and
+Library Overrides
+display
+  mode with complex object parent/child hierarchies.
+  (
+afde12e066
+### Commit Summary: Outliner performance: Only expand sub-trees if needed · afde12e066 - blender - Blender Projects
+### Commit Details:
+Before this, we would build the sub-trees of some elements, just to
+remove them afterwards. In big files, this would sometimes build ten
+thousands of elements unnecessarily. Now support not building those
+sub-trees in the first place.
+
+Performance tests in a Sprite Fright production file (release build):
+- View Layer display mode, reduced Outliner tree rebuilding from ~45ms
+  to 12-17ms
+- Library Overrides display mode, Hierarchies view, reduced tree
+  rebuilding from 5-6s(!) to 220ms
+-------
+)
+Asset Browser
+¶
+Don't show catalog path in the tooltip when dragging assets over root
+  level catalogs. The path and catalog name would match then, so the
+  name would just be repeated twice in the tooltip.
+  (
+2e33172719
+### Commit Summary: Assets: Don't show duplicated catalog name when dragging assets · 2e33172719 - blender - Blender Projects
+### Commit Details:
+While dragging assets over a catalog, we would show both the name and
+the full catalog path in the drag tooltip. For catalogs at the root
+level (catalogs without parents) the name and the full path are the
+same, so it would just display the name twice. This is more confusing
+than helpful. Now skip displaying the full path in that case.
+
+Reviewed by: Julian Eisel
+Addresses T92855
+
+Differential Revision:
+https://developer.blender.org/D15190
+-------
+)
+File Browser
+¶
+Ctrl l
+(
+Cmd l
+on
+  macOS) to edit the directory path button.
+  (
+209bf7780e
+### Commit Summary: UI: Add file browser operator to edit directory field · 209bf7780e - blender - Blender Projects
+### Commit Details:
+This allows using a shortcut from the file browser to edit the directory
+path. The shortcut Ctrl + L is quite standard and used in multiple
+GNU/Linux desktop desktop environments, Windows, as well as most web
+browsers. Safari on macOS uses Cmd + L.
+
+Reviewed by: Jacques Lucke, Julian Eisel
+
+Differential Revision:
+https://developer.blender.org/D15196
+-------
+)
+Theme settings: Use
+Widget
+font style instead of
+Widget Label
+for
+  File Browser text.
+  (
+6f7171525b
+### Commit Summary: File Browser UI: Use "Widget" font style instead of "Widget Label" · 6f7171525b - blender - Blender Projects
+### Commit Details:
+It didn't make much sense to use the "Widget Label" font style here,
+since this is just regular text, not labels for widgets. Checked with
+@pablovazquez
+and we agreed on using the "Widget" font style instead.
+
+Also fixes a mismatch where we used the "Widget Label" font style for
+drawing, but the "Widget" font style for string width calculations.
+Fixes T99207.
+-------
+)
+Gizmos
+¶
+Transform gizmos now display while being dragged
+  (
+648350e456
+### Commit Summary: UI: show gizmo while transforming · 648350e456 - blender - Blender Projects
+### Commit Details:
+When interacting with translate/rotate/scale gizmo, show the gizmo while
+it's in use. There are some exceptions to this, as showing all scale
+gizmos while scaling causes the gizmos to become large & distracting so
+in this case only the gizmo being dragged is shown.
+
+Resolves T63743.
+-------
+).
+
+'''''
+
+
+11. VFX & Video¶
+
+VFX & Video
+¶
+Tracking
+¶
+Implemented "Image from Plane Marker" operator which creates or updates
+image data-block from pixels which the plane marker "sees"
+(
+e4bf58e285
+### Commit Summary: Tracking: Image from Plane Marker operators · e4bf58e285 - blender - Blender Projects
+### Commit Details:
+There are two operators added, which are available via a special
+content menu next to the plane track image selector:
+
+- New Image from Plane Marker
+- Update Image from Plane Marker
+
+The former one creates an image from pixels which the active plane
+track marker "sees" at the current frame and sets it as the plane
+track's image.
+
+The latter one instead of creating the new image data-block updates
+the image in-place.
+
+This allows to create unwarped texture from a billboard from footage.
+The intent is to allow this image to be touched up and re-projected
+back to the footage with an updated content.
+
+Available from a plane track image context menu, as well as from the
+Track menu.
+
+{F13243219}
+
+The demo of the feature from Sebastian Koenig:
+https://www.youtube.com/watch?v=PDphO-w2SsA
+Differential Revision:
+https://developer.blender.org/D15312
+-------
+).
+This allows creating unwarped texture from a billboard from footage. The
+intent is to allow this image to be touched up and re-projected back to
+the footage with an updated content.
+PDphO-w2SsA
+Implemented motion tracking data pre-fill for compositor nodes
+(
+da85245704
+### Commit Summary: Compositor: Pre-fill active scene movie clip in more nodes · da85245704 - blender - Blender Projects
+### Commit Details:
+Pre-fills movie clip from the scene to the following nodes:
+- Keying Screen
+- Plane Track Deform
+- Track Position
+
+The rest of tracking related nodes were already doing so.
+
+Differential Revision:
+https://developer.blender.org/D15377
+-------
+,
+c76e1ecac6
+### Commit Summary: Compositor: Pre-fill motion tracking fields · c76e1ecac6 - blender - Blender Projects
+### Commit Details:
+Extends current functionality which was only filling in
+the active movie clip. Now we also pre-fill tracking object
+name, as well as (plane)track name.
+-------
+)
+Clip Editor
+¶
+Default to descending average sorting
+  (
+2e6cd70473
+### Commit Summary: Clip editor: Default to average error sort in dopesheet · 2e6cd70473 - blender - Blender Projects
+### Commit Details:
+This is what we agreed on during the workshop.
+
+Differential Revision:
+https://developer.blender.org/D15194
+-------
+)
+Mask Editor
+¶
+Add mask blending factor for combined overlay
+  (
+eca0c95d51
+### Commit Summary: Mask Editor: Add mask blending factor for combined overlay · eca0c95d51 - blender - Blender Projects
+### Commit Details:
+This adds a new parameter to the "Combined" overlay mode of the mask editor.
+The "blending factor" allows users to blend the mask exterior with the original
+footage to visualise the content of the mask in a more intuitive way.  The
+"Alpha" overlay is unaffected by this change.
+
+The existing "Combined" overlay is used like before (covering everything
+outside the mask in black), but can be blended with the slider in the mask
+overlay to look at the exterior.
+
+This is part of an effort to make mask editing more intuitive & easy to use:
+https://developer.blender.org/T93097
+Differential Revision:
+https://developer.blender.org/D13284
+-------
+)
+Add mask spline visibility overlay option
+  (
+df2ab4e758
+### Commit Summary: Mask Editor: Add toggle for mask spline drawing · df2ab4e758 - blender - Blender Projects
+### Commit Details:
+Adds an overlay option to show/hide the spline points & lines of masks in the Mask Editor.
+
+It also moves the "smooth" option up (its position left of the selection dropdown was missleading).
+
+{F11847272}
+
+This emerged from a discussion in
+https://developer.blender.org/D12776
+Differential Revision:
+https://developer.blender.org/D13314
+-------
+)
+Masks are always drawn smooth
+  (
+c1ffea157c
+### Commit Summary: Mask editor: Always use smooth drawing · c1ffea157c - blender - Blender Projects
+### Commit Details:
+The mask is expected to be always be displayed smooth, and the
+option mainly existed for some legacy drivers. IF smooth drawing
+causes issues it should be fixed in the drawing code, not as an
+option in the interface.
+
+Differential Revision:
+https://developer.blender.org/D15266
+-------
+)
+Sequencer
+¶
+Add filter method to strip transform
+  (
+1c5f2e49b7
+### Commit Summary: VSE: Add filter method to strip transform · 1c5f2e49b7 - blender - Blender Projects
+### Commit Details:
+Previously, nearest interpolation filter was used for preview, because
+it offered good performance and bilinear was used for rendering. This
+is not always desirable behavior, so filter method can now be chosen by
+user. Chosen method will be used for preview and for rendering.
+
+Reviewed By: ISS
+
+Differential Revision:
+https://developer.blender.org/D12807
+-------
+)
+Now change menu (
+C
+key) supports change scene.
+  (
+205c6d8d08
+### Commit Summary: VSE: New Change Scene option in Change menu · 205c6d8d08 - blender - Blender Projects
+### Commit Details:
+This is a new option in `C` key menu.
+
+Reviewed By: mendio, ISS
+
+Maniphest Tasks: T97711
+
+Differential Revision:
+https://developer.blender.org/D14807
+-------
+)
+Add Scene and Strip at the same time in one action.
+  (
+be84fe4ce1
+### Commit Summary: VSE: Add new Scene and Strip · be84fe4ce1 - blender - Blender Projects
+### Commit Details:
+This operator allows to add a new scene at the same time that the strip. This is very handy for storyboarding.
+
+Reviewed By: ISS
+
+Maniphest Tasks: T97678
+
+Differential Revision:
+https://developer.blender.org/D14790
+-------
+)
+Delete Strip and Scene in one step.
+  (
+8c4bd02b06
+### Commit Summary: VSE: Delete Strip and Scene Data in one step · 8c4bd02b06 - blender - Blender Projects
+### Commit Details:
+Actually, delete the strip only deletes the container, but not the linked data. This patch adds the option to delete the scene also. This is very handy for storyboarding.
+
+Reviewed By: ISS
+
+Maniphest Tasks: T97683
+
+Differential Revision:
+https://developer.blender.org/D14794
+-------
+)
+Added new retiming system. Sped up strips can be edited as normal
+  strips. Also movie playback speed is adjusted to match scene
+  framerate.
+  (
+302b04a5a3
+### Commit Summary: VSE: Improved Retiming system · 302b04a5a3 - blender - Blender Projects
+### Commit Details:
+Patch implements better way to control playback speed than it is
+possible to do with speed effect. Speed factor property can be set in
+Time panel.
+
+There are 2 layers of control:
+
+Option to retime movie to match scene FPS rate.
+Custom speed factor to control playback rate.
+Since playback rate is strip property, it is now possible to manipulate
+strip as normal one even if it is retimed.
+
+To facilitate manipulation, some functions need to consider speed factor
+and apply necessary corrections to strip offset or strip start. These
+corrections may need to be float numbers, so start and offsets must be
+float as well.
+
+Sound strips now use speed factor instead of pitch. This means, that
+strips will change length to match usable length. In addition, it is
+possible to group movie and sound strip and change speed of meta strip.
+-------
+)
+Add API function to select displayed meta strip.
+  (
+6b35d9e6fb
+### Commit Summary: VSE: Add API function to select displayed meta strip · 6b35d9e6fb - blender - Blender Projects
+### Commit Details:
+Use function `sequence_editor.display_stack(meta_strip)` to set
+displayed timeline content.
+
+To view top-level timeline, that does not belong to any meta strip, pass
+`None` as argument.
+
+Differential Revision:
+https://developer.blender.org/D12048
+-------
+)
+FFmpeg
+¶
+Playback of VFR movies is now correct
+  (
+f0a3d2beb2
+### Commit Summary: FFmpeg: Add VFR media support · f0a3d2beb2 - blender - Blender Projects
+### Commit Details:
+Variable frame rate (VFR) files have been difficult to work with.
+This is because during sequential decoding, spacing between frames is
+not always equal, but it was assumed to be equal. This can result in
+movie getting out of sync with sound and difference between preview and
+rendered image. A way to resolve these issues was to build and use
+timecodes which is quite lengthy and resource intensive process. Such
+issues are also difficult to communicate through UI because it is not
+possible to predict if timecode usage would be needed.
+
+With this patch, double buffer is used to keep previously decoded frame.
+If current frame has PTS greater than what we are looking for, it is not
+time to display it yet, and previous frame is displayed instead.
+
+Each `AVFrame` has information about it's duration, so in theory double
+buffering would not be needed, but in practice this information is
+unreliable.
+
+To ensure double buffer is always used, function
+`ffmpeg_decode_video_frame_scan` is used for sequential decoding, even
+if no scanning is expected.
+
+This approach is similar to D6392, but this implementation does not
+require seeking so it is much faster. Currently `AVFrame` is only
+referenced, so no data is copied and therefore no overhead is added.
+
+Note: There is one known issue where seeking fails even with double
+buffering: Some files may seek too far in stream and miss requested
+PTS. These require preseeking or greater negative subframe offset
+
+Fixes: T86361, T72347
+
+Reviewed By: zeddb, sergey
+
+Differential Revision:
+https://developer.blender.org/D13583
+-------
+)
+
+'''''
+
+
+12. Add-ons¶
+
+Add-ons
+¶
+glTF 2.0
+¶
+Importer
+¶
+Add missing image name
+  (
+a2650c0158
+)
+Manage some official Khronos Extensions about Materials
+(
+042fbefac6
+)
+Exporter
+¶
+Manage some official Khronos Extensions about Materials
+(
+042fbefac6
+)
+Replace Separate RGB shader node by new Separate Color node
+  (
+c28c92c149
+)
+Allow custom name for merged animation
+  (
+501c97628f
+)
+Export deformation bones only, without animation, is now possible
+  (
+807a64cdfc
+)
+Draco: Directly look at path specified by environment variable
+  (
+11bc851e16
+)
+Fix camera & light export when Yup is off
+  (
+849e7196eb
+)
+Export all actions of a single armature is now under an export option
+  (
+09d752e845
+)
+Fixed bezier control points to cubic spline tangents conversion
+  (
+08d13c024f
+)
+Manage all 4 types of Vertex Colors (corner/point - byte/float)
+(
+2fcac97522
+)
+Performance: cache parent/children data to avoid bad
+.children
+performance when used a lot
+  (
+5b2953ad08
+)
+Avoid crash when all drivers are invalids
+  (
+69b9725ba0
+)
+Add bufferView Target at export
+  (
+ef0027e72d
+)
+Amaranth
+¶
+Support listing images used by Empty objects in Debug tool
+  (
+8d609fc7e6
+)
+Add check for unsaved images in Save/Reload operator
+  (
+3c6a16fcbe
+)
+Fix Debug feature to list users of image datablocks
+  (
+4a522d353a
+)
+Collection Manager
+¶
+Fix duplicate keymap entries for QVT operators.
+  (
+1cc09e24c5
+)
+Fix duplicate QCD widgets being added when pressing backspace while
+  hovering over the QCD 3D Viewport Header Widget checkbox in the
+  preferences.
+  (
+af8d747d00
+)
+Fix adding/removing objects from nested collections to/from the
+  current selection.
+  (
+3570274fe7
+)
+
+'''''
+
+
+13. More Features¶
+
+More Features
+¶
+Collection Instance Offset
+¶
+The Collections property panel now has operators to control the Instance
+Offset parameter
+(
+2935b6a2ac
+### Commit Summary: Add Instance Offset operators to Collections property panel · 2935b6a2ac - blender - Blender Projects
+### Commit Details:
+Add three operators to the Collections properties panel:
+
+- `object.instance_offset_to_cursor`, which is already available from
+  the Object properties panel. The operator works on the active
+  collection, though, so it's weird to not have it in the Collections
+  panel.
+- `object.instance_offset_from_object` is a new operator, which performs
+  the same operation as above, but then based on the active object's
+  evaluated world position.
+- `object.instance_offset_to_cursor` is also new, and performs the
+  opposite of the first operator: it moves the 3D cursor to the
+  collection's instance offset.
+
+The first two operators make it easier to set the instance offset. The
+last operator makes it possible to actually see the offset in the 3D
+viewport; drawing it using some overlay could also work, but that would
+be more effort to get right, and then snapping the 3D cursor would still
+be useful.
+
+The operators are placed in a popup menu, as to not clutter the
+interface too much with various buttons.
+
+Reviewed By: dfelinto, eyecandy
+
+Differential Revision:
+https://developer.blender.org/D14966
+-------
+):
+Instance Offset from Cursor: This one was already available from the
+  Object properties panel, and is now in the Collections properties as
+  well.
+Instance Offset from Object: Performs the same operation as above, but
+  then based on the active object's evaluated world position.
+Instance Offset to Cursor: Performs the opposite of the first
+  operator: it moves the 3D cursor to the collection's instance offset.
+The first two operators make it easier to set the instance offset. The
+last operator makes it possible to actually see the offset in the 3D
+viewport.
+Miscellaneous
+¶
+Make Instance
+  Face
+### Commit Summary: Faces — Blender Manual
+### Commit Details:
+No details found
+-------
+now supports instanced collections
+  (
+15b4120064
+### Commit Summary: Make Instance Face: Support instanced collections too · 15b4120064 - blender - Blender Projects
+### Commit Details:
+Differential Revision:
+https://developer.blender.org/D15204
+-------
+).
+
+'''''
+
