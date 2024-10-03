@@ -11,7 +11,7 @@ To comply with both licenses, the entire repository is made available under GPL-
 ## Attribution
 Please attribute content from the Blender Manual or Release Notes as follows:
 
-"The [Blender Developer Documentation](https://projects.blender.org/blender/blender-developer-docs) by the Blender Developer Documentation Team, used under [CC-BY-SA v4.0](https://creativecommons.org/licenses/by-sa/4.0/)."
+Based on the Blender 4.2 Manual (https://docs.blender.org/manual/en/4.2/index.html) and Blender Developer Documentation (https://projects.blender.org/blender/blender-developer-docs), used under CC-BY-SA v4.0 (https://creativecommons.org/licenses/by-sa/4.0/). Python scripts included in both the Blender Manual and Release Notes are distributed under the GNU GPL v3.0 (http://www.gnu.org/copyleft/gpl.html).
 
 ## References
 - [Blender Documentation Team](https://developer.blender.org/docs)
