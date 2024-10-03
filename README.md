@@ -1,12 +1,10 @@
 # BlenderGPTs_Knowledge_Files
 
-This repository contains a summary of Blender's Release Notes in a text file ("What's new in Blender 4.2.txt").
+This repository contains a summary of Blender's Release Notes in a text file (What's new in Blender 4.2.txt).
 
 It includes:
-- **Commit links** (e.g., "13a3603578")
-- **References** such as "See the manual"
-
-All this information is organized and easy to navigate.
+- **Commit links** (such as "13a3603578")
+- **References** (such as "See the manual")
 
 ## License
 - The **Blender Manual** and **Release Notes** content are licensed under the [Creative Commons Attribution-ShareAlike 4.0 International License (CC-BY-SA v4.0)](https://creativecommons.org/licenses/by-sa/4.0/), except for logos, trademarks, icons, source code, and Python scripts.
