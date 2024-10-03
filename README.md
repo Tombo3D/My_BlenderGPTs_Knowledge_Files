@@ -1,6 +1,6 @@
 # BlenderGPTs_Knowledge_Files
 
-This repository contains a summary of Blender's Release Notes in a text file (What's new in Blender 4.2.txt).
+This repository contains summaries of Blender's Release Notes in text files like "What's new in Blender 4.2.txt".
 
 It includes:
 - **Commit links** (such as "13a3603578") that point to specific changes in the Blender source code.
