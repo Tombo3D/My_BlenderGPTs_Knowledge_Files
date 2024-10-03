@@ -1,6 +1,9 @@
 # BlenderGPTs_Knowledge_Files
 
-This repository contains text files related to the Blender Manual and Release Notes, alongside Python scripts that interact with the Blender API.
+This repository contains a summary of Blender's Release Notes in a text file ("What's new in Blender 4.2.txt"). It includes:
+Commit links (e.g., "13a3603578")
+References such as "See the manual"
+All this information is provided in an organized and accessible format.
 
 ## License
 - The **Blender Manual** and **Release Notes** content are licensed under the [Creative Commons Attribution-ShareAlike 4.0 International License (CC-BY-SA v4.0)](https://creativecommons.org/licenses/by-sa/4.0/), except for logos, trademarks, icons, source code, and Python scripts.
